@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: mindfine-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5001
+    plan: free
+
+  - type: web
+    name: mindfine-frontend
+    runtime: static
+    buildCommand: echo "Static site ready"
+    staticPublishPath: ./escola-parte
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /inicio-escola.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    plan: free
