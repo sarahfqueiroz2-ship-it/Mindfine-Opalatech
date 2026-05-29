@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Externalização</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --branco: #ffffff;
+            --neon-texto: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* --- FUNDO --- */
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-color: #001a2d; /* Cor de segurança caso a imagem falhe */
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* --- HEADER --- */
+        .diary-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: white; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            z-index: 500;
+            box-sizing: border-box;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .back-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; }
+
+        /* CANVAS - Garantir que fique acima do fundo e abaixo da UI */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            display: block;
+            touch-action: none;
+        }
+
+        /* --- ÁREA DE INPUT --- */
+        #ui-input-container {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-wrapper {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .thought-input {
+            flex-grow: 1;
+            background: white;
+            border: 2px solid var(--azul-bright);
+            border-radius: 30px;
+            padding: 15px 25px;
+            color: var(--azul-escuro);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .send-btn {
+            background: var(--azul-bright);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(50, 181, 241, 0.4);
+            transition: 0.3s;
+        }
+
+        .send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .instruction {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #fff;
+            font-weight: 800;
+            text-shadow: var(--neon-texto);
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+
+    <header class="diary-header" id="mainHeader">
+        <div class="header-left">
+            <a href="sala-de-jogos.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title">
+                <h2>Vazio Sereno</h2>
+            </div>
+        </div>
+        <i class="fas fa-wind" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <canvas id="world"></canvas>
+
+    <div id="ui-input-container">
+        <div class="input-wrapper">
+            <input type="text" id="thoughtField" class="thought-input" placeholder="O que quer soltar?" autocomplete="off">
+            <button id="sendBtn" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="instruction">Toque no ícone ou aperte Enter para soltar</div>
+    </div>
+
+    <script src="mindfine-sync.js"></script>
+    <script>
+        // Carregar dados ao entrar na página
+window.addEventListener('load', async () => {
+    const progresso = await window.mindfineAPI.inicializarPagina();
+    
+    if (progresso) {
+        // Aplicar dados carregados
+        currentCoins = progresso.moedas;
+        currentXP = progresso.xp;
+        currentLevel = progresso.nivel;
+        
+        // Atualizar UI
+        document.getElementById('coin-count').innerText = currentCoins.toLocaleString('pt-BR');
+        document.getElementById('level-display').innerText = `NV. ${currentLevel}`;
+        document.getElementById('xp-bar-fill').style.width = currentXP + '%';
+        
+        // Aplicar skin
+        document.getElementById('panda-image').src = progresso.skin_atual;
+        
+        // Carregar universos desbloqueados
+        progresso.universos_desbloqueados.forEach(nome => {
+            const universo = universes.find(u => u.name === nome);
+            if (universo) universo.unlocked = true;
+        });
+        
+        // Verificar se já registrou emoção hoje
+        const jaRegistrou = await window.mindfineAPI.jaRegistrouEmocaoHoje();
+        if (jaRegistrou) {
+            document.getElementById('checkinModal').classList.add('hidden');
+        } else {
+            document.getElementById('checkinModal').classList.remove('hidden');
+        }
+    }
+});
+        const canvas = document.getElementById('world');
+        const ctx = canvas.getContext('2d');
+        const input = document.getElementById('thoughtField');
+        const sendBtn = document.getElementById('sendBtn');
+        const headerElement = document.getElementById('mainHeader');
+
+        let thoughts = [];
+        let particles = [];
+        
+        // Pega a altura real do header dinamicamente
+        let headerHeight = headerElement.offsetHeight;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            headerHeight = headerElement.offsetHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 3;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.alpha = 1; this.color = color;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.alpha -= 0.02; }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Thought {
+            constructor(text) {
+                this.text = text;
+                // Posição inicial: baixo da tela
+                this.x = Math.random() * (canvas.width - 100) + 50;
+                this.y = canvas.height + 100;
+                this.vx = (Math.random() - 0.5) * 1;
+                this.vy = -Math.random() * 2 - 1.5; // Velocidade de subida
+                
+                // CÁLCULO DINÂMICO DO RAIO baseado na área do texto
+                // Base mínima de 45px, aumenta conforme o tamanho do texto
+                const charCount = text.length;
+                this.radius = Math.max(45, Math.sqrt(charCount * 180) + 20);
+                
+                this.atCeiling = false;
+                this.jiggleOffset = Math.random() * 1000;
+            }
+
+            update() {
+                if (!this.atCeiling) {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Verifica se bateu no topo (header)
+                    if (this.y - this.radius <= headerHeight) {
+                        this.y = headerHeight + this.radius + 5;
+                        this.atCeiling = true;
+                        this.vy = 0;
+                    }
+                } else {
+                    // Movimento suave quando está no topo
+                    this.x += Math.sin((Date.now() + this.jiggleOffset) / 1000) * 0.5;
+                }
+
+                // Rebater nas laterais
+                if (this.x < this.radius || this.x > canvas.width - this.radius) {
+                    this.vx *= -1;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 1. Aura/Brilho externo
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + 15, 0, Math.PI * 2);
+                let grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius + 15);
+                grad.addColorStop(0, 'rgba(50, 181, 241, 0.3)');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad; 
+                ctx.fill();
+
+                // 2. Corpo da Bolha
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(50, 181, 241, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 3. Reflexo da bolha (detalhe visual)
+                ctx.beginPath();
+                ctx.arc(this.x - this.radius * 0.4, this.y - this.radius * 0.4, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+
+                // 4. Texto
+                ctx.fillStyle = '#0277bd';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Fonte fixa para a bolha crescer em volta dele
+                const fontSize = 15;
+                ctx.font = `600 ${fontSize}px Montserrat`;
+                
+                this.wrapText(this.text, this.x, this.y, this.radius * 1.5, fontSize + 4);
+                
+                ctx.restore();
+            }
+
+            wrapText(text, x, y, maxWidth, lineHeight) {
+                const words = text.split(' ');
+                let line = '';
+                let lines = [];
+
+                for (let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n] + ' ';
+                    let metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && n > 0) {
+                        lines.push(line);
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+
+                // Centraliza o bloco de texto verticalmente
+                let totalHeight = lines.length * lineHeight;
+                let startY = y - (totalHeight / 2) + (lineHeight / 2);
+
+                lines.forEach((l, i) => {
+                    ctx.fillText(l.trim(), x, startY + (i * lineHeight));
+                });
+            }
+
+            pop() {
+                for (let i = 0; i < 25; i++) {
+                    particles.push(new Particle(this.x, this.y, '#32B5F1'));
+                }
+            }
+        }
+
+        function releaseThought() {
+            const val = input.value.trim();
+            if (val !== "") {
+                thoughts.push(new Thought(val));
+                input.value = "";
+            }
+        }
+
+        sendBtn.addEventListener('click', releaseThought);
+        input.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') releaseThought(); 
+        });
+
+        // Estourar bolha ao clicar
+        window.addEventListener('pointerdown', (e) => {
+            const mx = e.clientX; 
+            const my = e.clientY;
+            
+            for (let i = thoughts.length - 1; i >= 0; i--) {
+                let t = thoughts[i];
+                let dist = Math.sqrt((mx - t.x)**2 + (my - t.y)**2);
+                if (dist < t.radius) {
+                    t.pop();
+                    thoughts.splice(i, 1);
+                    break;
+                }
+            }
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Partículas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+
+            // Pensamentos/Bolhas
+            thoughts.forEach(t => {
+                t.update();
+                t.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

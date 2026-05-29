@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mindfine Studio - Arte</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --branco: #ffffff;
+            --texto: #2c3e50;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            height: 100vh; overflow: hidden;
+        }
+
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* --- HEADER FULL WIDTH --- */
+        .diary-header {
+            background: white; padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            position: fixed; top: 0; left: 0; width: 100%;
+            z-index: 1000; box-sizing: border-box;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .back-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 0.85rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .plus-btn { color: var(--azul-bright); font-size: 1.6rem; background: none; border: none; cursor: pointer; }
+
+        /* --- TELA 1: BIBLIOTECA (3 COLUNAS) --- */
+        #library-view {
+            position: relative; z-index: 10;
+            padding: 90px 10px 40px;
+            height: 100vh; overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 POR LINHA */
+            gap: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .art-card {
+            background: white; border-radius: 10px;
+            overflow: hidden; position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            aspect-ratio: 1; transition: 0.3s;
+            cursor: zoom-in;
+        }
+
+        .art-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .art-date {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.5); color: white;
+            font-size: 0.55rem; padding: 4px 0; text-align: center;
+            font-weight: 600;
+        }
+
+        /* --- TELA 2: ATELIÊ --- */
+        #drawing-view {
+            display: none; position: relative; z-index: 20; height: 100vh; flex-direction: column;
+        }
+
+        .canvas-area { flex: 1; padding: 80px 10px 150px; display: flex; justify-content: center; align-items: center; }
+        canvas { background: white; border-radius: 15px; touch-action: none; width: 100%; height: 100%; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+
+        /* CORES E FERRAMENTAS */
+        .recent-colors-container {
+            position: fixed; right: 10px; top: 90px;
+            display: flex; flex-direction: column; gap: 8px;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 8px; border-radius: 30px; z-index: 1100;
+        }
+        .color-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
+
+        .toolbar {
+            background: white; padding: 15px; border-radius: 25px 25px 0 0;
+            display: flex; flex-direction: column; gap: 12px;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            box-sizing: border-box; z-index: 1100; box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
+        }
+        .brushes-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .tool-btn {
+            background: #f1f3f5; border: none; min-width: 42px; height: 42px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 1rem;
+        }
+        .tool-btn.active { background: var(--azul-bright); color: white; }
+
+        /* --- EFEITO DE EXPANSÃO (MODAL) --- */
+        #expand-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        #expanded-img { max-width: 90%; max-height: 70%; border-radius: 15px; box-shadow: 0 0 30px var(--azul-bright); transform: scale(0.8); transition: 0.3s; }
+        #expand-modal.active #expanded-img { transform: scale(1); }
+        
+        .modal-btns { margin-top: 20px; display: flex; gap: 20px; }
+        .circle-action {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: white; color: var(--azul-escuro); font-size: 1.2rem; cursor: pointer;
+        }
+
+        .empty-msg { color: white; grid-column: span 3; text-align: center; padding-top: 100px; opacity: 0.6; }
+  
+  #notifModal.visible { opacity: 1 !important; pointer-events: all !important; }
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+
+    <!-- BIBLIOTECA -->
+    <section id="library-view">
+        <header class="diary-header">
+            <div class="header-left">
+                <a href="sala-de-jogos.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+                <div class="diary-title"><h2>Minha Galeria</h2></div>
+            </div>
+            <button class="plus-btn" onclick="openCanvas()"><i class="fa-solid fa-circle-plus"></i></button>
+        </header>
+
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
+
+    <!-- ATELIÊ -->
+    <section id="drawing-view">
+        <header class="diary-header">
+            <div class="header-left">
+                <button class="back-btn" onclick="closeCanvas()"><i class="fas fa-chevron-left"></i></button>
+                <div class="diary-title"><h2>Novo Desenho</h2></div>
+            </div>
+            <button class="plus-btn" onclick="saveToLibrary()"><i class="fa-solid fa-circle-check"></i></button>
+        </header>
+
+        <div class="recent-colors-container" id="recentColors"></div>
+
+        <div class="canvas-area">
+            <canvas id="paintCanvas"></canvas>
+        </div>
+
+        <div class="toolbar">
+            <div class="brushes-row">
+                <button class="tool-btn active" onclick="setBrush('normal', this)"><i class="fa-solid fa-pencil"></i></button>
+                <button class="tool-btn" onclick="setBrush('neon', this)"><i class="fa-solid fa-sun"></i></button>
+                <button class="tool-btn" onclick="setBrush('spray', this)"><i class="fa-solid fa-spray-can"></i></button>
+                <button class="tool-btn" onclick="setBrush('marker', this)"><i class="fa-solid fa-highlighter"></i></button>
+                <button class="tool-btn" onclick="setBrush('eraser', this)"><i class="fa-solid fa-eraser"></i></button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <input type="color" id="colorPicker" value="#32B5F1" onchange="addColorToHistory(this.value)" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--azul-bright); background: none; cursor: pointer;">
+                <input type="range" id="sizeSlider" min="2" max="60" value="10" style="flex: 1; accent-color: var(--azul-bright);">
+                <button onclick="clearCanvas()" style="border: none; background: none; color: #e74c3c; font-size: 1.2rem;"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL DE EXPANSÃO -->
+    <div id="expand-modal" onclick="closeExpand()">
+        <img id="expanded-img" src="" onclick="event.stopPropagation()">
+        <div class="modal-btns">
+            <button class="circle-action" onclick="downloadArt()"><i class="fa-solid fa-download"></i></button>
+            <button class="circle-action" onclick="deleteCurrentArt()" style="color: #e74c3c;"><i class="fa-solid fa-trash"></i></button>
+            <button class="circle-action" onclick="closeExpand()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+
+    <div id="notifModal" style="position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:9999;transition:0.4s;opacity:0;pointer-events:none;min-width:280px;">
+    <div style="background:white;border-radius:20px;padding:16px 22px;display:flex;align-items:center;gap:12px;border:2px solid #32B5F1;box-shadow:0 8px 25px rgba(50,181,241,0.3);">
+        <i class="fas fa-info-circle" id="notifIcon" style="font-size:1.3rem;color:#32B5F1;flex-shrink:0;"></i>
+        <div><div id="notifTitle" style="font-weight:800;color:#0277bd;font-size:0.85rem;"></div><div id="notifMsg" style="font-size:0.75rem;color:#667;margin-top:3px;"></div></div>
+    </div>
+</div>
+
+<div id="confirmDiscardModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:20px;padding:28px;max-width:320px;width:90%;text-align:center;">
+        <i class="fas fa-pencil-alt" style="font-size:2rem;color:#f97316;margin-bottom:12px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:8px;">Descartar desenho?</h3>
+        <p style="font-size:0.8rem;color:#667;margin-bottom:22px;">As alterações não salvas serão perdidas.</p>
+        <div style="display:flex;gap:10px;">
+            <button id="cancelDiscardBtn" style="flex:1;padding:11px;border-radius:50px;border:2px solid #32B5F1;background:white;color:#32B5F1;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Cancelar</button>
+            <button id="confirmDiscardBtn" style="flex:1;padding:11px;border-radius:50px;border:none;background:#f97316;color:white;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Descartar</button>
+        </div>
+    </div>
+</div>
+
+<div id="confirmClearCanvasModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:20px;padding:28px;max-width:320px;width:90%;text-align:center;">
+        <i class="fas fa-trash-alt" style="font-size:2rem;color:#ef4444;margin-bottom:12px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:8px;">Limpar tela?</h3>
+        <p style="font-size:0.8rem;color:#667;margin-bottom:22px;">Todo o progresso será perdido.</p>
+        <div style="display:flex;gap:10px;">
+            <button onclick="document.getElementById('confirmClearCanvasModal').style.display='none'" style="flex:1;padding:11px;border-radius:50px;border:2px solid #32B5F1;background:white;color:#32B5F1;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Cancelar</button>
+            <button id="confirmClearCanvasBtn" style="flex:1;padding:11px;border-radius:50px;border:none;background:#ef4444;color:white;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Limpar</button>
+        </div>
+    </div>
+</div>
+
+<div id="confirmDeleteDrawingModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:20px;padding:28px;max-width:320px;width:90%;text-align:center;">
+        <i class="fas fa-trash-alt" style="font-size:2rem;color:#ef4444;margin-bottom:12px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:8px;">Excluir desenho?</h3>
+        <p style="font-size:0.8rem;color:#667;margin-bottom:22px;">Esta ação não pode ser desfeita.</p>
+        <div style="display:flex;gap:10px;">
+            <button onclick="document.getElementById('confirmDeleteDrawingModal').style.display='none'" style="flex:1;padding:11px;border-radius:50px;border:2px solid #32B5F1;background:white;color:#32B5F1;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Cancelar</button>
+            <button id="confirmDeleteDrawingBtn" style="flex:1;padding:11px;border-radius:50px;border:none;background:#ef4444;color:white;font-weight:800;cursor:pointer;font-family:'Montserrat',sans-serif;">Excluir</button>
+        </div>
+    </div>
+</div>
+
+   <script src="mindfine-sync.js"></script>
+<script>
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+    const galleryGrid = document.getElementById('galleryGrid');
+    let painting = false;
+    let currentBrush = 'normal';
+    let colorHistory = ['#32B5F1', '#000000', '#FF5252', '#4CAF50', '#FFEB3B', '#9C27B0', '#FF9800', '#FFFFFF'];
+    let selectedArtId = null;
+    let matriculaAtual = '';
+    
+    let desenhos = []; // Array para armazenar os desenhos do backend
+
+    // ========== FUNÇÕES DO BACKEND ==========
+    
+    async function carregarGaleria() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}`);
+            desenhos = await response.json();
+            console.log('✅ Galeria carregada:', desenhos.length, 'desenhos');
+            renderGallery();
+        } catch (error) {
+            console.error('❌ Erro ao carregar galeria:', error);
+            desenhos = [];
+            renderGallery();
+        }
+    }
+    
+    async function salvarDesenhoNoBackend(imagemBase64) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imagem_base64: imagemBase64 })
+            });
+            const result = await response.json();
+            if (result.sucesso) {
+                await carregarGaleria(); // Recarregar a galeria
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('❌ Erro ao salvar desenho:', error);
+            return false;
+        }
+    }
+    
+   async function deletarDesenho(id) {
+    document.getElementById('confirmDeleteDrawingModal').style.display = 'flex';
+    document.getElementById('confirmDeleteDrawingBtn').onclick = async () => {
+        document.getElementById('confirmDeleteDrawingModal').style.display = 'none';
+        try {
+            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}/${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.sucesso) await carregarGaleria();
+        } catch (error) { console.error('❌ Erro ao deletar desenho:', error); }
+    };
+}
+
+    // ========== FUNÇÕES DA GALERIA ==========
+    
+    function renderGallery() {
+        if (desenhos.length === 0) {
+            galleryGrid.innerHTML = '<div class="empty-msg">Nenhum desenho ainda. Comece criando um!</div>';
+            return;
+        }
+        
+        galleryGrid.innerHTML = desenhos.map(desenho => `
+            <div class="art-card" onclick="expandArt(${desenho.id})">
+                <img src="${desenho.imagem_base64}">
+                <div class="art-date">${desenho.data}</div>
+            </div>
+        `).join('');
+    }
+
+    // ========== FUNÇÕES DO CANVAS ==========
+    
+    function renderRecentColors() {
+        const box = document.getElementById('recentColors');
+        box.innerHTML = '';
+        colorHistory.forEach(color => {
+            const dot = document.createElement('div');
+            dot.className = 'color-dot';
+            dot.style.background = color;
+            dot.onclick = () => document.getElementById('colorPicker').value = color;
+            box.appendChild(dot);
+        });
+    }
+
+    function addColorToHistory(newColor) {
+        colorHistory = [newColor, ...colorHistory.filter(c => c !== newColor)].slice(0, 8);
+        renderRecentColors();
+    }
+
+    function openCanvas() {
+        document.getElementById('library-view').style.display = 'none';
+        document.getElementById('drawing-view').style.display = 'flex';
+        resizeCanvas();
+    }
+
+    function closeCanvas() {
+    if (_pendingCloseConfirm) return;
+    _pendingCloseConfirm = true;
+    document.getElementById('confirmDiscardModal').style.display = 'flex';
+    document.getElementById('confirmDiscardBtn').onclick = () => {
+        document.getElementById('confirmDiscardModal').style.display = 'none';
+        _pendingCloseConfirm = false;
+        document.getElementById('drawing-view').style.display = 'none';
+        document.getElementById('library-view').style.display = 'block';
+    };
+    document.getElementById('cancelDiscardBtn').onclick = () => {
+        document.getElementById('confirmDiscardModal').style.display = 'none';
+        _pendingCloseConfirm = false;
+    };
+}
+let _pendingCloseConfirm = false;
+
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    async function saveToLibrary() {
+        const imagemBase64 = canvas.toDataURL();
+        const sucesso = await salvarDesenhoNoBackend(imagemBase64);
+        
+        if (sucesso) {
+showNotif('Salvo!', 'Desenho salvo na sua galeria.', 'success');
+            closeCanvas();
+        } else {
+showNotif('Erro', 'Não foi possível salvar. Tente novamente.', 'error');
+        }
+    }
+
+    // ========== EXPANSÃO (MODAL) ==========
+    
+    function expandArt(id) {
+        const desenho = desenhos.find(d => d.id === id);
+        if (!desenho) return;
+        
+        selectedArtId = id;
+        document.getElementById('expanded-img').src = desenho.imagem_base64;
+        document.getElementById('expand-modal').style.display = 'flex';
+        setTimeout(() => document.getElementById('expand-modal').classList.add('active'), 10);
+    }
+
+    function closeExpand() {
+        document.getElementById('expand-modal').classList.remove('active');
+        setTimeout(() => document.getElementById('expand-modal').style.display = 'none', 300);
+    }
+
+    function downloadArt() {
+        const desenho = desenhos.find(d => d.id === selectedArtId);
+        if (!desenho) return;
+        
+        const link = document.createElement('a');
+        link.download = `mindfine-arte-${selectedArtId}.png`;
+        link.href = desenho.imagem_base64;
+        link.click();
+    }
+
+    function deleteCurrentArt() {
+        if (selectedArtId) {
+            deletarDesenho(selectedArtId);
+            closeExpand();
+        }
+    }
+
+    // ========== FUNÇÕES DO CANVAS (desenho) ==========
+    
+    function setBrush(type, btn) {
+        currentBrush = type;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function draw(e) {
+        if (!painting) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+        const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
+        const size = document.getElementById('sizeSlider').value;
+        const color = document.getElementById('colorPicker').value;
+
+        ctx.lineWidth = size;
+        ctx.strokeStyle = (currentBrush === 'eraser') ? 'white' : color;
+        ctx.shadowBlur = (currentBrush === 'neon') ? size : 0;
+        ctx.shadowColor = color;
+        ctx.globalAlpha = (currentBrush === 'marker') ? 0.4 : 1;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+   function clearCanvas() {
+    document.getElementById('confirmClearCanvasModal').style.display = 'flex';
+    document.getElementById('confirmClearCanvasBtn').onclick = () => {
+        document.getElementById('confirmClearCanvasModal').style.display = 'none';
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+    };
+}
+
+    // ========== EVENTOS DO CANVAS ==========
+    
+    canvas.addEventListener('mousedown', (e) => { 
+        painting = true; 
+        ctx.beginPath();
+        draw(e); 
+    });
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', () => { 
+        painting = false; 
+        ctx.beginPath();
+    });
+    canvas.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        painting = true;
+        ctx.beginPath();
+        draw(e); 
+    });
+    canvas.addEventListener('touchmove', (e) => { 
+        e.preventDefault(); 
+        draw(e); 
+    });
+    canvas.addEventListener('touchend', () => { 
+        painting = false; 
+        ctx.beginPath();
+    });
+
+    function showNotif(title, msg, type = 'info') {
+    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-times-circle' };
+    const el = document.getElementById('notifModal');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifMsg').innerText = msg;
+    document.getElementById('notifIcon').className = `fas ${icons[type] || icons.info}`;
+    el.style.opacity = '1'; el.style.pointerEvents = 'all';
+    setTimeout(() => { el.style.opacity = '0'; el.style.pointerEvents = 'none'; }, 3500);
+}
+
+    // ========== INICIALIZAÇÃO ==========
+    
+    window.addEventListener('resize', () => {
+        if (document.getElementById('drawing-view').style.display === 'flex') {
+            resizeCanvas();
+        }
+    });
+    
+    renderRecentColors();
+    carregarGaleria();
+</script>
+</body>
+</html>

@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Santuário Inicial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --azul-bright: #32B5F1;
+        --azul-escuro: #0277bd;
+        --neon-border: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+        --glass: rgba(255, 255, 255, 0.2);
+    }
+
+    body, html {
+        margin: 0; padding: 0;
+        height: 100%; overflow: hidden;
+        font-family: 'Montserrat', sans-serif;
+        background: #000;
+    }
+
+    /* --- CAMADAS DE FUNDO --- */
+    .background-layer {
+        position: fixed; width: 115%; height: 115%;
+        background-image: url('fundos/fundo-a.png');
+        background-size: cover; background-position: center;
+        z-index: 1; left: -7.5%; top: -7.5%;
+        transition: transform 0.2s ease-out, background-image 0.5s ease-in-out;
+    }
+
+    .smoke-overlay {
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 60%;
+        background: linear-gradient(to top, rgba(255,255,255,0.4), transparent);
+        z-index: 2; pointer-events: none; filter: blur(40px);
+        animation: smokeMove 8s infinite alternate;
+    }
+
+    @keyframes smokeMove { from { transform: translateY(20px); } to { transform: translateY(-20px); } }
+
+    /* --- HEADER --- */
+    header {
+        position: absolute; top: 0; left: 0; width: 100%;
+        padding: 20px 40px; display: flex;
+        justify-content: space-between; align-items: flex-start;
+        z-index: 500; box-sizing: border-box;
+    }
+
+    .sidebar-logo { display: flex; align-items: center; gap: 12px; }
+    .sidebar-logo-text { font-size: 24px; font-weight: 800; color: white; text-shadow: 0 0 10px rgba(50, 181, 241, 0.8); }
+
+    .emergency-btn {
+        background: #ff4d4d; color: white; border: 2px solid white;
+        padding: 10px 20px; border-radius: 50px; font-weight: 700;
+        cursor: pointer; box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+        transition: 0.3s; text-transform: uppercase; font-size: 0.7rem;
+    }
+
+    .header-stats { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .pill-stats {
+        background: white; padding: 8px 25px; border-radius: 50px;
+        display: flex; gap: 20px; font-weight: 800; color: var(--azul-bright);
+        border: 2px solid white; box-shadow: var(--neon-border);
+    }
+    
+    .coin-wrapper { position: relative; display: flex; align-items: center; gap: 8px; cursor: help; }
+    .coin-name-popup {
+        position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+        background: var(--azul-escuro); color: white; padding: 2px 8px;
+        border-radius: 5px; font-size: 0.6rem; opacity: 0; transition: 0.3s; pointer-events: none;
+    }
+    .coin-wrapper:hover .coin-name-popup { opacity: 1; bottom: -30px; }
+
+    .xp-container {
+        width: 140px; height: 8px; background: rgba(255,255,255,0.3);
+        border-radius: 10px; border: 1.5px solid white; overflow: hidden;
+    }
+    .xp-bar { width: 60%; height: 100%; background: var(--azul-bright); box-shadow: 0 0 10px white; transition: width 0.5s ease; }
+
+    /* --- EFEITO DE BRILHO PARA LEVEL UP --- */
+    @keyframes rewardGlow {
+        0% { box-shadow: 0 0 5px var(--azul-bright); border-color: white; }
+        50% { box-shadow: 0 0 20px var(--azul-bright), 0 0 30px white; border-color: #FFD700; transform: scale(1.05); }
+        100% { box-shadow: 0 0 5px var(--azul-bright); border-color: white; }
+    }
+    .level-reward-glow {
+        animation: rewardGlow 1.5s infinite !important;
+        background: white !important;
+        color: var(--azul-escuro) !important;
+        z-index: 1000;
+    }
+
+    /* --- NOVO EFEITO GLITTER EXPLOSION ATRÁS DO PANDA --- */
+    @keyframes glitterBurst {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+        30% { opacity: 1; }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
+    }
+    
+    .glitter-effect::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 380px; height: 380px; /* Reduzido para ocupar menos espaço */
+        border-radius: 50%;
+        z-index: 1; /* Atrás do Panda (que é z-index 5) */
+        pointer-events: none;
+        
+        /* Simulando partículas de glitter azul espalhadas */
+        background: 
+            radial-gradient(circle at 20% 20%, #32B5F1 4px, transparent 5px),
+            radial-gradient(circle at 80% 15%, #ffffff 3px, transparent 4px),
+            radial-gradient(circle at 10% 70%, #0277bd 5px, transparent 6px),
+            radial-gradient(circle at 90% 80%, #32B5F1 4px, transparent 5px),
+            radial-gradient(circle at 50% 50%, #81d4fa 6px, transparent 7px),
+            radial-gradient(circle at 35% 65%, #ffffff 3px, transparent 4px),
+            radial-gradient(circle at 70% 30%, #32B5F1 5px, transparent 6px),
+            radial-gradient(circle at 50% 10%, #0277bd 4px, transparent 5px),
+            radial-gradient(circle at 15% 45%, #ffffff 4px, transparent 5px),
+            radial-gradient(circle at 85% 50%, #81d4fa 5px, transparent 6px);
+            
+        animation: glitterBurst 0.7s ease-out forwards;
+    }
+
+    /* --- ACESSO RÁPIDO LATERAL --- */
+    .quick-access {
+        position: absolute; left: 20px; top: 65%;
+        transform: translateY(-50%);
+        display: flex; flex-direction: column; gap: 15px;
+        z-index: 600;
+    }
+
+    .side-btn {
+        background: white; color: var(--azul-bright); border: 2px solid white;
+        width: 50px; height: 50px; border-radius: 15px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; box-shadow: var(--neon-border); transition: 0.3s;
+    }
+    .side-btn:hover { transform: scale(1.1); }
+    .side-btn.active { background: var(--azul-bright); color: white; }
+
+    /* --- SIDEBARS --- */
+    .sidebar {
+        position: absolute; top: 0;
+        width: 320px; height: 100vh;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px); z-index: 450;
+        padding: 100px 20px 20px;
+        transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 5px 0 25px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--azul-bright); border-radius: 10px; }
+
+    .sidebar-left { left: -350px; border-right: 3px solid var(--azul-bright); }
+    .sidebar-left.active { left: 0; }
+    .sidebar-right { right: -350px; border-left: 3px solid var(--azul-bright); }
+    .sidebar-right.active { right: 0; }
+
+    /* --- GRID DE UNIVERSOS --- */
+    #universe-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .universe-card {
+        width: 100%; height: 100px; border-radius: 15px;
+        position: relative; overflow: hidden;
+        cursor: pointer; border: 2px solid transparent; transition: 0.3s;
+    }
+    .universe-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+    .universe-card:not(.locked):hover { border-color: var(--azul-bright); transform: translateY(-3px); }
+    .universe-card img { width: 100%; height: 100%; object-fit: cover; }
+    .universe-label {
+        position: absolute; bottom: 0; width: 100%;
+        background: rgba(0,0,0,0.6);
+        color: white; padding: 5px; font-weight: 800; font-size: 0.65rem;
+        text-align: center; box-sizing: border-box;
+    }
+    .lock-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.5rem; text-shadow: 0 0 10px black; }
+
+    .back-btn {
+        display: none; align-items: center; gap: 8px; color: var(--azul-bright);
+        font-weight: 800; cursor: pointer; margin-bottom: 20px; font-size: 0.8rem;
+    }
+
+    .menu-item {
+        background: white; color: var(--azul-bright); border-radius: 15px;
+        margin-bottom: 12px; padding: 15px; display: flex; align-items: center;
+        gap: 12px; font-weight: 800; font-size: 0.8rem; text-decoration: none;
+        border: 2px solid #eee; transition: 0.3s; cursor: pointer;
+    }
+    .menu-item:hover { border-color: var(--azul-bright); transform: translateX(5px); }
+
+    /* --- PANDA CENTRAL --- */
+    .game-world {
+        position: relative; width: 100vw; height: 100vh;
+        display: flex; justify-content: center; align-items: center; z-index: 10;
+    }
+    .panda-glow {
+        position: absolute; width: 450px; height: 450px;
+        background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(50, 181, 241, 0.2) 50%, transparent 70%);
+        border-radius: 50%; z-index: -1; animation: pulseGlow 4s infinite;
+    }
+    #panda-container { 
+        position: relative; width: 300px; transition: transform 0.1s ease-out; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center;
+    }
+    
+    #panda-image { width: 100%; z-index: 5; animation: pandaBreath 4s ease-in-out infinite alternate; }
+
+    @keyframes pandaBreath { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+    @keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.2); opacity: 0.9; } }
+
+    .sparkle-particle {
+        position: fixed; width: 8px; height: 8px; background: #FFD700;
+        border-radius: 50%; pointer-events: none; z-index: 5000;
+        box-shadow: 0 0 10px #FFF, 0 0 20px #FFD700;
+    }
+
+    /* --- NAVBAR INFERIOR --- */
+    .nav-pill {
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: white; padding: 12px 40px; border-radius: 100px;
+        display: flex; gap: 30px; align-items: center;
+        border: 2px solid white; box-shadow: var(--neon-border); z-index: 2000;
+    }
+    .nav-item { 
+        text-decoration: none; color: var(--azul-bright); 
+        font-weight: 800; font-size: 0.7rem; text-transform: uppercase; 
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+
+    /* --- BOTÃO DE PERFIL (INFERIOR DIREITO) --- */
+    .user-profile-container {
+        position: fixed; bottom: 30px; right: 40px;
+        z-index: 2500;
+    }
+    .user-profile-btn {
+        background: white; color: var(--azul-bright); border: 2px solid white;
+        width: 60px; height: 60px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; box-shadow: var(--neon-border); transition: 0.3s;
+        font-size: 1.8rem;
+    }
+    .user-profile-btn:hover { transform: scale(1.1); }
+    
+    .profile-dropdown {
+        position: absolute; bottom: 80px; right: 0;
+        background: white; border-radius: 20px; width: 200px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        display: none; flex-direction: column; overflow: hidden;
+        border: 2px solid var(--azul-bright);
+    }
+    .profile-dropdown.active { display: flex; }
+    .profile-dropdown-item {
+        padding: 15px 20px; text-decoration: none; color: var(--azul-escuro);
+        font-weight: 800; font-size: 0.8rem; display: flex; align-items: center;
+        gap: 12px; transition: 0.3s; border: none; background: transparent;
+        width: 100%; text-align: left; cursor: pointer;
+    }
+    .profile-dropdown-item:hover { background: #f0faff; color: var(--azul-bright); }
+    .profile-dropdown-item:not(:last-child) { border-bottom: 1px solid #eee; }
+
+    /* --- MODAIS --- */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+        z-index: 3000; transition: 0.5s;
+    }
+    .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+    .modal-content {
+        background: rgba(255, 255, 255, 0.95); border-radius: 30px;
+        padding: 30px; max-width: 400px; width: 90%;
+        border: 3px solid var(--azul-bright); box-shadow: var(--neon-border);
+        position: relative;
+    }
+    
+    .emoji-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+    .emoji-option {
+        background: #f0faff; border-radius: 15px; padding: 15px; text-align: center;
+        cursor: pointer; border: 2px solid transparent; transition: 0.3s;
+    }
+    .emoji-option.selected { border-color: var(--azul-bright); background: white; }
+    .emoji { font-size: 2rem; display: block; }
+    .emoji-label { font-size: 0.7rem; font-weight: 700; color: var(--azul-escuro); }
+
+    .btn-modal { width: 100%; padding: 15px; border-radius: 50px; border: none; background: var(--azul-bright); color: white; font-weight: 800; cursor: pointer; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: var(--azul-bright); cursor: pointer; }
+    
+    #calendarModal .modal-content { max-width: 360px; padding: 20px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 10px 0; }
+    .calendar-day {
+        aspect-ratio: 1; border-radius: 8px; background: #f8fdff;
+        border: 1px solid #eef2f5; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; position: relative; overflow: hidden;
+    }
+    .calendar-day.empty { background: transparent; border: none; }
+    .calendar-day.has-emotion { background: white; border-color: var(--azul-bright); box-shadow: 0 2px 5px rgba(50, 181, 241, 0.1); }
+    .calendar-day .day-number { position: absolute; top: 3px; left: 4px; font-size: 0.5rem; font-weight: 700; color: #bbb; }
+    .calendar-day .day-emoji { font-size: 0.9rem; margin-top: 4px; }
+    .calendar-day.today { border: 2px solid var(--azul-bright); background: #f0faff; }
+    .calendar-day.today .day-number { color: var(--azul-bright); }
+    .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 5px; font-size: 0.55rem; font-weight: 800; color: var(--azul-bright); text-align: center; }
+    .motivation-phrase { background: #f0faff; color: var(--azul-escuro); padding: 10px 15px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-align: center; margin: 10px 0; line-height: 1.3; border-left: 4px solid var(--azul-bright); }
+
+    #particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+    .ether-bubble { position: absolute; bottom: -50px; background: radial-gradient(circle, #fff 0%, rgba(50, 181, 241, 0.4) 70%, transparent 100%); border-radius: 50%; animation: riseBubble linear forwards; }
+    @keyframes riseBubble { from { transform: translateY(0); opacity: 0; } 20% { opacity: 0.6; } 100% { transform: translateY(-100vh); opacity: 0; } }
+
+
+/* Botão de ajuda responsivo */
+.emergency-btn {
+    background: #ff4d4d;
+    color: white;
+    border: 2px solid white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Ícone dentro do botão */
+.emergency-btn i {
+    font-size: 1rem;
+}
+
+/* Esconder texto e mostrar só ícone em telas menores */
+@media (max-width: 768px) {
+    .emergency-btn span {
+        display: none;
+    }
+    .emergency-btn {
+        padding: 12px;
+        border-radius: 50px;
+        width: auto;
+    }
+    .emergency-btn i {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+}
+
+/* Para telas muito pequenas (celular) */
+@media (max-width: 480px) {
+    .emergency-btn {
+        padding: 10px;
+    }
+    .emergency-btn i {
+        font-size: 1.1rem;
+    }
+}
+
+.confetti {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+@keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+/* --- RESPONSIVIDADE: Mover botão de perfil para lateral em telas pequenas --- */
+@media (max-width: 768px) {
+    /* Esconde o botão de perfil da posição original */
+    .user-profile-container {
+        position: static;
+        margin-top: 15px;
+    }
+    
+    /* Move o container do perfil para a sidebar direita */
+    .sidebar-right {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
+    /* Adiciona o botão de perfil dentro da sidebar direita */
+    .sidebar-right .user-profile-container {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin: 0 0 20px 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .sidebar-right .user-profile-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    /* Ajusta o dropdown para abrir para cima dentro da sidebar */
+    .sidebar-right .profile-dropdown {
+        bottom: 70px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 480px) {
+    .sidebar-right .user-profile-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+}
+
+/* --- BOTÃO DE PERFIL NA LATERAL (quick-access) --- */
+/* --- BOTÃO DE PERFIL NA LATERAL (quick-access) --- */
+.user-profile-container-side {
+    position: relative;
+    margin-top: 15px;
+}
+
+.profile-dropdown-side {
+    position: absolute;
+    top: 0;
+    left: 60px;
+    background: white;
+    border-radius: 16px;
+    width: 180px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px solid var(--azul-bright);
+    z-index: 1000;
+}
+
+.profile-dropdown-side.active {
+    display: flex;
+}
+
+/* Remove o botão antigo que estava na sidebar */
+.sidebar-right .user-profile-container {
+    display: none;
+}
+
+/* Em telas menores, ajusta o dropdown para baixo */
+@media (max-width: 768px) {
+    .profile-dropdown-side {
+        top: 60px;
+        left: -10px;
+        width: 160px;
+    }
+    .profile-dropdown-side .profile-dropdown-item {
+        padding: 12px 15px;
+        font-size: 0.7rem;
+    }
+}
+
+/* Para telas muito pequenas */
+@media (max-width: 480px) {
+    .profile-dropdown-side {
+        left: -20px;
+        width: 150px;
+    }
+}
+
+/* --- MODAL DE NOTIFICAÇÃO (substitui alert) --- */
+#notifModal {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 9999; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0; pointer-events: none;
+}
+#notifModal.visible { opacity: 1; pointer-events: all; }
+.notif-box {
+    background: white; border-radius: 20px; padding: 20px 30px;
+    display: flex; align-items: center; gap: 15px; min-width: 300px;
+    border: 2px solid var(--azul-bright); box-shadow: var(--neon-border);
+}
+.notif-icon { font-size: 1.5rem; color: var(--azul-bright); flex-shrink: 0; }
+.notif-icon.success { color: #4CAF50; }
+.notif-icon.warning { color: #FF9800; }
+.notif-text { flex: 1; }
+.notif-title { font-weight: 800; color: var(--azul-escuro); font-size: 0.85rem; }
+.notif-msg { font-size: 0.75rem; color: #667; margin-top: 3px; }
+
+/* --- ONBOARDING TOUR --- */
+#onboardingModal {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+}
+#onboardingModal.active { display: flex; }
+
+.onboard-box {
+    background: white; border-radius: 30px; padding: 35px 30px;
+    max-width: 360px; width: 90%; text-align: center;
+    border: 3px solid var(--azul-bright); box-shadow: var(--neon-border);
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.onboard-icon {
+    font-size: 3rem; margin-bottom: 15px; display: block;
+    animation: bounce 1s ease infinite alternate;
+}
+@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
+.onboard-title {
+    font-size: 1.2rem; font-weight: 800; color: var(--azul-escuro);
+    margin-bottom: 10px;
+}
+.onboard-text {
+    font-size: 0.85rem; color: #555; font-weight: 600;
+    line-height: 1.6; margin-bottom: 25px;
+}
+.onboard-dots {
+    display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;
+}
+.onboard-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ddd; transition: background 0.3s;
+}
+.onboard-dot.active { background: var(--azul-bright); }
+
+.onboard-btn {
+    width: 100%; padding: 14px; border-radius: 50px; border: none;
+    background: var(--azul-bright); color: white;
+    font-weight: 800; font-size: 0.9rem; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; transition: 0.3s;
+}
+.onboard-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+.onboard-highlight {
+    background: #f0faff; border-left: 4px solid var(--azul-bright);
+    border-radius: 12px; padding: 12px 15px;
+    font-size: 0.8rem; color: var(--azul-escuro);
+    font-weight: 700; margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="background-layer" id="bg"></div>
+<div class="smoke-overlay"></div>
+<div id="particles-container"></div>
+
+<header>
+    <div class="sidebar-logo"><span class="sidebar-logo-text">Mindfine</span></div>
+    <div class="header-stats">
+        <div class="pill-stats">
+            <span id="level-display">NV. 5</span>
+            <div class="coin-wrapper" id="coin-target">
+                <img src="itens/mindcoin.png" style="width: 20px;" alt="coin"> 
+                <span id="coin-count">2.500</span>
+                <div class="coin-name-popup">mindcoin</div>
+            </div>
+        </div>
+        <div class="xp-container"><div class="xp-bar" id="xp-bar-fill"></div></div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+<button class="emergency-btn" onclick="openHelpModal()">
+    <i class="fas fa-life-ring"></i>
+    <span>Preciso de Ajuda</span>
+</button>
+    </div>
+</header>
+
+<div class="quick-access">
+    <button class="side-btn" id="btn-explore" onclick="toggleSidebar('left')"><i class="fas fa-compass"></i></button>
+    <button class="side-btn" id="btn-skins" onclick="toggleSidebar('right')"><i class="fas fa-tshirt"></i></button>
+    
+    <!-- BOTÃO DE PERFIL (agora na lateral esquerda) -->
+    <div class="user-profile-container-side">
+        <div class="profile-dropdown-side" id="profileDropdownSide">
+            <a href="calendario-emocoes.html" class="profile-dropdown-item">
+                <i class="fas fa-calendar-alt"></i> Meu Calendário
+            </a>
+            <button onclick="logout()" class="profile-dropdown-item">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+        <button class="side-btn" onclick="toggleProfileDropdownSide()">
+            <i class="fas fa-user-circle"></i>
+        </button>
+    </div>
+</div>
+
+
+<div class="game-world">
+    <div class="sidebar sidebar-left" id="sidebar-left">
+        <h3 style="color:var(--azul-escuro); font-size: 0.9rem; text-align: center; margin-bottom: 25px; text-transform: uppercase;">Explorar</h3>
+        <a href="ilhas.html" class="menu-item" id="menu-ilhas"><i class="fas fa-map-marked-alt"></i><span>Ir para Ilhas</span></a>
+        <a href="album.html" class="menu-item"><i class="fas fa-images"></i><span>Ir para Álbuns</span></a>
+        <a href="sala-de-jogos.html" class="menu-item"><i class="fas fa-play"></i><span>Sala de Jogos</span></a>
+    </div>
+
+    <div class="sidebar sidebar-right" id="sidebar-right">
+        <h3 id="skin-title" style="color:var(--azul-escuro); font-size: 0.9rem; text-align: center; margin-bottom: 25px; text-transform: uppercase;">Universos</h3>
+        <div id="back-universes" class="back-btn" onclick="showUniverses()">
+            <i class="fas fa-chevron-left"></i> Voltar aos Universos
+        </div>
+        <div id="universe-list"></div>
+        <div id="skins-of-universe" style="display: none;"></div>
+    </div>
+
+    <div id="panda-container">
+        <div class="panda-glow"></div>
+        <img src="pandas/skin.png" id="panda-image">
+    </div>
+
+    <nav class="nav-pill">
+        <a href="inicial.html" class="nav-item"><i class="fas fa-home"></i><span>Início</span></a>
+        <a href="diario.html" class="nav-item"><i class="fas fa-book"></i><span>Diário</span></a>
+        <a href="chat-com-psicologa.html" class="nav-item"><i class="fas fa-comments"></i><span>Apoio</span></a>
+        <a href="pagina-de-respiracao.html" class="nav-item"><i class="fas fa-wind"></i><span>Respiração</span></a>
+        <a href="playlist.html" class="nav-item"><i class="fas fa-music"></i><span>Playlist</span></a>
+    </nav>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-overlay hidden" id="checkinModal">
+    <div class="modal-content">
+        <h2 style="text-align:center; color: var(--azul-escuro); margin-bottom:5px;">Olá, Maria!</h2>
+        <p style="text-align:center; font-size: 0.9rem; color: #667; margin-top:0;">Como você está se sentindo agora?</p>
+        <div class="emoji-container">
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😊</span><span class="emoji-label">Alegria</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😢</span><span class="emoji-label">Tristeza</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😌</span><span class="emoji-label">Relaxado</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😰</span><span class="emoji-label">Ansioso</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😠</span><span class="emoji-label">Raiva</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😁</span><span class="emoji-label">Animado</span></div>
+        </div>
+        <button class="btn-modal" id="btnConfirmarHumor" disabled onclick="confirmFeeling()">Continuar</button>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="calendarModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="showRewardModal()">&times;</span>
+        <h3 style="color: var(--azul-escuro); text-align: center; margin-bottom: 5px; font-size: 1rem;">Seu Progresso</h3>
+        <div id="motivationPhrase" class="motivation-phrase"></div>
+<p style="text-align: center; font-size: 0.65rem; color: #667; margin-bottom: 10px;" id="mesAnoCalendario">Carregando...</p>
+        <div class="calendar-header"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <button class="btn-modal" onclick="showRewardModal()" style="margin-top: 15px; padding: 10px;">Continuar</button>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="rewardModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="collectReward()">&times;</span>
+        <i class="fas fa-coins reward-icon"></i>
+        <h2 style="color: var(--azul-escuro); margin-bottom: 10px;">Parabéns!</h2>
+        <p style="font-size: 0.9rem; color: #444;">Por cuidar da sua mente hoje, você ganhou:</p>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #FFD700; margin: 15px 0;">
+            <span id="reward-amount">0</span> Mindcoins
+        </div>
+        <button class="btn-modal" onclick="collectReward()">Receber!</button>
+    </div>
+</div>
+
+<!-- MODAL DE EMERGÊNCIA ATUALIZADO -->
+<div class="modal-overlay hidden" id="helpModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeHelpModal()">&times;</span>
+        <h2 style="text-align:center; color: #ff4d4d; margin-bottom:15px;">
+            <i class="fas fa-life-ring"></i> Apoio Emocional
+        </h2>
+        
+        <!-- Bloco CVV -->
+        <div style="background: #fff0f0; padding: 15px; border-radius: 15px; border: 1px solid #ffcccc; margin-bottom: 20px; text-align: center;">
+            <h3 style="color: #d32f2f; font-size: 0.95rem; margin-top: 0; margin-bottom: 5px;">Centro de Valorização da Vida (CVV)</h3>
+            <p style="font-size: 0.8rem; color: #555; margin-bottom: 15px;">
+                Se você precisa conversar, o CVV oferece atendimento gratuito, sigiloso e 24h.
+            </p>
+            <a href="tel:188" class="btn-modal" style="background: #d32f2f; color: white; margin-bottom: 8px; font-size: 0.9rem;">
+                <i class="fas fa-phone-alt"></i> Ligar 188
+            </a>
+            <a href="https://www.cvv.org.br/" target="_blank" style="font-size: 0.75rem; color: #d32f2f; font-weight:bold; text-decoration: underline;">
+                Acessar chat online do CVV
+            </a>
+        </div>
+
+        <!-- Bloco Apoio Escolar -->
+        <p style="text-align:center; font-size: 0.85rem; color: #666; margin: 10px 0; font-weight: 600;">Prefere falar com a escola?</p>
+        
+        <div style="text-align: center; margin-bottom: 15px;">
+            <p style="font-size: 0.75rem; color: #ff9800; font-weight: 700; background: #fff8e1; padding: 10px; border-radius: 8px; line-height: 1.3;">
+                <i class="fas fa-exclamation-triangle"></i> Atenção: Devido ao alto volume de solicitações, o atendimento escolar pode não ser imediato.
+            </p>
+        </div>
+
+        <a href="chat-com-psicologa.html" class="btn-modal" style="background: var(--azul-bright);">
+            <i class="fas fa-comments"></i> Ir para Chat Escolar
+        </a>
+    </div>
+</div>
+<div id="notifModal">
+    <div class="notif-box">
+        <i class="notif-icon fas fa-info-circle" id="notifIcon"></i>
+        <div class="notif-text">
+            <div class="notif-title" id="notifTitle"></div>
+            <div class="notif-msg" id="notifMsg"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="confirmModal">
+    <div class="modal-content" style="text-align: center; max-width: 340px;">
+        <i class="fas fa-sign-out-alt" style="font-size: 2rem; color: var(--azul-bright); margin-bottom: 15px; display: block;"></i>
+        <h3 style="color: var(--azul-escuro); margin-bottom: 8px;">Sair da conta</h3>
+        <p style="font-size: 0.85rem; color: #667; margin-bottom: 25px;">Deseja realmente sair da sua conta?</p>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('confirmModal').classList.add('hidden')" 
+                style="flex:1; padding: 12px; border-radius: 50px; border: 2px solid var(--azul-bright); background: white; color: var(--azul-bright); font-weight: 800; cursor: pointer;">
+                Cancelar
+            </button>
+            <button onclick="window.location.href='login.html'"
+                style="flex:1; padding: 12px; border-radius: 50px; border: none; background: var(--azul-bright); color: white; font-weight: 800; cursor: pointer;">
+                Sair
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ONBOARDING TOUR -->
+<div id="onboardingModal">
+    <div class="onboard-box" id="onboardBox">
+        <!-- conteúdo gerado via JS -->
+    </div>
+</div>
+
+<script src="mindfine-sync.js"></script>
+<script>
+    // Aguardar o mindfineAPI carregar completamente
+    function aguardarAPI(callback) {
+        if (window.mindfineAPI && typeof window.mindfineAPI.jaRegistrouEmocaoHoje === 'function') {
+            callback();
+        } else {
+            setTimeout(() => aguardarAPI(callback), 100);
+        }
+    }
+
+    const bg = document.getElementById('bg');
+    const pandaCont = document.getElementById('panda-container');
+    let currentCoins = 0;
+    let wonAmount = 0;
+    let currentXP = 0;
+    let currentLevel = 1;
+    let matriculaAtual = '';
+
+    const universes = [
+    { name: "Santuário", img: "fundos/fundo-a.png", skins: ["pandas/skin.png"], unlocked: true, ilhaCorrespondente: "Porto Inicial" },
+    { name: "Ilha do Pirata", img: "fundos/fundo-piratas.jpeg", skins: ["pandas/pirata1.png", "pandas/pirata2.png"], unlocked: false, ilhaCorrespondente: "Baía Pirata" },
+    { name: "Ilha do Bruxo", img: "fundos/fundo-bruxo.jpeg", skins: ["pandas/bruxo1.png", "pandas/bruxo2.png"], unlocked: false, ilhaCorrespondente: "Recife Bruxo" },
+    { name: "Ilha do Brasil", img: "fundos/fundo-Brasil.jpeg", skins: ["pandas/vale-skin1.png", "pandas/vale-skin2.png"], unlocked: false, ilhaCorrespondente: "Encosta Brasileira" },
+    { name: "Ilha da China", img: "fundos/fundo-china.jpeg", skins: ["pandas/bosque-skin1.png", "pandas/bosque-skin2.png"], unlocked: false, ilhaCorrespondente: "Encosta Chinesa" },
+    { name: "Ilha dos Piratas", img: "fundos/fundo-piratas.jpeg", skins: ["pandas/nuvem-skin1.png", "pandas/nuvem-skin2.png"], unlocked: false, ilhaCorrespondente: "Baía das Bailarinas" }
+];
+
+let emotionHistory = {};   
+    
+    const motivationalPhrases = {
+        "😊": "Sua alegria é contagiante! Que esse brilho guie o seu dia hoje.",
+        "😢": "Tudo bem não estar bem. Respire fundo, acolha seu coração e saiba que isso vai passar.",
+        "😌": "Aproveite essa paz interior. O equilíbrio é a sua maior força.",
+        "😰": "Um passo de cada vez. Você é muito mais forte do que a sua ansiedade pensa.",
+        "😠": "Respire. Transforme essa energia em calma e clareza para agir com sabedoria.",
+        "😁": "Que energia incrível! Use esse entusiasmo para realizar algo maravilhoso hoje."
+    };
+
+    // ========== FUNÇÕES DE SALVAR/CARREGAR ==========
+    
+
+async function carregarDados() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    matriculaAtual = usuario.matricula || '123456';
+    
+    try {
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const dados = await response.json();
+        
+        currentCoins = dados.moedas || 0;
+        currentXP = dados.xp || 0;
+        currentLevel = dados.nivel || 1;
+        
+        document.getElementById('coin-count').innerText = currentCoins.toLocaleString('pt-BR');
+        document.getElementById('level-display').innerText = `NV. ${currentLevel}`;
+        document.getElementById('xp-bar-fill').style.width = currentXP + '%';
+        
+        // CARREGAR SKIN DO BACKEND (SEM LOCALSTORAGE)
+        if (dados.skin_atual) {
+            document.getElementById('panda-image').src = dados.skin_atual;
+        } else {
+            document.getElementById('panda-image').src = 'pandas/skin.png';
+        }
+        
+        // CARREGAR O FUNDO SALVO
+        if (dados.fundo_atual) {
+            document.getElementById('bg').style.backgroundImage = `url('${dados.fundo_atual}')`;
+        }
+        
+   universes.forEach(universo => {
+    if (universo.name === "Santuário") {
+        universo.unlocked = true;
+    } else {
+        universo.unlocked = false;
+    }
+});
+initUniverses();
+
+// Salvar no backend apenas o Santuário
+await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ universos_desbloqueados: ["Santuário"] })
+});
+
+        
+        // CARREGAR HISTÓRICO DE EMOÇÕES
+        await carregarHistoricoEmocoes();
+        
+        console.log('✅ Dados carregados para usuário:', matriculaAtual);
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
+    }
+}
+    
+    async function salvarProgresso() {
+        if (!matriculaAtual) {
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            matriculaAtual = usuario.matricula || '123456';
+        }
+        
+        try {
+            await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    moedas: currentCoins,
+                    xp: currentXP,
+                    nivel: currentLevel
+                })
+            });
+            console.log('✅ Progresso salvo:', { moedas: currentCoins, xp: currentXP, nivel: currentLevel });
+        } catch (error) {
+            console.error('❌ Erro ao salvar:', error);
+        }
+    }
+
+    // ========== FUNÇÕES EXISTENTES ==========
+    
+    function getDailyReward() {
+        const day = new Date().getDay();
+        const rewards = [20, 25, 30, 35, 40, 45, 50];
+        return rewards[day];
+    }
+
+    function initUniverses() {
+        const list = document.getElementById('universe-list');
+        list.innerHTML = '';
+        universes.forEach(uni => {
+            const card = document.createElement('div');
+            card.className = 'universe-card' + (uni.unlocked ? '' : ' locked');
+            if (uni.unlocked) { card.onclick = () => openUniverse(uni); }
+            card.innerHTML = `
+                <img src="${uni.img}">
+                <div class="universe-label">${uni.name}</div>
+                ${!uni.unlocked ? '<i class="fas fa-lock lock-icon"></i>' : ''}
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function openUniverse(universe) {
+    bg.style.backgroundImage = `url('${universe.img}')`;
+    document.getElementById('universe-list').style.display = 'none';
+    document.getElementById('back-universes').style.display = 'flex';
+    document.getElementById('skins-of-universe').style.display = 'block';
+    document.getElementById('skin-title').innerText = universe.name;
+    
+    // SALVAR O FUNDO NO BACKEND
+    salvarFundo(universe.img);
+    
+    const container = document.getElementById('skins-of-universe');
+    container.innerHTML = '';
+    universe.skins.forEach((skinImg, index) => {
+        const skinItem = document.createElement('div');
+        skinItem.className = 'menu-item';
+        skinItem.onclick = () => changeSkin(skinImg);
+        skinItem.innerHTML = `<img src="${skinImg}" style="width: 40px; height: 40px; object-fit: contain;"><span>Skin ${index + 1}</span>`;
+        container.appendChild(skinItem);
+    });
+}
+
+// Forçar que apenas o Santuário fique desbloqueado no início
+async function resetarUniversosIniciais() {
+    try {
+        // SEMPRE FORÇAR APENAS SANTUÁRIO DESBLOQUEADO
+        const universosIniciais = ["Santuário"];
+        
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ universos_desbloqueados: universosIniciais })
+        });
+        
+        // Atualizar localmente
+        universes.forEach(universo => {
+            if (universo.name === "Santuário") {
+                universo.unlocked = true;
+            } else {
+                universo.unlocked = false;
+            }
+        });
+        
+        initUniverses();
+        console.log('✅ Universos resetados para apenas Santuário');
+        
+    } catch (error) {
+        console.error('Erro ao resetar universos:', error);
+    }
+}
+
+async function salvarFundo(fundoImg) {
+    try {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fundo_atual: fundoImg })
+        });
+    } catch(e) { console.error(e); }
+}
+
+  async function changeSkin(skinImg) {
+    document.getElementById('panda-image').src = skinImg;
+    
+    // SALVAR APENAS NO BACKEND, NÃO NO LOCALSTORAGE
+    try {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skin_atual: skinImg })
+        });
+        console.log('✅ Skin salva no backend para o usuário:', matriculaAtual);
+    } catch(e) { console.error(e); }
+    
+    // Efeito visual
+    const pandaContainer = document.getElementById('panda-container');
+    pandaContainer.classList.remove('glitter-effect');
+    void pandaContainer.offsetWidth;
+    pandaContainer.classList.add('glitter-effect');
+    setTimeout(() => { pandaContainer.classList.remove('glitter-effect'); }, 1000);
+    
+    toggleSidebar('right');
+}
+
+    function showUniverses() {
+        document.getElementById('universe-list').style.display = 'grid';
+        document.getElementById('back-universes').style.display = 'none';
+        document.getElementById('skins-of-universe').style.display = 'none';
+        document.getElementById('skin-title').innerText = 'Universos';
+        document.getElementById('btn-skins').classList.remove('level-reward-glow');
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 30;
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+        pandaCont.style.transform = `translate(${x}px, ${y}px)`;
+        bg.style.transform = `translate(${-x/2}px, ${-y/2}px)`;
+    });
+
+    function toggleSidebar(side) {
+        const left = document.getElementById('sidebar-left'), right = document.getElementById('sidebar-right');
+        if (side === 'left') {
+            left.classList.toggle('active'); right.classList.remove('active');
+            if(left.classList.contains('active')) document.getElementById('btn-explore').classList.remove('level-reward-glow');
+        } else {
+            right.classList.toggle('active'); left.classList.remove('active');
+            if(!right.classList.contains('active')) showUniverses();
+            else document.getElementById('btn-skins').classList.remove('level-reward-glow');
+        }
+    }
+
+    function selectFeeling(el) {
+        document.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('btnConfirmarHumor').disabled = false;
+    }
+
+    async function confirmFeeling() {
+    const selectedEmoji = document.querySelector('.emoji-option.selected .emoji').textContent;
+    const selectedLabel = document.querySelector('.emoji-option.selected .emoji-label').textContent;
+    
+    const sucesso = await window.mindfineAPI.registrarEmocaoDiaria(selectedLabel, selectedEmoji);
+    
+    if (!sucesso) {
+showNotif('Já registrado!', 'Você já registrou sua emoção hoje.', 'warning');
+        document.getElementById('checkinModal').classList.add('hidden');
+        return;
+    }
+    
+    // Recarregar o histórico para incluir a nova emoção
+    await carregarHistoricoEmocoes();
+    
+    document.getElementById('motivationPhrase').innerText = motivationalPhrases[selectedEmoji] || "Continue sua jornada!";
+    document.getElementById('checkinModal').classList.add('hidden');
+    setTimeout(() => {
+        document.getElementById('calendarModal').classList.remove('hidden');
+        startConfetti();
+    }, 400);
+}
+
+    function salvarEmocaoNoLocalStorage(emocaoLabel) {
+        try {
+            const usuarioInfo = obterDadosUsuario();
+            const hoje = new Date().toISOString().split('T')[0];
+            const chave = `mindfine-emocoes-${hoje}`;
+            const mapeamento = { 'Alegria': 'feliz', 'Tristeza': 'triste', 'Relaxado': 'calmo', 'Ansioso': 'ansioso', 'Raiva': 'triste', 'Animado': 'feliz' };
+            const emocao = mapeamento[emocaoLabel] || 'feliz';
+            let dadosExistentes = { emocoes: { feliz: 0, calmo: 0, triste: 0, ansioso: 0 }, total: 0, porTurma: {}, porCurso: {}, porAno: {} };
+            const dadosSalvos = localStorage.getItem(chave);
+            if (dadosSalvos) dadosExistentes = JSON.parse(dadosSalvos);
+            dadosExistentes.emocoes[emocao]++; dadosExistentes.total++;
+            if (!dadosExistentes.porTurma[usuarioInfo.turma]) dadosExistentes.porTurma[usuarioInfo.turma] = { feliz: 0, calmo: 0, triste: 0, ansioso: 0, total: 0 };
+            dadosExistentes.porTurma[usuarioInfo.turma][emocao]++; dadosExistentes.porTurma[usuarioInfo.turma].total++;
+            if (!dadosExistentes.porCurso[usuarioInfo.curso]) dadosExistentes.porCurso[usuarioInfo.curso] = { feliz: 0, calmo: 0, triste: 0, ansioso: 0, total: 0 };
+            dadosExistentes.porCurso[usuarioInfo.curso][emocao]++; dadosExistentes.porCurso[usuarioInfo.curso].total++;
+            if (!dadosExistentes.porAno[usuarioInfo.ano]) dadosExistentes.porAno[usuarioInfo.ano] = { feliz: 0, calmo: 0, triste: 0, ansioso: 0, total: 0 };
+            dadosExistentes.porAno[usuarioInfo.ano][emocao]++; dadosExistentes.porAno[usuarioInfo.ano].total++;
+            localStorage.setItem(chave, JSON.stringify(dadosExistentes));
+        } catch (error) { console.error('❌ Erro ao salvar emoção:', error); }
+    }
+
+    function showRewardModal() {
+        document.getElementById('calendarModal').classList.add('hidden');
+        wonAmount = getDailyReward();
+        document.getElementById('reward-amount').innerText = wonAmount;
+        document.getElementById('rewardModal').classList.remove('hidden');
+    }
+
+   async function collectReward() {
+    document.getElementById('rewardModal').classList.add('hidden');
+    const target = document.getElementById('coin-target').getBoundingClientRect();
+    const startX = window.innerWidth / 2;
+    const startY = window.innerHeight / 2;
+    
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'sparkle-particle';
+            particle.style.left = startX + 'px';
+            particle.style.top = startY + 'px';
+            document.body.appendChild(particle);
+            const anim = particle.animate([
+                { left: startX + 'px', top: startY + 'px', opacity: 1 },
+                { left: (target.left + 10) + 'px', top: (target.top + 10) + 'px', opacity: 0.5 }
+            ], { duration: 600 + (Math.random() * 400), easing: 'ease-in' });
+            anim.onfinish = async () => {
+                particle.remove();
+                if (i === 19) {
+                    currentCoins += wonAmount;
+                    await salvarProgresso();
+                    await addXP(25);
+                    // ATUALIZAR A INTERFACE DEPOIS DE GANHAR
+                    await atualizarInterface();
+
+                    const primeiraVez = !localStorage.getItem(`onboard_${matriculaAtual}`);
+if (primeiraVez) {
+    localStorage.setItem(`onboard_${matriculaAtual}`, 'true');
+    setTimeout(() => mostrarOnboarding(), 600);
+}
+                }
+            };
+        }, i * 30);
+    }
+}
+
+  async function addXP(amount) {
+    currentXP += amount;
+    let subiuNivel = false;
+    
+    if (currentXP >= 100) {
+        currentXP = 0;
+        currentLevel++;
+        subiuNivel = true;
+        await salvarProgresso();
+        
+        const firstLocked = universes.find(u => !u.unlocked);
+        if (firstLocked) {
+            firstLocked.unlocked = true;
+            initUniverses();
+            document.getElementById('btn-skins').classList.add('level-reward-glow');
+        }
+        document.getElementById('btn-explore').classList.add('level-reward-glow');
+        document.getElementById('menu-ilhas').classList.add('level-reward-glow');
+    }
+    
+    document.getElementById('xp-bar-fill').style.width = currentXP + '%';
+    document.getElementById('level-display').innerText = `NV. ${currentLevel}`;
+    await salvarProgresso();
+    
+    // ATUALIZAR MOEDAS TAMBÉM
+    await atualizarInterface();
+    
+    if (subiuNivel) {
+        // Mostrar notificação de level up
+showNotif('Level Up!', `Você subiu para o Nível ${currentLevel}!`, 'success');
+    }
+}
+
+function buildCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth();
+    const daysInMonth = new Date(ano, mes + 1, 0).getDate();
+    const firstDayOffset = new Date(ano, mes, 1).getDay();
+    const today = hoje.getDate();
+    
+    // ATUALIZAR O TÍTULO DO CALENDÁRIO
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const mesAnoElement = document.getElementById('mesAnoCalendario');
+    if (mesAnoElement) {
+        mesAnoElement.textContent = `${meses[mes]} ${ano}`;
+    }
+    
+    // ... resto do código (os dias) continua igual
+    for (let i = 0; i < firstDayOffset; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day empty';
+        grid.appendChild(empty);
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dataStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day' + (day === today ? ' today' : '');
+        
+        if (emotionHistory[dataStr]) {
+            dayDiv.classList.add('has-emotion');
+            dayDiv.innerHTML = `<div class="day-number">${day}</div><div class="day-emoji">${emotionHistory[dataStr]}</div>`;
+        } else {
+            dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+        }
+        grid.appendChild(dayDiv);
+    }
+}
+  
+    function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); }
+    function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); }
+
+    function startConfetti() {
+        const colors = ['#32B5F1', '#0277bd', '#E1F5FE'];
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.top = '-10px';
+            const duration = Math.random() * 2 + 2;
+            confetti.style.animation = `fall ${duration}s linear forwards`;
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), duration * 1000);
+        }
+    }
+
+    function createBubble() {
+        const container = document.getElementById('particles-container');
+        const b = document.createElement('div');
+        b.className = 'ether-bubble';
+        const size = Math.random() * 15 + 5;
+        b.style.width = size + 'px'; b.style.height = size + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 4 + 4) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 8000);
+    }
+
+    setInterval(createBubble, 1200);
+    initUniverses();
+
+    function obterDadosUsuario() {
+        try {
+            const usuario = JSON.parse(localStorage.getItem('usuario'));
+            if (!usuario) return { turma: '1-informatica', curso: 'informatica', ano: '1', matricula: 'demo' };
+            const matricula = usuario.matricula || 'demo';
+            return { turma: '1-informatica', curso: 'informatica', ano: '1', matricula: matricula };
+        } catch (error) { return { turma: '1-informatica', curso: 'informatica', ano: '1', matricula: 'demo' }; }
+    }
+
+    function logout() {
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+    function toggleProfileDropdownSide() {
+        document.getElementById('profileDropdownSide').classList.toggle('active');
+    }
+
+    window.addEventListener('click', function(e) {
+        const container = document.querySelector('.user-profile-container-side');
+        if (container && !container.contains(e.target)) {
+            document.getElementById('profileDropdownSide').classList.remove('active');
+        }
+    });
+
+async function carregarHistoricoEmocoes() {
+    try {
+        const response = await fetch(`http://localhost:5001/api/emocoes/${matriculaAtual}`);
+        const historico = await response.json();
+        
+        emotionHistory = {};
+        
+        for (const [data, info] of Object.entries(historico)) {
+            emotionHistory[data] = info.emoji || getEmojiPorEmocao(info.feeling);
+        }
+        
+        console.log('✅ Histórico carregado:', emotionHistory);
+        buildCalendar();
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar histórico:', error);
+        emotionHistory = {};
+        buildCalendar();
+    }
+}
+
+function getEmojiPorEmocao(emocao) {
+    const mapa = {
+        'Alegria': '😊',
+        'Tristeza': '😢',
+        'Relaxado': '😌',
+        'Ansioso': '😰',
+        'Raiva': '😠',
+        'Animado': '😁'
+    };
+    return mapa[emocao] || '😊';
+}
+
+// Atualizar a interface com os novos valores
+async function atualizarInterface() {
+    try {
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const dados = await response.json();
+        
+        currentCoins = dados.moedas || 0;
+        currentXP = dados.xp || 0;
+        currentLevel = dados.nivel || 1;
+        
+        document.getElementById('coin-count').innerText = currentCoins.toLocaleString('pt-BR');
+        document.getElementById('level-display').innerText = `NV. ${currentLevel}`;
+        document.getElementById('xp-bar-fill').style.width = currentXP + '%';
+        
+        console.log('💰 Interface atualizada:', { moedas: currentCoins, xp: currentXP, nivel: currentLevel });
+    } catch (error) {
+        console.error('Erro ao atualizar interface:', error);
+    }
+}
+
+function showNotif(title, msg, type = 'info') {
+    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', warning: 'fa-exclamation-circle' };
+    const modal = document.getElementById('notifModal');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifMsg').innerText = msg;
+    const icon = document.getElementById('notifIcon');
+    icon.className = `notif-icon fas ${icons[type] || icons.info} ${type}`;
+    modal.classList.add('visible');
+    setTimeout(() => modal.classList.remove('visible'), 3500);
+}
+
+// Sincronizar universos com as ilhas desbloqueadas
+async function sincronizarUniversos() {
+    try {
+        // Buscar as ilhas desbloqueadas do backend
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const dados = await response.json();
+        
+        // Universos que o usuário já desbloqueou (vem do backend)
+        const universosDesbloqueadosBackend = dados.universos_desbloqueados || [];
+        
+        // Atualizar o status de cada universo
+        universes.forEach(universo => {
+            if (universosDesbloqueadosBackend.includes(universo.name)) {
+                universo.unlocked = true;
+            } else {
+                universo.unlocked = false;
+            }
+        });
+        
+        // Garantir que Santuário sempre fique desbloqueado
+        const santuario = universes.find(u => u.name === "Santuário");
+        if (santuario) santuario.unlocked = true;
+        
+        initUniverses();
+        
+    } catch (error) {
+        console.error('Erro ao sincronizar universos:', error);
+    }
+}
+
+// Função para desbloquear um universo específico (chamada quando desbloquear uma ilha)
+async function desbloquearUniverso(nomeUniverso) {
+    try {
+        // Buscar universos já desbloqueados
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const dados = await response.json();
+        const universosAtuais = dados.universos_desbloqueados || [];
+        
+        // Se já estiver desbloqueado, não faz nada
+        if (universosAtuais.includes(nomeUniverso)) return;
+        
+        // Adicionar novo universo
+        universosAtuais.push(nomeUniverso);
+        
+        // Salvar no backend
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ universos_desbloqueados: universosAtuais })
+        });
+        
+        // Atualizar localmente
+        const universo = universes.find(u => u.name === nomeUniverso);
+        if (universo) {
+            universo.unlocked = true;
+            initUniverses();
+            showNotif('🌍 Novo Universo!', `Você desbloqueou o universo ${nomeUniverso}!`, 'success');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao desbloquear universo:', error);
+    }
+}
+
+// ========== ONBOARDING ==========
+
+const onboardingSteps = [
+    {
+        icon: '🐼',
+        title: 'Bem-vindo ao Mindfine!',
+        text: 'Este é o seu santuário pessoal. Aqui você cuida da sua mente, ganha recompensas e explora mundos incríveis.',
+        btn: 'Que incrível! E agora?'
+    },
+    {
+        icon: '📦',
+        title: 'Pacote de Figurinhas Liberado!',
+        text: 'Como presente de boas-vindas, um pacote de figurinhas foi desbloqueado para você. Acesse seu Álbum para abri-lo!',
+        highlight: '🎁 1 pacote aguardando no seu Álbum',
+        btn: 'Entendi! O que mais?'
+    },
+    {
+        icon: '🗺️',
+        title: 'Explore as Ilhas!',
+        text: 'Cada ilha tem missões, skins e figurinhas exclusivas. Desbloqueie novas ilhas conforme você evoluir de nível.',
+        highlight: '👉 Vá em Explorar → Ir para Ilhas para começar',
+        btn: 'Vamos lá!'
+    }
+];
+
+let onboardStep = 0;
+
+function renderOnboardStep() {
+    const step = onboardingSteps[onboardStep];
+    const total = onboardingSteps.length;
+
+    const dotsHTML = Array.from({ length: total }, (_, i) =>
+        `<div class="onboard-dot ${i === onboardStep ? 'active' : ''}"></div>`
+    ).join('');
+
+    const highlightHTML = step.highlight
+        ? `<div class="onboard-highlight"><i class="fas fa-info-circle"></i> ${step.highlight}</div>`
+        : '';
+
+    document.getElementById('onboardBox').innerHTML = `
+        <span class="onboard-icon">${step.icon}</span>
+        <div class="onboard-title">${step.title}</div>
+        <div class="onboard-text">${step.text}</div>
+        ${highlightHTML}
+        <div class="onboard-dots">${dotsHTML}</div>
+        <button class="onboard-btn" onclick="nextOnboardStep()">${step.btn}</button>
+    `;
+}
+
+function nextOnboardStep() {
+    onboardStep++;
+    if (onboardStep >= onboardingSteps.length) {
+        document.getElementById('onboardingModal').classList.remove('active');
+        // Abre a sidebar de explorar como dica visual
+        setTimeout(() => {
+            document.getElementById('sidebar-left').classList.add('active');
+            document.getElementById('btn-explore').classList.add('level-reward-glow');
+        }, 400);
+        return;
+    }
+    renderOnboardStep();
+}
+
+function mostrarOnboarding() {
+    onboardStep = 0;
+    renderOnboardStep();
+    document.getElementById('onboardingModal').classList.add('active');
+}
+
+  // ========== INICIALIZAÇÃO PRINCIPAL ==========
+aguardarAPI(async () => {
+    await carregarDados();
+    
+    // Resetar universos iniciais
+    await resetarUniversosIniciais();
+    
+    
+    const jaRegistrou = await window.mindfineAPI.jaRegistrouEmocaoHoje();
+    console.log('📌 Ja registrou hoje?', jaRegistrou);
+    
+    if (jaRegistrou) {
+        document.getElementById('checkinModal').classList.add('hidden');
+    } else {
+        document.getElementById('checkinModal').classList.remove('hidden');
+    }
+});
+</script>
+</body>
+</html>

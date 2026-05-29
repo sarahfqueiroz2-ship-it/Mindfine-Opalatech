@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Sala de Jogos</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<style>
+    :root {
+        --azul-bright: #32B5F1;
+        --azul-escuro: #0277bd;
+    }
+
+    body, html {
+        margin: 0; padding: 0;
+        height: 100%; 
+        overflow: hidden; 
+        font-family: 'Montserrat', sans-serif;
+        background: #000;
+    }
+
+    .background-layer {
+        position: fixed; width: 110%; height: 110%;
+        background-image: url('fundos/fundo-a.png'); 
+        background-size: cover; background-position: center;
+        z-index: 1; left: -5%; top: -5%;
+        filter: blur(8px) brightness(0.6);
+    }
+
+    .main-content {
+        position: relative; 
+        z-index: 10;
+        height: 100vh; 
+        display: flex; 
+        flex-direction: column;
+    }
+
+    /* HEADER FIXO NO TOPO */
+    .diary-header {
+        background: white; 
+        padding: 15px 20px;
+        display: flex; 
+        align-items: center; 
+        gap: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        z-index: 500;
+        flex-shrink: 0;
+    }
+    
+    .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+    .back-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; text-decoration: none; }
+    .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; }
+
+    /* ÁREA DE JOGOS COM SCROLL INDEPENDENTE */
+    .games-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 20px 0 40px 0; /* Padding reduzido pois não há mais navbar */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .games-area {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        width: 90%;
+        max-width: 500px;
+    }
+
+    /* CARDS */
+    .game-card {
+        background: white; 
+        border-radius: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        text-decoration: none; 
+        display: flex; 
+        flex-direction: column; 
+        overflow: hidden;
+        transition: 0.3s ease;
+        animation: fadeIn 0.5s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+    .game-card:hover { transform: translateY(-5px); }
+    
+    .game-img-container {
+        width: 100%;
+        height: 110px;
+        background: #f0f0f0;
+        overflow: hidden;
+    }
+
+    .game-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: 0.5s ease;
+    }
+
+    .game-card:hover .game-img { transform: scale(1.1); }
+
+    .game-info {
+        padding: 12px 10px;
+        text-align: center;
+    }
+
+    .game-card strong { 
+        display: block;
+        font-size: 0.85rem; 
+        font-weight: 800; 
+        color: var(--azul-escuro); 
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    
+    .game-card p { 
+        font-size: 0.65rem; 
+        color: #666; 
+        margin: 0; 
+        line-height: 1.2; 
+    }
+
+    /* PARTÍCULAS */
+    #particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+    .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; animation: rise linear forwards; }
+    @keyframes rise { to { transform: translateY(-110vh); opacity: 0; } }
+
+    @media (min-width: 500px) {
+        .games-area { grid-template-columns: repeat(3, 1fr); max-width: 700px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<div class="main-content">
+    <header class="diary-header">
+        <div class="header-left">
+            <a href="inicial.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title">
+                <h2>Sala de Jogos</h2>
+            </div>
+        </div>
+        <i class="fas fa-gamepad" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <div class="games-container">
+        <div class="games-area" id="gamesList">
+            <!-- Cards gerados via JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const gamesData = [
+        { nome: 'Memória', desc: 'Treine sua memória.', imagem: 'jogos/jogo-memoria.png', link: 'Jogo-Memoria.html' },
+        { nome: 'Externalização', desc: 'Liberte o que sente.', imagem: 'jogos/jogo.png', link: 'jogo-externalizacao.html' },
+        { nome: 'Pop It', desc: 'Estoure bolhas.', imagem: 'jogos/bolhas.png', link: 'jogo-booble.html' },
+        { nome: 'Jogo da Velha', desc: 'Lógica e equilíbrio.', imagem: 'jogos/velha.png', link: 'jogo-da-velha.html' },
+        { nome: 'Arte', desc: 'Crie sua própria paz.', imagem: 'jogos/canva.png', link: 'jogo-desenho.html' },
+        { nome: 'Flypp-Panda', desc: 'Voe com leveza.', imagem: 'jogos/jogo2.png', link: 'jogo-flypp-panda.html' },
+        { nome: 'Caça palavras', desc: 'Encontre clareza.', imagem: 'jogos/caca.jpg', link: 'jogo-caca-palavras.html' }
+    ];
+
+    function renderGames() {
+        const container = document.getElementById('gamesList');
+        container.innerHTML = gamesData.map(game => `
+            <a href="${game.link}" class="game-card">
+                <div class="game-img-container">
+                    <img src="${game.imagem}" alt="${game.nome}" class="game-img">
+                </div>
+                <div class="game-info">
+                    <strong>${game.nome}</strong>
+                    <p>${game.desc}</p>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    function createBubble() {
+        const container = document.getElementById('particles-container');
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const size = Math.random() * 20 + 5;
+        b.style.width = size + 'px'; b.style.height = size + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+
+    setInterval(createBubble, 1500);
+    renderGames();
+</script>
+
+</body>
+</html>

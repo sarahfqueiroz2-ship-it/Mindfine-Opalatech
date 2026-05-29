@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mindfine - Pop It</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --neon-border: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            touch-action: none;
+        }
+
+        /* --- FUNDO PADRÃO --- */
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.8);
+        }
+
+        canvas {
+            display: block;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- HEADER --- */
+        .diary-header {
+            background: white; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: fixed; top: 0; width: 100%;
+            z-index: 500;
+            box-sizing: border-box;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .back-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; }
+
+        /* --- PLACAR --- */
+        #score-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            text-align: right;
+            z-index: 100;
+            pointer-events: none;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        #score-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--azul-escuro);
+            font-weight: 800;
+            display: block;
+        }
+
+        #score-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--azul-bright);
+        }
+
+        /* DICA INICIAL */
+        #start-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+            animation: etherealPulse 2s infinite ease-in-out;
+        }
+
+        #start-prompt h1 {
+            font-size: 18px;
+            color: var(--azul-escuro);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes etherealPulse {
+            0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+
+    <header class="diary-header">
+        <div class="header-left">
+            <a href="sala-de-jogos.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title">
+                <h2>Pop It Relaxante</h2>
+            </div>
+        </div>
+        <i class="fas fa-circle-dot" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <div id="score-container">
+        <span id="score-label">Estouradas</span>
+        <div id="score-value">0</div>
+<div id="recordeDisplay" style="font-size: 0.7rem; color: var(--azul-escuro); margin-top: 5px;">🏆 Recorde: 0</div>
+    </div>
+
+    <div id="start-prompt">
+        <h1>Toque para Relaxar</h1>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+
+  <script src="mindfine-sync.js"></script>
+<script>
+    let matriculaAtual = '';
+    let melhorPontuacao = 0;
+    
+    // ========== FUNÇÕES DE RECORDE ==========
+    
+    async function carregarRecorde() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/pop_it`);
+            const dados = await response.json();
+            melhorPontuacao = dados.recorde || 0;
+            console.log(`🏆 Melhor pontuação: ${melhorPontuacao}`);
+            
+            // Mostrar recorde na tela se existir elemento
+            const recordeDisplay = document.getElementById('recordeDisplay');
+            if (recordeDisplay) {
+                recordeDisplay.innerHTML = `🏆 Recorde: ${melhorPontuacao}`;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar recorde:', error);
+        }
+    }
+    
+    async function salvarRecorde(pontuacao) {
+        if (pontuacao <= melhorPontuacao) return false;
+        
+        try {
+            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/pop_it`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pontuacao: pontuacao })
+            });
+            melhorPontuacao = pontuacao;
+            console.log(`🎉 Novo recorde: ${pontuacao} bolhas!`);
+            
+            const recordeDisplay = document.getElementById('recordeDisplay');
+            if (recordeDisplay) {
+                recordeDisplay.innerHTML = `🏆 Recorde: ${melhorPontuacao}`;
+            }
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar recorde:', error);
+            return false;
+        }
+    }
+
+    // ========== LÓGICA DO JOGO ==========
+    
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score-value');
+    const startPrompt = document.getElementById('start-prompt');
+
+    let score = 0;
+    let bubbles = [];
+    let particles = [];
+    let animationFrame;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Bubble {
+        constructor() {
+            this.radius = Math.random() * 35 + 25;
+            this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
+            this.y = canvas.height + this.radius + Math.random() * 100;
+            this.speed = Math.random() * 1.2 + 0.4;
+            this.hue = 198;
+            this.opacity = Math.random() * 0.4 + 0.2;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            
+            let grad = ctx.createRadialGradient(
+                this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1,
+                this.x, this.y, this.radius
+            );
+            grad.addColorStop(0, `rgba(255, 255, 255, 0.6)`);
+            grad.addColorStop(0.6, `hsla(${this.hue}, 88%, 57%, ${this.opacity})`);
+            grad.addColorStop(1, `hsla(${this.hue}, 88%, 40%, 0.2)`);
+
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
+            ctx.strokeStyle = `rgba(255, 255, 255, 0.5)`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(this.x - this.radius*0.4, this.y - this.radius*0.4, this.radius * 0.2, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        update() {
+            this.y -= this.speed;
+            this.x += Math.sin(this.y * 0.015) * 0.4;
+            
+            if (this.y + this.radius < 0) {
+                this.reset();
+            }
+        }
+
+        reset() {
+            this.y = canvas.height + this.radius + Math.random() * 100;
+            this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            this.radius = Math.random() * 3;
+            this.velocity = {
+                x: (Math.random() - 0.5) * 6,
+                y: (Math.random() - 0.5) * 6
+            };
+            this.life = 1.0;
+            this.color = color;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.life;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        update() {
+            this.x += this.velocity.x;
+            this.y += this.velocity.y;
+            this.life -= 0.03;
+        }
+    }
+
+    function init() {
+        bubbles = [];
+        for (let i = 0; i < 12; i++) {
+            bubbles.push(new Bubble());
+        }
+        animate();
+    }
+
+    function createExplosion(x, y, color) {
+        for (let i = 0; i < 10; i++) {
+            particles.push(new Particle(x, y, color));
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        bubbles.forEach(bubble => {
+            bubble.update();
+            bubble.draw();
+        });
+
+        particles.forEach((particle, index) => {
+            if (particle.life <= 0) {
+                particles.splice(index, 1);
+            } else {
+                particle.update();
+                particle.draw();
+            }
+        });
+
+        animationFrame = requestAnimationFrame(animate);
+    }
+
+    async function checkPop(e) {
+        if (startPrompt.style.display !== 'none') {
+            startPrompt.style.display = 'none';
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+
+        let popped = false;
+        
+        bubbles.forEach((bubble) => {
+            const dist = Math.hypot(mouseX - bubble.x, mouseY - bubble.y);
+            if (dist < bubble.radius) {
+                createExplosion(bubble.x, bubble.y, `rgba(50, 181, 241, 0.8)`);
+                bubble.reset();
+                score++;
+                scoreEl.innerText = score;
+                popped = true;
+                if (navigator.vibrate) navigator.vibrate(15);
+            }
+        });
+        
+        // Verificar recorde a cada 5 pontos (para não sobrecarregar)
+        if (popped && score > melhorPontuacao) {
+            await salvarRecorde(score);
+        }
+    }
+
+    canvas.addEventListener('mousedown', checkPop);
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        checkPop(e);
+    }, { passive: false });
+
+    // Carregar recorde e iniciar
+    carregarRecorde().then(() => {
+        init();
+    });
+</script> 
+
+</body>
+</html>

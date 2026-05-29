@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine — Alertas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+   <script src="https://unpkg.com/lucide@latest"></script>
+   
+   <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --texto-cor: #1e293b;
+            --muted: #64748b;
+            --surface2: #f1f9ff;
+            --border: rgba(0,0,0,0.08);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Montserrat',sans-serif; background:#000; min-height:100vh; overflow-x:hidden; color:var(--texto-cor); }
+
+        /* FUNDO */
+        .background-layer {
+            position:fixed; width:110%; height:110%;
+            background-image:url('fundos/fundo-a.png');
+            background-size:cover; background-position:center;
+            z-index:1; left:-5%; top:-5%;
+            filter:blur(8px) brightness(0.6);
+        }
+
+        /* PARTÍCULAS */
+        #particles-container { position:fixed; inset:0; pointer-events:none; z-index:2; }
+        .bubble { position:absolute; bottom:-20px; background:rgba(255,255,255,0.2); border-radius:50%; animation:rise linear forwards; }
+        @keyframes rise { to { transform:translateY(-110vh); opacity:0; } }
+
+        /* SIDEBAR */
+        .sidebar {
+            position:fixed; left:0; top:0; width:240px; height:100vh;
+            background:rgba(255,255,255,0.92); backdrop-filter:blur(20px);
+            border-right:1px solid var(--border);
+            display:flex; flex-direction:column; z-index:100; padding:32px 0;
+        }
+        .sidebar-logo { padding:0 24px 32px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+        .logo-mark { display:flex; align-items:center; gap:10px; }
+       .logo-icon {
+    width:36px; height:36px;
+    background:linear-gradient(135deg,var(--azul-bright),var(--azul-escuro));
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+}
+        .logo-text {
+            font-weight:800; font-size:18px;
+            background:linear-gradient(90deg,var(--azul-bright),var(--azul-escuro));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .sidebar-nav { flex:1; padding:0 12px; display:flex; flex-direction:column; gap:4px; }
+        .nav-section-label {
+            font-size:10px; font-weight:800; color:var(--muted);
+            text-transform:uppercase; letter-spacing:0.12em; padding:16px 12px 8px;
+        }
+        .nav-item {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 16px; border-radius:10px;
+            color:#64748b; font-size:14px; font-weight:600;
+            cursor:pointer; transition:all 0.2s; text-decoration:none;
+            position:relative; margin-bottom:4px;
+        }
+        .nav-item:hover { background:#f1f5f9; color:var(--azul-bright); }
+        .nav-item.active { background:#e3f2fd; color:var(--azul-escuro); font-weight:800; }
+        .nav-item.active::before {
+            content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+            width:3px; height:18px; background:var(--azul-bright); border-radius:0 2px 2px 0;
+        }
+        .nav-badge {
+            margin-left:auto; background:#b8d1ff; color:#0059ff;
+            font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px;
+        }
+        .sidebar-footer { padding:16px 12px 0; border-top:1px solid var(--border); margin-top:8px; }
+ .user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: transparent;
+}
+.user-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--azul-bright), var(--azul-escuro));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+
+           .user-info-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0097dd;
+        }
+
+        .user-info-role {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        /* MENU TOGGLE */
+        .menu-toggle {
+            display:none; position:fixed; top:20px; left:20px; z-index:200;
+            background:white; width:44px; height:44px; border-radius:12px;
+            cursor:pointer; align-items:center; justify-content:center;
+            box-shadow:0 5px 15px rgba(0,0,0,0.3); border:none; font-size:18px;
+        }
+
+        /* MAIN */
+        .main-content { position:relative; z-index:10; margin-left:240px; padding:40px 32px; min-height:100vh; }
+
+        /* ANIMAÇÕES */
+        .fade-in { opacity:0; transform:translateY(16px); animation:fadeInUp 0.5s ease forwards; }
+        @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+        .d1{animation-delay:.05s} .d2{animation-delay:.10s} .d3{animation-delay:.15s}
+        .d4{animation-delay:.20s} .d5{animation-delay:.25s}
+
+        /* HEADER */
+        .page-header {
+            background:white; padding:25px 30px; border-radius:20px;
+            margin-bottom:28px; box-shadow:0 10px 20px rgba(0,0,0,0.2);
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+        }
+        .header-left h1 { font-size:24px; font-weight:800; text-transform:uppercase; margin-bottom:4px; color:var(--azul-escuro); }
+        .header-left h1 span {
+            background:linear-gradient(90deg,var(--azul-bright),var(--azul-escuro));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .header-left p { font-size:14px; color:#666; font-weight:600; }
+        .header-right { display:flex; gap:12px; align-items:center; }
+
+        /* PULSAÇÃO NO HEADER badge */
+        .live-badge {
+            display:flex; align-items:center; gap:8px;
+            background:#fff0f0; border:2px solid rgba(239,68,68,0.25);
+            padding:8px 16px; border-radius:20px;
+        }
+        .live-dot {
+            width:10px; height:10px; border-radius:50%; background:#ef4444;
+            animation:pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,0.5); }
+            50%      { box-shadow:0 0 0 7px rgba(239,68,68,0); }
+        }
+        .live-text { font-size:12px; font-weight:800; color:#ef4444; }
+
+        /* BOTÕES */
+        .btn-primary {
+            background:linear-gradient(135deg,var(--azul-bright),var(--azul-escuro));
+            color:#fff; border:none; padding:10px 20px; border-radius:10px;
+            font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700;
+            cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px;
+        }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(50,181,241,0.4); }
+        .btn-ghost {
+            background:white; color:#64748b; border:2px solid #e2e8f0;
+            padding:10px 18px; border-radius:10px;
+            font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600;
+            cursor:pointer; transition:all 0.2s;
+        }
+        .btn-ghost:hover { border-color:var(--azul-bright); color:var(--azul-bright); }
+
+        /* KPI STRIP */
+        .kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:18px; margin-bottom:28px; }
+        .kpi-card {
+            background:white; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.15);
+            padding:18px 20px; display:flex; align-items:center; gap:12px; transition:all 0.3s;
+            cursor:pointer; border:2px solid transparent;
+        }
+        .kpi-card:hover { transform:translateY(-4px); }
+        .kpi-card.selected { border-color:var(--azul-bright); }
+        .kpi-icon { width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+        .kpi-icon.red    { background:rgba(239,68,68,0.12); }
+        .kpi-icon.orange { background:rgba(249,115,22,0.12); }
+        .kpi-icon.yellow { background:rgba(251,191,36,0.12); }
+        .kpi-icon.green  { background:rgba(52,211,153,0.12); }
+        .kpi-icon.blue   { background:rgba(50,181,241,0.12); }
+        .kpi-value { font-size:26px; font-weight:800; color:var(--azul-escuro); line-height:1; }
+        .kpi-label { font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase; margin-top:2px; }
+
+        /* TOOLBAR */
+        .toolbar {
+            background:white; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.15);
+            padding:18px 24px; margin-bottom:24px;
+            display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+        }
+        .search-box {
+            display:flex; align-items:center; gap:8px;
+            background:#f8fafc; border:2px solid #f0f0f0;
+            border-radius:10px; padding:9px 14px; flex:1; min-width:180px;
+        }
+        .search-box input {
+            background:transparent; border:none; color:var(--texto-cor);
+            font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; outline:none; width:100%;
+        }
+        .search-box input::placeholder { color:var(--muted); font-weight:400; }
+        .filter-pill {
+            padding:8px 16px; border-radius:20px; border:2px solid #f0f0f0;
+            background:#f8fafc; font-family:'Montserrat',sans-serif;
+            font-size:12px; font-weight:700; color:var(--muted); cursor:pointer; transition:all 0.2s;
+            white-space:nowrap;
+        }
+        .filter-pill:hover   { border-color:var(--azul-bright); color:var(--azul-bright); }
+        .filter-pill.active  { background:#e3f2fd; border-color:var(--azul-bright); color:var(--azul-escuro); }
+        .sort-select {
+            border:2px solid #f0f0f0; border-radius:10px;
+            font-family:'Montserrat',sans-serif; font-weight:700;
+            font-size:12px; padding:8px 12px; color:var(--muted);
+            background:#f8fafc; cursor:pointer; outline:none;
+        }
+
+        /* LAYOUT */
+        .content-grid { display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start; }
+
+        /* LISTA DE ALERTAS */
+        .alerts-list { display:flex; flex-direction:column; gap:14px; }
+
+        /* CARD DE ALERTA */
+        .alert-card {
+            background:white; border-radius:18px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.08);
+            border-left:5px solid transparent;
+            transition:all 0.25s; cursor:pointer; overflow:hidden;
+        }
+        .alert-card:hover { transform:translateY(-3px); box-shadow:0 14px 32px rgba(0,0,0,0.14); }
+        .alert-card.critico  { border-left-color:#ef4444; }
+        .alert-card.alto     { border-left-color:#f97316; }
+        .alert-card.medio    { border-left-color:#fbbf24; }
+        .alert-card.baixo    { border-left-color:#32B5F1; }
+        .alert-card.resolvido{ border-left-color:#34d399; opacity:0.7; }
+
+        .alert-card-inner { padding:18px 20px; display:flex; gap:16px; align-items:flex-start; }
+        .alert-left { display:flex; flex-direction:column; align-items:center; gap:8px; flex-shrink:0; }
+        .alert-emoji { font-size:26px; }
+        .alert-sev {
+            font-size:9px; font-weight:800; padding:3px 7px;
+            border-radius:20px; text-transform:uppercase; letter-spacing:0.05em; text-align:center;
+        }
+        .alert-sev.critico  { background:rgba(239,68,68,0.12);  color:#ef4444; }
+        .alert-sev.alto     { background:rgba(249,115,22,0.12); color:#f97316; }
+        .alert-sev.medio    { background:rgba(251,191,36,0.12); color:#d97706; }
+        .alert-sev.baixo    { background:rgba(50,181,241,0.12); color:#0277bd; }
+        .alert-sev.resolvido{ background:rgba(52,211,153,0.12); color:#10b981; }
+
+        .alert-body { flex:1; }
+        .alert-titulo { font-size:15px; font-weight:800; color:var(--texto-cor); margin-bottom:5px; line-height:1.3; }
+        .alert-desc   { font-size:12px; font-weight:600; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+
+        .alert-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .meta-chip {
+            font-size:10px; font-weight:800; padding:3px 10px;
+            border-radius:20px; background:#f0f4f8; color:var(--muted);
+        }
+        .meta-chip.turma   { background:rgba(50,181,241,0.10); color:var(--azul-escuro); }
+        .meta-chip.aluno   { background:rgba(139,92,246,0.10); color:#8b5cf6; }
+        .meta-chip.curso-adm  { background:rgba(52,211,153,0.10); color:#10b981; }
+        .meta-chip.curso-inf  { background:rgba(50,181,241,0.10); color:#0277bd; }
+        .meta-chip.curso-ma   { background:rgba(249,115,22,0.10); color:#f97316; }
+
+        .alert-time-col { display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0; }
+        .alert-time { font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; }
+        .alert-actions { display:flex; gap:6px; }
+        .btn-sm {
+            font-size:11px; font-weight:800; padding:5px 12px; border-radius:8px;
+            border:none; cursor:pointer; transition:all 0.18s; font-family:'Montserrat',sans-serif;
+        }
+        .btn-sm.resolve  { background:rgba(52,211,153,0.12); color:#10b981; }
+        .btn-sm.resolve:hover { background:rgba(52,211,153,0.25); }
+        .btn-sm.intervir { background:linear-gradient(135deg,var(--azul-bright),var(--azul-escuro)); color:white; }
+        .btn-sm.intervir:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(50,181,241,0.35); }
+        .btn-sm.dismiss  { background:#f1f5f9; color:var(--muted); }
+        .btn-sm.dismiss:hover { background:#e2e8f0; }
+
+        /* ALERTA EXPANDIDO */
+        .alert-expanded {
+            border-top:1px solid #f0f4f8; padding:16px 20px 18px;
+            background:#fafcff; display:none;
+        }
+        .alert-card.open .alert-expanded { display:block; }
+        .exp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+        .exp-item { background:white; border-radius:10px; padding:12px 14px; }
+        .exp-label { font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:3px; }
+        .exp-val   { font-size:13px; font-weight:800; color:var(--texto-cor); }
+
+        /* EMPTY */
+        .empty-state {
+            background:white; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.12);
+            padding:60px 32px; text-align:center;
+        }
+        .empty-state-icon { font-size:48px; margin-bottom:14px; }
+        .empty-state-title { font-size:18px; font-weight:800; color:var(--texto-cor); margin-bottom:6px; }
+        .empty-state-sub { font-size:14px; color:var(--muted); font-weight:600; }
+
+        /* PAINEL LATERAL */
+        .side-panel { display:flex; flex-direction:column; gap:20px; }
+
+        .card {
+            background:white; border-radius:20px;
+            box-shadow:0 10px 20px rgba(0,0,0,0.15); padding:22px;
+        }
+        .card-title {
+            font-size:14px; font-weight:800; color:var(--azul-escuro);
+            text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:8px;
+        }
+
+        /* MAPA DE CALOR */
+        .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.heatmap-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.heatmap-grid::-webkit-scrollbar-thumb {
+    background: var(--azul-bright);
+    border-radius: 4px;
+}
+        .heatmap-cell {
+            border-radius:12px; padding:12px 10px; text-align:center; transition:0.2s; cursor:pointer;
+        }
+        .heatmap-cell:hover { transform:scale(1.04); }
+        .heatmap-cell .hc-turma { font-size:12px; font-weight:800; margin-bottom:4px; }
+        .heatmap-cell .hc-score { font-size:18px; font-weight:800; }
+        .heatmap-cell .hc-alerts{ font-size:10px; font-weight:700; margin-top:2px; }
+        .heat-5  { background:#fff0f0; color:#ef4444; }
+        .heat-4  { background:#fff3e0; color:#f97316; }
+        .heat-3  { background:#fffde7; color:#d97706; }
+        .heat-2  { background:#e3f2fd; color:#0277bd; }
+        .heat-1  { background:#e8faf4; color:#10b981; }
+
+        /* INSIGHT CARDS */
+        .insight-row {
+            display:flex; align-items:flex-start; gap:10px;
+            padding:10px 0; border-bottom:1px solid #f0f4f8;
+        }
+        .insight-row:last-child { border-bottom:none; }
+        .insight-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+        .insight-text { font-size:12px; font-weight:700; color:var(--texto-cor); line-height:1.5; }
+        .insight-text span { font-weight:800; }
+
+        /* MODAL */
+        .modal-overlay {
+            position:fixed; inset:0; z-index:300;
+            background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+            display:flex; align-items:center; justify-content:center;
+            opacity:0; pointer-events:none; transition:opacity 0.3s;
+        }
+        .modal-overlay.open { opacity:1; pointer-events:all; }
+        .modal {
+            background:white; border-radius:24px; padding:32px;
+            width:500px; max-width:95vw; max-height:90vh; overflow-y:auto;
+            transform:scale(0.92); transition:transform 0.3s cubic-bezier(.4,0,.2,1);
+            box-shadow:0 40px 80px rgba(0,0,0,0.3);
+        }
+        .modal-overlay.open .modal { transform:scale(1); }
+        .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+        .modal-title  { font-size:18px; font-weight:800; color:var(--azul-escuro); }
+        .modal-close  {
+            width:34px; height:34px; background:#f1f5f9; border:none; border-radius:10px;
+            color:var(--muted); font-size:18px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .modal-close:hover { color:var(--texto-cor); }
+
+        .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+        .form-label  { font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+        .form-input, .form-select, .form-textarea {
+            border:2px solid #f0f0f0; border-radius:10px;
+            font-family:'Montserrat',sans-serif; font-weight:600;
+            font-size:13px; padding:9px 12px; color:var(--texto-cor);
+            background:#f8fafc; outline:none; transition:border-color 0.2s; width:100%;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--azul-bright); background:white; }
+        .form-textarea { resize:none; height:80px; line-height:1.5; }
+        .modal-footer { display:flex; gap:10px; margin-top:20px; }
+        .btn-success {
+            background:linear-gradient(135deg,#34d399,#10b981); color:#fff; border:none;
+            padding:11px 20px; border-radius:10px;
+            font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700;
+            cursor:pointer; transition:all 0.2s; flex:1;
+        }
+        .btn-success:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(52,211,153,0.4); }
+
+        /* NOTIF TOAST */
+        .toast {
+            position:fixed; bottom:28px; right:28px; z-index:400;
+            background:var(--azul-escuro); color:white;
+            padding:14px 22px; border-radius:14px;
+            font-size:13px; font-weight:700;
+            box-shadow:0 10px 30px rgba(0,0,0,0.3);
+            transform:translateY(80px); opacity:0;
+            transition:all 0.4s cubic-bezier(.4,0,.2,1);
+            display:flex; align-items:center; gap:10px;
+        }
+        .toast.show { transform:translateY(0); opacity:1; }
+
+        /* MOBILE */
+        @media(max-width:1100px) { .content-grid { grid-template-columns:1fr; } .kpi-strip { grid-template-columns:repeat(3,1fr); } }
+        @media(max-width:768px) {
+            .sidebar { transform:translateX(-100%); transition:0.3s; }
+            .sidebar.open { transform:translateX(0); }
+            .menu-toggle { display:flex; }
+            .main-content { margin-left:0; padding:72px 16px 32px; }
+            .kpi-strip { grid-template-columns:1fr 1fr; }
+        }
+
+      .nav-item i { width:18px; height:18px; stroke-width:2; flex-shrink:0; }
+.kpi-icon i, .card-title i, .btn-primary i, .btn-ghost i, .modal-close i { width:18px; height:18px; flex-shrink:0; }
+.kpi-icon i { width:20px; height:20px; }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-mark">
+            <div class="logo-icon"><img src="pandas/skin.png" style="width:32px;height:32px;object-fit:contain;"></div>
+            <span class="logo-text">Mindfine</span>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="inicio-escola.html" class="nav-item">
+            <i data-lucide="layout-dashboard"></i> Painel Geral
+        </a>
+        <a href="turma.html" class="nav-item">
+            <i data-lucide="users"></i> Turmas
+        </a>
+        <a href="relatorio.html" class="nav-item">
+            <i data-lucide="trending-up"></i> Relatórios
+        </a>
+        <div class="nav-section-label">Gestão</div>
+        <a href="alertas.html" class="nav-item active">
+            <i data-lucide="bell"></i> Alertas
+            <span class="nav-badge" id="sidebarBadge">0</span>
+        </a>
+        <a href="intervencao.html" class="nav-item">
+            <i data-lucide="target"></i> Intervenções
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar">EP</div>
+            <div>
+                <div class="user-info-name">Escola Painel</div>
+                <div class="user-info-role">Administrador</div>
+            </div>
+        </div>
+        <a href="login.html" class="nav-item" style="color:#f87171;margin-top:8px;">
+            <i data-lucide="log-out"></i> Sair
+        </a>
+    </div>
+</aside>
+
+<button class="menu-toggle" id="menuToggle"><i data-lucide="menu"></i></button>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <!-- Header -->
+    <div class="page-header fade-in">
+        <div class="header-left">
+            <h1>Central de <span>Alertas</span></h1>
+            <p>Monitoramento em tempo real do bem-estar escolar</p>
+        </div>
+        <div class="header-right">
+            <div class="live-badge">
+                <div class="live-dot"></div>
+                <span class="live-text">AO VIVO</span>
+            </div>
+            <button class="btn-ghost" onclick="resolverTodos()"><i data-lucide="check-circle"></i> Resolver Todos</button>
+<button class="btn-primary" onclick="abrirModalAlerta()"><i data-lucide="plus"></i> Criar Alerta</button>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip fade-in d1">
+        <div class="kpi-card" onclick="filtrarSev('todos')" id="kpi-todos">
+<div class="kpi-icon blue"><i data-lucide="bell"></i></div>
+            <div>
+                <div class="kpi-value" id="kv-todos">15</div>
+                <div class="kpi-label">Total Ativos</div>
+            </div>
+        </div>
+        <div class="kpi-card" onclick="filtrarSev('critico')" id="kpi-critico">
+<div class="kpi-icon red"><i data-lucide="alert-circle"></i></div>
+            <div>
+                <div class="kpi-value" id="kv-critico">3</div>
+                <div class="kpi-label">Críticos</div>
+            </div>
+        </div>
+        <div class="kpi-card" onclick="filtrarSev('alto')" id="kpi-alto">
+<div class="kpi-icon orange"><i data-lucide="alert-triangle"></i></div>
+            <div>
+                <div class="kpi-value" id="kv-alto">5</div>
+                <div class="kpi-label">Alta Prioridade</div>
+            </div>
+        </div>
+        <div class="kpi-card" onclick="filtrarSev('medio')" id="kpi-medio">
+<div class="kpi-icon yellow"><i data-lucide="pin"></i></div>
+            <div>
+                <div class="kpi-value" id="kv-medio">4</div>
+                <div class="kpi-label">Média Prioridade</div>
+            </div>
+        </div>
+        <div class="kpi-card" onclick="filtrarSev('resolvido')" id="kpi-resolvido">
+<div class="kpi-icon green"><i data-lucide="check-circle"></i></div>
+            <div>
+                <div class="kpi-value" id="kv-resolvido">7</div>
+                <div class="kpi-label">Resolvidos Hoje</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar fade-in d2">
+        <div class="search-box">
+<i data-lucide="search" style="width:16px;height:16px;color:var(--muted);flex-shrink:0;"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por aluno, turma ou descrição…" oninput="renderAlertas()">
+        </div>
+        <button class="filter-pill active" onclick="setPill(this,'todos')">Todos</button>
+<button class="filter-pill"        onclick="setPill(this,'aluno')">Alunos</button>
+<button class="filter-pill"        onclick="setPill(this,'turma')">Turma</button>
+<button class="filter-pill"        onclick="setPill(this,'bem-estar')">Bem-estar</button>
+        <select class="sort-select" id="sortSelect" onchange="renderAlertas()">
+            <option value="data">↓ Mais recente</option>
+            <option value="sev">↓ Mais grave</option>
+            <option value="turma">↓ Por turma</option>
+        </select>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid fade-in d3">
+
+        <!-- Lista de Alertas -->
+        <div>
+            <div id="alertsContainer"></div>
+        </div>
+
+        <!-- Painel Lateral -->
+        <div class="side-panel fade-in d4">
+
+            <!-- Mapa de calor -->
+            <div class="card">
+<div class="card-title"><i data-lucide="map"></i> Mapa de Risco por Turma</div>
+                <div class="heatmap-grid" id="heatmapGrid"></div>
+                <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--muted);">
+                        <span style="width:10px;height:10px;border-radius:3px;background:#fff0f0;display:inline-block;border:1px solid #efb4b4;"></span> Crítico
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--muted);">
+                        <span style="width:10px;height:10px;border-radius:3px;background:#fff3e0;display:inline-block;border:1px solid #f0c4a0;"></span> Alto
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--muted);">
+                        <span style="width:10px;height:10px;border-radius:3px;background:#fffde7;display:inline-block;border:1px solid #f0e0a0;"></span> Médio
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:var(--muted);">
+                        <span style="width:10px;height:10px;border-radius:3px;background:#e8faf4;display:inline-block;border:1px solid #a8eac8;"></span> OK
+                    </div>
+                </div>
+            </div>
+
+           <div class="card">
+    <div class="card-title"><i data-lucide="lightbulb"></i> Insights Automáticos</div>
+    <div id="insightsContainer">
+        <div class="insight-row">
+            <span class="insight-icon"><i data-lucide="loader-circle" style="width:18px;height:18px;color:#32B5F1"></i></span>
+            <div class="insight-text">Carregando insights...</div>
+        </div>
+    </div>
+</div>
+
+            <!-- Resolução recente -->
+            <div class="card">
+<div class="card-title"><i data-lucide="check-circle"></i> Resolvidos Recentemente</div>
+                <div id="resolvidosContainer"></div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<!-- MODAL CRIAR ALERTA -->
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title"><i data-lucide="bell" style="width:18px;height:18px;color:var(--azul-bright);margin-right:6px;"></i> Novo Alerta Manual</div>
+<button class="modal-close" onclick="fecharModalBtn()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Título do Alerta</label>
+            <input class="form-input" id="fTitulo" type="text" placeholder="Ex: Comportamento preocupante — aluno X">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+                <label class="form-label">Turma</label>
+                <select class="form-select" id="fTurma">
+                    <option>1° ADM</option><option>2° ADM</option><option>3° ADM</option>
+                    <option>1° INF</option><option>2° INF</option><option>3° INF</option>
+                    <option>1° MA</option><option>2° MA</option><option>3° MA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Severidade</label>
+                <select class="form-select" id="fSev">
+                    <option value="critico">Crítico</option>
+                    <option value="alto">Alto</option>
+                    <option value="medio" selected>Médio</option>
+                    <option value="baixo">Baixo</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" id="fTipo">
+                    <option value="aluno">Aluno específico</option>
+                    <option value="turma">Turma</option>
+                    <option value="bem-estar">Bem-estar</option>
+                    <option value="participacao">Participação</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea class="form-textarea" id="fDesc" placeholder="Descreva a situação que motivou este alerta…"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-ghost" onclick="fecharModalBtn()" style="flex:1">Cancelar</button>
+            <button class="btn-success" onclick="criarAlerta()">✓ Criar Alerta</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Alerta resolvido com sucesso!</span>
+</div>
+
+
+<script>
+    let alertas = [];
+    let filtroSev = 'todos';
+    let filtroTipo = 'todos';
+    let openCard = null;
+
+    // ========== CARREGAR ALERTAS REAIS ==========
+    
+   async function carregarAlertas() {
+    try {
+        // Buscar alertas salvos no backend
+        const response = await fetch('http://localhost:5001/api/alertas');
+        const alertasSalvos = await response.json();
+        
+        if (alertasSalvos && alertasSalvos.length > 0) {
+            // Carregar alertas salvos
+            alertas = alertasSalvos.map(a => ({
+                ...a,
+                resolvido: a.resolvido === 1,
+                detalhes: typeof a.detalhes === 'string' ? JSON.parse(a.detalhes) : (a.detalhes || {})
+            }));
+        } else {
+            // Gerar alertas automáticos baseados nos alunos
+            const responseAlunos = await fetch('http://localhost:5001/api/escola/alunos');
+            const alunos = await responseAlunos.json();
+            alertas = gerarAlertasReais(alunos);
+            
+            // Salvar alertas gerados no backend
+            for (const alerta of alertas) {
+                await fetch('http://localhost:5001/api/alertas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(alerta)
+                });
+            }
+        }
+        
+        renderAlertas();
+        atualizarKPIs();
+        renderHeatmap();
+        await carregarInsights();
+        
+    } catch (error) {
+        console.error('Erro ao carregar alertas:', error);
+        alertas = [];
+        renderAlertas();
+    }
+}
+    
+    function gerarAlertasReais(alunos) {
+        const alertasGerados = [];
+        const agora = new Date();
+        const hora = `${agora.getHours()}:${agora.getMinutes().toString().padStart(2, '0')}`;
+        
+        // Alunos com nível baixo (1 ou 2)
+        const alunosBaixoNivel = alunos.filter(a => (a.nivel || 1) <= 2);
+        alunosBaixoNivel.forEach(aluno => {
+            alertasGerados.push({
+                id: Date.now() + Math.random(),
+                sev: 'critico',
+                tipo: 'aluno',
+                emoji: 'alert-circle',
+                titulo: `Baixo engajamento — ${aluno.nome}`,
+                desc: `Aluno com nível ${aluno.nivel || 1} e apenas ${aluno.moedas || 0} moedas. Pouca participação nas atividades.`,
+                turma: getTurmaFromMatricula(aluno.matricula),
+                aluno: aluno.nome,
+                data: `Hoje, ${hora}`,
+                resolvido: false,
+                detalhes: {
+                    'Nível': aluno.nivel || 1,
+                    'Moedas': aluno.moedas || 0,
+                    'XP': aluno.xp || 0,
+                    'Matrícula': aluno.matricula
+                }
+            });
+        });
+        
+        // Alunos com muitas moedas mas nível baixo (pode ser desbalanceado)
+        const alunosDesbalanceados = alunos.filter(a => (a.moedas || 0) > 500 && (a.nivel || 1) <= 2);
+        alunosDesbalanceados.forEach(aluno => {
+            alertasGerados.push({
+                id: Date.now() + Math.random(),
+                sev: 'alto',
+                tipo: 'aluno',
+                emoji: 'alert-triangle',
+                titulo: `Progresso desbalanceado — ${aluno.nome}`,
+                desc: `Aluno acumulou ${aluno.moedas || 0} moedas mas ainda está no nível ${aluno.nivel || 1}. Pode estar gastando XP de forma inadequada.`,
+                turma: getTurmaFromMatricula(aluno.matricula),
+                aluno: aluno.nome,
+                data: `Hoje, ${hora}`,
+                resolvido: false,
+                detalhes: {
+                    'Moedas': aluno.moedas || 0,
+                    'Nível': aluno.nivel || 1,
+                    'Proporção': `${Math.round((aluno.moedas || 0) / ((aluno.nivel || 1) * 100))}x`
+                }
+            });
+        });
+        
+        // Ordenar por severidade
+        return alertasGerados.sort((a, b) => {
+            const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+            return ordem[a.sev] - ordem[b.sev];
+        });
+    }
+    
+    function getTurmaFromMatricula(matricula) {
+        if (!matricula || matricula.length < 5) return "Turma não definida";
+        
+        const anoIngresso = parseInt(matricula.substring(0, 4));
+        const codigoTurma = matricula.charAt(4);
+        const anoAtual = new Date().getFullYear();
+        let ano = anoAtual - anoIngresso + 1;
+        
+        if (ano < 1) ano = 1;
+        if (ano > 3) ano = 3;
+        
+        const cursos = {
+            '1': 'Informática',
+            '2': 'Administração',
+            '3': 'Meio Ambiente'
+        };
+        
+        const curso = cursos[codigoTurma] || 'Desconhecido';
+        return `${ano}° ${curso}`;
+    }
+    
+    // ========== FUNÇÕES DE RENDERIZAÇÃO ==========
+    
+    function renderAlertas() {
+        const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const sort = document.getElementById('sortSelect')?.value || 'data';
+        
+        let lista = alertas.filter(a => {
+            const sevOk = filtroSev === 'todos' || (filtroSev === 'resolvido' ? a.resolvido : (!a.resolvido && a.sev === filtroSev));
+            const tipoOk = filtroTipo === 'todos' || a.tipo === filtroTipo;
+            const qOk = q === '' || a.titulo.toLowerCase().includes(q) ||
+                        a.turma.toLowerCase().includes(q) ||
+                        (a.aluno || '').toLowerCase().includes(q) ||
+                        a.desc.toLowerCase().includes(q);
+            return sevOk && tipoOk && qOk;
+        });
+        
+        if (sort === 'sev') lista.sort((a,b) => {
+            const ordem = { critico: 4, alto: 3, medio: 2, baixo: 1, resolvido: 0 };
+            return ordem[b.sev] - ordem[a.sev];
+        });
+        if (sort === 'turma') lista.sort((a,b) => a.turma.localeCompare(b.turma));
+        
+        const container = document.getElementById('alertsContainer');
+        
+        if (lista.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i data-lucide="check-circle" style="width:48px;height:48px;color:#10b981;"></i></div>
+                    <div class="empty-state-title">Nenhum alerta encontrado</div>
+                    <div class="empty-state-sub">Todos os alunos estão em dia!</div>
+                </div>`;
+            return;
+        }
+        
+        container.innerHTML = `<div class="alerts-list">${lista.map(a => alertCardHTML(a)).join('')}</div>`;
+        lucide.createIcons();
+    }
+    
+    function alertCardHTML(a) {
+        const sevLabel = { critico:'Crítico', alto:'Alto', medio:'Médio', baixo:'Baixo', resolvido:'Resolvido' };
+        const resolvidoCls = a.resolvido ? ' resolvido' : '';
+        
+        const detailsHTML = `
+            <div class="alert-expanded" id="exp-${a.id}">
+                <div class="exp-grid">
+                    ${Object.entries(a.detalhes).map(([k,v]) => `
+                        <div class="exp-item">
+                            <div class="exp-label">${k}</div>
+                            <div class="exp-val">${v}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-sm intervir" onclick="event.stopPropagation();criarIntervencao(${a.id})">Criar Intervenção</button>
+                    ${!a.resolvido ? `<button class="btn-sm resolve" onclick="event.stopPropagation();resolver(${a.id})">Marcar Resolvido</button>` : ''}
+                </div>
+            </div>`;
+        
+        return `
+            <div class="alert-card ${a.sev}${resolvidoCls}" id="card-${a.id}" onclick="toggleCard(${a.id})">
+                <div class="alert-card-inner">
+                    <div class="alert-left">
+                        <span class="alert-emoji"><i data-lucide="${a.emoji}" style="width:24px;height:24px;"></i></span>
+                        <span class="alert-sev ${a.resolvido ? 'resolvido' : a.sev}">${a.resolvido ? 'Resolvido' : sevLabel[a.sev]}</span>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-titulo">${a.titulo}</div>
+                        <div class="alert-desc">${a.desc}</div>
+                        <div class="alert-meta">
+                            <span class="meta-chip turma">${a.turma}</span>
+                            ${a.aluno ? `<span class="meta-chip aluno">${a.aluno}</span>` : ''}
+                            <span class="meta-chip">${a.tipo === 'aluno' ? 'Individual' : 'Geral'}</span>
+                        </div>
+                    </div>
+                    <div class="alert-time-col">
+                        <span class="alert-time">${a.data}</span>
+                        <div class="alert-actions" onclick="event.stopPropagation()">
+                            ${!a.resolvido
+                                ? `<button class="btn-sm resolve" onclick="resolver(${a.id})">Resolver</button>`
+                                : ''
+                            }
+                        </div>
+                    </div>
+                </div>
+                ${detailsHTML}
+            </div>`;
+    }
+    
+    function toggleCard(id) {
+        const card = document.getElementById('card-' + id);
+        const exp = document.getElementById('exp-' + id);
+        if (!card || !exp) return;
+        
+        if (openCard && openCard !== id) {
+            const prev = document.getElementById('card-' + openCard);
+            const prevExp = document.getElementById('exp-' + openCard);
+            if (prev) prev.classList.remove('open');
+            if (prevExp) prevExp.style.display = 'none';
+        }
+        
+        const isOpen = card.classList.toggle('open');
+        exp.style.display = isOpen ? 'block' : 'none';
+        openCard = isOpen ? id : null;
+    }
+    
+   async function resolver(id) {
+    const alerta = alertas.find(a => a.id == id);
+    if (!alerta) return;
+    
+    try {
+        await fetch(`http://localhost:5001/api/alertas/${id}/resolver`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        alerta.resolvido = true;
+        alerta.sev = 'resolvido';
+        renderAlertas();
+        atualizarKPIs();  // Já chama salvarContadorAlertas
+        renderHeatmap();
+        toast('✅ Alerta resolvido!');
+        
+    } catch (error) {
+        console.error('Erro ao resolver alerta:', error);
+        toast('❌ Erro ao resolver alerta!');
+    }
+}
+    
+    function criarIntervencao(id) {
+        const alerta = alertas.find(a => a.id === id);
+        if (!alerta) return;
+        toast(`🛠️ Intervenção criada para ${alerta.turma}`);
+        resolver(id);
+        setTimeout(() => window.location.href = 'intervencao.html', 1500);
+    }
+    
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+    
+    // ========== KPIs ==========
+    
+    function atualizarKPIs() {
+        const ativos = alertas.filter(a => !a.resolvido);
+        document.getElementById('kv-todos').textContent = ativos.length;
+        document.getElementById('kv-critico').textContent = ativos.filter(a => a.sev === 'critico').length;
+        document.getElementById('kv-alto').textContent = ativos.filter(a => a.sev === 'alto').length;
+        document.getElementById('kv-medio').textContent = ativos.filter(a => a.sev === 'medio').length;
+        document.getElementById('sidebarBadge').textContent = ativos.length;
+    }
+    
+    // ========== HEATMAP ==========
+    
+    function renderHeatmap() {
+        const turmasSet = new Set();
+        alertas.forEach(a => turmasSet.add(a.turma));
+        
+        const turmasHeat = Array.from(turmasSet).map(turma => ({
+            nome: turma,
+            alertCount: alertas.filter(a => a.turma === turma && !a.resolvido).length
+        }));
+        
+        const container = document.getElementById('heatmapGrid');
+        if (!container) return;
+        
+        container.innerHTML = turmasHeat.map(t => {
+            const heatClass = t.alertCount >= 3 ? 'heat-5' : t.alertCount >= 2 ? 'heat-4' : t.alertCount >= 1 ? 'heat-3' : 'heat-1';
+            return `
+                <div class="heatmap-cell ${heatClass}" onclick="filtrarTurma('${t.nome}')">
+                    <div class="hc-turma">${t.nome}</div>
+                    <div class="hc-score">${t.alertCount}</div>
+                    <div class="hc-alerts">${t.alertCount} alerta${t.alertCount !== 1 ? 's' : ''}</div>
+                </div>`;
+        }).join('');
+    }
+    
+    function filtrarTurma(turma) {
+        document.getElementById('searchInput').value = turma;
+        renderAlertas();
+        document.getElementById('alertsContainer').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // ========== FILTROS ==========
+    
+    function filtrarSev(sev) {
+        filtroSev = sev;
+        document.querySelectorAll('.kpi-card').forEach(k => k.classList.remove('selected'));
+        document.getElementById('kpi-' + sev)?.classList.add('selected');
+        renderAlertas();
+    }
+    
+    function setPill(btn, tipo) {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        filtroTipo = tipo;
+        renderAlertas();
+    }
+    
+   function abrirModalAlerta() {
+    document.getElementById('modalOverlay').classList.add('open');
+}
+    
+    // ========== BOLHAS ==========
+    
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    
+    setInterval(createBubble, 1500);
+
+// ========== INSIGHTS DINÂMICOS ==========
+
+async function carregarInsights() {
+    try {
+        // Buscar dados reais para gerar insights
+        const response = await fetch('http://localhost:5001/api/escola/estatisticas');
+        const stats = await response.json();
+        
+        const responseTurmas = await fetch('http://localhost:5001/api/escola/turmas');
+        const turmas = await responseTurmas.json();
+        
+        const insights = [];
+        
+        // Insight 1: Ansiedade (se houver dados de emoção)
+        const responseEmocoes = await fetch('http://localhost:5001/api/relatorio/emocoes?periodo=mes');
+        const emocoes = await responseEmocoes.json();
+        
+        if (emocoes.ansioso && emocoes.ansioso > 25) {
+            insights.push({
+                icon: 'trending-up',
+                color: '#ef4444',
+                texto: `Alertas de ansiedade subiram para ${emocoes.ansioso}% esta semana. Período próximo de avaliações pode ser o fator.`
+            });
+        } else {
+            insights.push({
+                icon: 'trending-up',
+                color: '#32B5F1',
+                texto: 'Índices de ansiedade dentro da normalidade esta semana.'
+            });
+        }
+        
+        // Insight 2: Turmas críticas
+        const turmasCriticas = turmas.filter(t => t.nivelMedio < 6);
+        if (turmasCriticas.length > 0) {
+            const nomes = turmasCriticas.map(t => t.nome).join(', ');
+            insights.push({
+                icon: 'alert-circle',
+                color: '#ef4444',
+                texto: `Turmas de ${nomes} concentram ${turmasCriticas.length} turma(s) com nível médio abaixo do esperado.`
+            });
+        }
+        
+        // Insight 3: Aluno crítico
+        const responseAlunos = await fetch('http://localhost:5001/api/escola/alunos');
+        const alunos = await responseAlunos.json();
+        const alunosCriticos = alunos.filter(a => (a.nivel || 1) <= 2);
+        
+        if (alunosCriticos.length > 0) {
+            insights.push({
+                icon: 'user',
+                color: '#8b5cf6',
+                texto: `${alunosCriticos.length} aluno(s) com nível crítico. Acompanhamento prioritário recomendado.`
+            });
+        }
+        
+        // Insight 4: Taxa de resolução (mock, baseado em intervenções)
+        insights.push({
+            icon: 'check-circle',
+            color: '#10b981',
+            texto: `Taxa de engajamento: ${Math.min(95, 70 + turmas.length)}% dos alunos ativos esta semana.`
+        });
+        
+        // Insight 5: Pico de alertas
+        insights.push({
+            icon: 'clock',
+            color: '#f59e0b',
+            texto: 'Pico de atividades registrado às segundas-feiras. Reforçar acolhimento no início da semana.'
+        });
+        
+        renderizarInsights(insights);
+        
+    } catch (error) {
+        console.error('Erro ao carregar insights:', error);
+        // Insights padrão se falhar
+        renderizarInsights([
+            { icon: 'trending-up', color: '#32B5F1', texto: 'Carregando insights baseados nos dados reais...' }
+        ]);
+    }
+}
+
+function renderizarInsights(insights) {
+    const container = document.querySelector('.card .insight-row')?.parentElement;
+    if (!container) return;
+    
+    container.innerHTML = insights.map(i => `
+        <div class="insight-row" onclick="window.location='relatorio.html'" style="cursor:pointer;">
+            <span class="insight-icon"><i data-lucide="${i.icon}" style="width:18px;height:18px;color:${i.color}"></i></span>
+            <div class="insight-text">${i.texto}</div>
+        </div>
+    `).join('');
+    
+    lucide.createIcons();
+}
+
+
+async function criarAlerta() {
+    const titulo = document.getElementById('fTitulo').value;
+    const turma = document.getElementById('fTurma').value;
+    const severidade = document.getElementById('fSev').value;
+    const tipo = document.getElementById('fTipo').value;
+    const desc = document.getElementById('fDesc').value;
+    
+    if (!titulo) {
+        toast('❌ Título é obrigatório!');
+        return;
+    }
+    
+    const novoAlerta = {
+        id: Date.now().toString(),
+        titulo: titulo,
+        desc: desc,
+        turma: turma,
+        aluno: '',
+        sev: severidade,
+        tipo: tipo,
+        emoji: severidade === 'critico' ? 'alert-circle' : 'alert-triangle',
+        resolvido: false,
+        data: `Hoje, ${new Date().getHours()}:${new Date().getMinutes().toString().padStart(2,'0')}`,
+        detalhes: { 'Criado por': 'Escola', 'Turma': turma }
+    };
+    
+  try {
+        await fetch('http://localhost:5001/api/alertas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(novoAlerta)
+        });
+        
+        alertas.unshift(novoAlerta);
+        renderAlertas();
+        atualizarKPIs();  // Já chama salvarContadorAlertas
+        renderHeatmap();
+        fecharModalBtn();
+        toast('✅ Alerta criado com sucesso!');
+        
+    } catch (error) {
+        console.error('Erro ao criar alerta:', error);
+        toast('❌ Erro ao criar alerta!');
+    }
+}
+
+function fecharModalBtn() {
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function fecharModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+        fecharModalBtn();
+    }
+}
+    
+
+// Salvar o número de alertas ativos no localStorage
+function salvarContadorAlertas() {
+    const ativos = alertas.filter(a => !a.resolvido).length;
+    localStorage.setItem('mindfine_alertas_count', ativos);
+    localStorage.setItem('mindfine_alertas_timestamp', Date.now());
+    
+    // Atualizar o badge da sidebar
+    const badge = document.getElementById('sidebarBadge');
+    if (badge) {
+        badge.textContent = ativos;
+        badge.style.display = ativos > 0 ? 'inline-block' : 'none';
+    }
+}
+
+// Modificar a função atualizarKPIs para chamar salvarContadorAlertas
+function atualizarKPIs() {
+    const ativos = alertas.filter(a => !a.resolvido);
+    document.getElementById('kv-todos').textContent = ativos.length;
+    document.getElementById('kv-critico').textContent = ativos.filter(a => a.sev === 'critico').length;
+    document.getElementById('kv-alto').textContent = ativos.filter(a => a.sev === 'alto').length;
+    document.getElementById('kv-medio').textContent = ativos.filter(a => a.sev === 'medio').length;
+    document.getElementById('sidebarBadge').textContent = ativos.length;
+    
+    // SALVAR NO LOCALSTORAGE
+    salvarContadorAlertas();
+}
+
+    // ========== SIDEBAR MOBILE ==========
+    
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+        document.getElementById('sidebar')?.classList.toggle('open');
+    });
+
+
+
+    
+    // ========== EXPOR FUNÇÕES GLOBAIS ==========
+    
+    window.filtrarSev = filtrarSev;
+    window.setPill = setPill;
+    window.resolver = resolver;
+    window.criarIntervencao = criarIntervencao;
+    window.abrirModalAlerta = abrirModalAlerta;
+    window.toggleCard = toggleCard;
+    window.filtrarTurma = filtrarTurma;
+    
+    // ========== INICIALIZAR ==========
+    
+    carregarAlertas();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Jogo da Velha</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --azul-claro: #e1f5fe;
+            --branco: #ffffff;
+            --fundo-transparente: rgba(255, 255, 255, 0.98);
+        }
+
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0; /* Espaço para não encostar no topo/fundo em telas pequenas */
+        }
+
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        .diary-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: white; padding: 12px 25px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 500;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .back-btn { color: var(--azul-bright); font-size: 1.4rem; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            background: var(--fundo-transparente);
+            padding: 25px; /* Reduzido de 40px */
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: 400px; /* Reduzido de 500px */
+            min-height: 500px; /* Reduzido de 650px */
+            max-width: 90vw;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-top: 60px; /* Espaço para o header fixo */
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-bubble {
+            background: var(--azul-claro);
+            padding: 8px;
+            border-radius: 15px;
+            border: 1px solid rgba(50, 181, 241, 0.2);
+        }
+
+        .score-label { font-size: 0.6rem; text-transform: uppercase; color: var(--azul-escuro); font-weight: 800; }
+        .score-value { font-size: 1.4rem; color: var(--azul-escuro); font-weight: 800; }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            margin: 0 auto 15px auto;
+            width: 300px; /* Reduzido de 380px */
+            height: 300px; /* Reduzido de 380px */
+        }
+
+        .cell {
+            background: #fff;
+            border: 2px solid #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem; /* Ajustado */
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 15px;
+            font-weight: 800;
+        }
+
+        .cell:hover:not(.taken) {
+            border-color: var(--azul-bright);
+            background: var(--azul-claro);
+        }
+
+        .cell.x { color: var(--azul-bright); }
+        .cell.o { color: var(--azul-escuro); }
+
+        .message-box {
+            margin: 5px 0 15px 0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--azul-escuro);
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-style {
+            padding: 12px 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid var(--azul-bright);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: white;
+            color: var(--azul-escuro);
+            font-family: 'Montserrat', sans-serif;
+            width: 100%;
+        }
+
+        .btn-style:hover {
+            background: var(--azul-bright);
+            color: white;
+        }
+
+        .btn-filled {
+            background: var(--azul-bright);
+            color: white;
+        }
+
+        .symbol-choice {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .symbol-option {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #f0f4f8;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            background: white;
+        }
+
+        .symbol-option.selected {
+            border-color: var(--azul-bright);
+            background: var(--azul-claro);
+            transform: scale(1.05);
+        }
+
+        .symbol-option.x-option { color: var(--azul-bright); }
+        .symbol-option.o-option { color: var(--azul-escuro); }
+
+        @media (max-width: 400px) {
+            .board { width: 260px; height: 260px; }
+            .container { padding: 15px; }
+            .cell { font-size: 2rem; }
+            .diary-title h2 { font-size: 0.8rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+
+    <header class="diary-header">
+        <div class="header-left">
+            <a href="sala-de-jogos.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title">
+                <h2>Jogo da Velha</h2>
+            </div>
+        </div>
+        <i class="fas fa-robot" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <div class="container">
+        <div class="confetti-container" id="confettiContainer"></div>
+       
+        <!-- TELA 1: ESCOLHA DE DIFICULDADE -->
+        <div class="screen active" id="difficultyScreen">
+            <div class="message-box">Escolha o nível de dificuldade</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-style" onclick="selectDifficulty('easy')">Iniciante</button>
+                <button class="btn-style" onclick="selectDifficulty('medium')">Intermediário</button>
+                <button class="btn-style" onclick="selectDifficulty('hard')">Mestre</button>
+            </div>
+        </div>
+
+        <!-- TELA 2: ESCOLHA DE SÍMBOLO -->
+        <div class="screen" id="symbolScreen">
+            <div class="message-box">Escolha seu símbolo</div>
+            <div class="symbol-choice">
+                <div class="symbol-option x-option" onclick="selectSymbol('X')">X</div>
+                <div class="symbol-option o-option" onclick="selectSymbol('O')">O</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-style btn-filled" id="confirmSymbol" onclick="startGame()" disabled>Confirmar</button>
+                <button class="btn-style" onclick="backToDifficulty()">Voltar</button>
+            </div>
+        </div>
+
+        <!-- TELA 3: JOGO -->
+        <div class="screen" id="gameScreen">
+            <div class="scoreboard">
+                <div class="score-bubble">
+                    <div class="score-label">Você</div>
+                    <div class="score-value" id="playerScore">0</div>
+                </div>
+                <div class="score-bubble">
+                    <div class="score-label">Empate</div>
+                    <div class="score-value" id="drawScore">0</div>
+                </div>
+                <div class="score-bubble">
+                    <div class="score-label">Robô</div>
+                    <div class="score-value" id="aiScore">0</div>
+                </div>
+            </div>
+           
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+
+            <div class="message-box" id="messageBox">Sua vez de jogar</div>
+<div class="recorde-text" id="recordeText">🏆 Melhor sequência: 0</div>
+
+            <div class="btn-container">
+                <button class="btn-style btn-filled" onclick="resetGame()" id="newRoundBtn" style="display: none;">Nova Rodada</button>
+                <button class="btn-style" onclick="location.reload()">Sair</button>
+            </div>
+        </div>
+    </div>
+<script src="mindfine-sync.js"></script>
+
+<script>
+    let matriculaAtual = '';
+    let melhorSequencia = 0;
+    
+    // ========== FUNÇÕES DE RECORDE ==========
+    
+    async function carregarRecorde() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/jogo_da_velha`);
+            const dados = await response.json();
+            melhorSequencia = dados.recorde || 0;
+            document.getElementById('recordeText').innerHTML = `🏆 Melhor sequência: ${melhorSequencia}`;
+        } catch (error) {
+            console.error('Erro ao carregar recorde:', error);
+        }
+    }
+    
+    async function salvarRecorde(pontuacao) {
+        if (pontuacao <= melhorSequencia) return;
+        
+        try {
+            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/jogo_da_velha`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pontuacao: pontuacao })
+            });
+            melhorSequencia = pontuacao;
+            document.getElementById('recordeText').innerHTML = `🏆 Melhor sequência: ${melhorSequencia}`;
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar recorde:', error);
+            return false;
+        }
+    }
+
+    // ========== LÓGICA DO JOGO ==========
+    
+    const cells = document.querySelectorAll('.cell');
+    const messageBox = document.getElementById('messageBox');
+    const difficultyScreen = document.getElementById('difficultyScreen');
+    const symbolScreen = document.getElementById('symbolScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const playerScoreEl = document.getElementById('playerScore');
+    const aiScoreEl = document.getElementById('aiScore');
+    const drawScoreEl = document.getElementById('drawScore');
+    const newRoundBtn = document.getElementById('newRoundBtn');
+    const confirmSymbolBtn = document.getElementById('confirmSymbol');
+
+    let playerSymbol = "";
+    let aiSymbol = "";
+    let currentPlayer = "";
+    let gameState = ["", "", "", "", "", "", "", "", ""];
+    let gameActive = false;
+    let difficulty = "medium";
+    let scores = { player: 0, ai: 0, draws: 0 };
+    let sequenciaAtual = 0;
+
+    const motivationalPhrases = [
+        "Respire fundo. O aprendizado faz parte.",
+        "Acalme a mente e tente novamente.",
+        "O progresso vem de pequenas tentativas."
+    ];
+
+    const winningConditions = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    function selectDifficulty(level) {
+        difficulty = level;
+        difficultyScreen.classList.remove('active');
+        symbolScreen.classList.add('active');
+    }
+
+    function backToDifficulty() {
+        symbolScreen.classList.remove('active');
+        difficultyScreen.classList.add('active');
+        document.querySelectorAll('.symbol-option').forEach(opt => opt.classList.remove('selected'));
+        confirmSymbolBtn.disabled = true;
+    }
+
+    function selectSymbol(symbol) {
+        playerSymbol = symbol;
+        aiSymbol = symbol === "X" ? "O" : "X";
+        document.querySelectorAll('.symbol-option').forEach(opt => opt.classList.remove('selected'));
+        event.target.classList.add('selected');
+        confirmSymbolBtn.disabled = false;
+    }
+
+    function startGame() {
+        symbolScreen.classList.remove('active');
+        gameScreen.classList.add('active');
+        gameActive = true;
+        currentPlayer = "X";
+        resetGame();
+        carregarRecorde();
+    }
+
+    function handleCellClick(e) {
+        const clickedCell = e.target;
+        const clickedIndex = parseInt(clickedCell.getAttribute('data-index'));
+        if (gameState[clickedIndex] !== "" || !gameActive || currentPlayer !== playerSymbol) return;
+        makeMove(clickedCell, clickedIndex, playerSymbol);
+        if (gameActive) {
+            messageBox.textContent = "IA analisando...";
+            setTimeout(aiMove, 600);
+        }
+    }
+
+    function makeMove(cell, index, player) {
+        gameState[index] = player;
+        cell.innerText = player;
+        cell.classList.add('taken', player.toLowerCase());
+        checkResult();
+    }
+
+    function aiMove() {
+        if (!gameActive) return;
+        let move;
+        if (difficulty === "easy") move = getRandomMove();
+        else if (difficulty === "medium") move = getBalancedMove();
+        else move = getBestMove();
+
+        if (move !== -1) {
+            const cell = document.querySelector(`[data-index="${move}"]`);
+            makeMove(cell, move, aiSymbol);
+        }
+    }
+
+    function getRandomMove() {
+        const available = gameState.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+        return available[Math.floor(Math.random() * available.length)];
+    }
+
+    function getBalancedMove() {
+        let win = findWinningMove(aiSymbol); 
+        if (win !== -1) return win;
+        let block = findWinningMove(playerSymbol); 
+        if (block !== -1) return block;
+        return getRandomMove();
+    }
+
+    function findWinningMove(p) {
+        for (let cond of winningConditions) {
+            const [a, b, c] = cond;
+            const line = [gameState[a], gameState[b], gameState[c]];
+            if (line.filter(x => x === p).length === 2 && line.includes("")) {
+                return cond[line.indexOf("")];
+            }
+        }
+        return -1;
+    }
+
+    function getBestMove() {
+        let bScore = -Infinity;
+        let move = -1;
+        for (let i = 0; i < 9; i++) {
+            if (gameState[i] === "") {
+                gameState[i] = aiSymbol;
+                let score = minimax(gameState, 0, false);
+                gameState[i] = "";
+                if (score > bScore) { bScore = score; move = i; }
+            }
+        }
+        return move;
+    }
+
+    function minimax(board, depth, isMax) {
+        let res = checkWinner();
+        if (res === aiSymbol) return 10 - depth;
+        if (res === playerSymbol) return depth - 10;
+        if (res === "draw") return 0;
+        if (isMax) {
+            let best = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === "") {
+                    board[i] = aiSymbol;
+                    best = Math.max(best, minimax(board, depth + 1, false));
+                    board[i] = "";
+                }
+            }
+            return best;
+        } else {
+            let best = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === "") {
+                    board[i] = playerSymbol;
+                    best = Math.min(best, minimax(board, depth + 1, true));
+                    board[i] = "";
+                }
+            }
+            return best;
+        }
+    }
+
+    function checkWinner() {
+        for (let cond of winningConditions) {
+            const [a, b, c] = cond;
+            if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) return gameState[a];
+        }
+        return gameState.includes("") ? null : "draw";
+    }
+
+    function checkResult() {
+        let winner = checkWinner();
+        if (winner) {
+            gameActive = false;
+            if (winner === playerSymbol) { 
+                scores.player++;
+                sequenciaAtual++;
+                messageBox.textContent = "Excelente Vitória!";
+                createConfetti();
+            }
+            else if (winner === aiSymbol) { 
+                scores.ai++;
+                sequenciaAtual = 0;
+                messageBox.textContent = motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)];
+            }
+            else { 
+                scores.draws++;
+                sequenciaAtual = 0;
+                messageBox.textContent = "Empate. Equilíbrio.";
+            }
+            updateScoreboard();
+            
+            if (sequenciaAtual > melhorSequencia) {
+                salvarRecorde(sequenciaAtual);
+            }
+            
+            newRoundBtn.style.display = "block";
+        } else {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            if (currentPlayer !== playerSymbol) {
+                messageBox.textContent = "Robô pensando...";
+            } else {
+                messageBox.textContent = "Sua vez de jogar";
+            }
+        }
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 30; i++) {
+            const c = document.createElement('div');
+            c.style.position = 'fixed';
+            c.style.width = '8px'; c.style.height = '8px';
+            c.style.backgroundColor = '#32B5F1';
+            c.style.left = Math.random() * 100 + '%';
+            c.style.top = '-10px';
+            document.body.appendChild(c);
+            c.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${window.innerHeight}px)`, opacity: 0 }], { duration: 1500 });
+            setTimeout(() => c.remove(), 1500);
+        }
+    }
+
+    function resetGame() {
+        gameState = ["", "", "", "", "", "", "", "", ""];
+        gameActive = true;
+        currentPlayer = "X";
+        newRoundBtn.style.display = "none";
+        cells.forEach(c => { c.innerText = ""; c.className = "cell"; });
+        if (aiSymbol === "X") setTimeout(aiMove, 600);
+        else messageBox.textContent = "Sua vez de jogar";
+    }
+
+    function updateScoreboard() {
+        playerScoreEl.innerText = scores.player;
+        aiScoreEl.innerText = scores.ai;
+        drawScoreEl.innerText = scores.draws;
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+</script>
+
+    </body>
+</html>

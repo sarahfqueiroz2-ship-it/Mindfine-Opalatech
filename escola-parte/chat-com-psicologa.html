@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Chat com Apoio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --azul-bright: #32B5F1;
+        --azul-escuro: #0277bd;
+        --neon-border: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+        --glass: rgba(255, 255, 255, 0.9);
+    }
+
+    body, html {
+        margin: 0; padding: 0;
+        height: 100%; overflow: hidden;
+        font-family: 'Montserrat', sans-serif;
+        background: #000;
+    }
+
+    /* --- FUNDO --- */
+    .background-layer {
+        position: fixed; width: 110%; height: 110%;
+        background-image: url('fundos/fundo-a.png'); 
+        background-size: cover; background-position: center;
+        z-index: 1; left: -5%; top: -5%;
+        filter: blur(4px) brightness(0.7);
+    }
+
+    /* --- SIDEBAR --- */
+    .sidebar {
+        position: fixed; left: -320px; top: 0;
+        width: 320px; height: 100vh;
+        background: white; z-index: 1000;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 5px 0 25px rgba(0,0,0,0.2);
+        display: flex; flex-direction: column;
+    }
+    .sidebar.active { left: 0; }
+
+    .sidebar-header { padding: 30px 20px; background: var(--azul-bright); color: white; }
+    .sidebar-header h3 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+
+    .history-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
+    .history-item {
+        padding: 15px; border-radius: 12px;
+        background: #f8f9fa; margin-bottom: 10px;
+        border: 2px solid transparent; cursor: pointer; transition: 0.3s;
+    }
+    .history-item:hover { border-color: var(--azul-bright); background: #f0faff; }
+    .history-item.active { border-color: var(--azul-bright); background: #e1f5fe; }
+    .history-item h4 { margin: 0 0 5px; font-size: 0.85rem; color: var(--azul-escuro); }
+    .history-item p { margin: 0; font-size: 0.75rem; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .new-chat-btn {
+        margin: 20px; padding: 15px;
+        background: var(--azul-bright); color: white;
+        border: none; border-radius: 50px; font-weight: 800;
+        cursor: pointer; box-shadow: 0 4px 15px rgba(50, 181, 241, 0.3);
+    }
+
+    /* --- CONTEÚDO PRINCIPAL --- */
+    .main-content {
+        position: relative; z-index: 10;
+        height: 100vh; display: flex; flex-direction: column;
+    }
+
+    .chat-header {
+        background: white; padding: 15px 20px;
+        display: flex; align-items: center; gap: 15px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        z-index: 500;
+    }
+    .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+    .back-btn, .menu-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; }
+    
+    .chat-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; }
+    .chat-title span { font-size: 0.7rem; font-weight: 600; }
+    .status-online { color: #2ecc71; }
+    .status-offline { color: #95a5a6; }
+
+    .messages-area {
+        flex-grow: 1; overflow-y: auto;
+        padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .msg {
+        max-width: 75%; padding: 12px 16px; border-radius: 18px;
+        font-size: 0.85rem; line-height: 1.4; position: relative;
+        animation: msgIn 0.3s ease;
+    }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } }
+
+    .msg.received { align-self: flex-start; background: white; color: #444; border-bottom-left-radius: 2px; }
+    .msg.sent { align-self: flex-end; background: var(--azul-bright); color: white; border-bottom-right-radius: 2px; box-shadow: var(--neon-border); }
+    .msg-time { font-size: 0.6rem; opacity: 0.7; display: block; margin-top: 5px; text-align: right; }
+
+    .input-bar { background: white; padding: 15px 20px; display: flex; align-items: center; gap: 12px; }
+    .input-wrapper { flex-grow: 1; background: #f0f2f5; border-radius: 25px; padding: 10px 20px; }
+    .input-wrapper input { width: 100%; border: none; background: transparent; outline: none; font-family: 'Montserrat'; font-size: 0.9rem; }
+    .send-btn { background: var(--azul-bright); color: white; width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* --- MODAL DE IDENTIDADE --- */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center;
+        z-index: 3000; transition: 0.3s;
+    }
+    .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+    .modal-content {
+        background: white; border-radius: 30px;
+        padding: 30px; max-width: 400px; width: 90%;
+        border: 3px solid var(--azul-bright); text-align: center;
+        position: relative;
+    }
+    .id-display-box { background: #f0faff; border: 2px dashed var(--azul-bright); padding: 15px; border-radius: 15px; margin: 20px 0; }
+    .id-name { font-size: 1.2rem; font-weight: 800; color: var(--azul-escuro); display: block; }
+
+    .btn-choice {
+        background: white; border: 2px solid var(--azul-bright); color: var(--azul-bright);
+        padding: 15px; border-radius: 15px; font-weight: 800; cursor: pointer; width: 100%;
+        margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Montserrat';
+    }
+    .btn-choice.primary { background: var(--azul-bright); color: white; }
+    .hidden { display: none; }
+
+    /* Partículas */
+    #particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+    .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; animation: rise linear forwards; }
+    @keyframes rise { to { transform: translateY(-110vh); opacity: 0; } }
+
+
+/* Botão de fechar modal */
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 1.5rem;
+    color: var(--azul-bright);
+    cursor: pointer;
+    transition: 0.3s;
+    background: none;
+    border: none;
+    font-weight: bold;
+}
+.modal-close:hover {
+    color: var(--azul-escuro);
+    transform: scale(1.1);
+}
+</style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<!-- MODAL DE IDENTIDADE -->
+<div class="modal-overlay" id="identityModal">
+    <div class="modal-content" id="modalStep1">
+    <button class="modal-close" onclick="closeIdentityModal()">&times;</button>
+        <h2 style="color: var(--azul-escuro);"><i class="fas fa-user-shield"></i> Nova Conversa</h2>
+        <p style="font-size: 0.85rem; color: #444;">Como você deseja ser identificada nesta conversa?</p>
+        <div style="margin-top: 20px;">
+            <button class="btn-choice" onclick="selectIdentity('id')"><i class="fas fa-user"></i> Usar meu nome </button>
+            <button class="btn-choice" onclick="generateAndShowAnon()"><i class="fas fa-user-secret"></i> Ser Anônimo(a)</button>
+        </div>
+    </div>
+
+    <div class="modal-content hidden" id="modalStepAnon">
+    <button class="modal-close" onclick="closeIdentityModal()">&times;</button>
+        <h2 style="color: var(--azul-escuro);">Seu Nome Anônimo</h2>
+        <p style="font-size: 0.85rem; color: #444;">Este é o nome exclusivo que a psicóloga verá. Ele nunca se repetirá para ela:</p>
+        
+        <div class="id-display-box">
+            <span class="id-name" id="generatedNameDisplay">---</span>
+            <span style="font-size: 0.65rem; color: #666; display: block; margin-top: 5px;"><i class="fas fa-lock"></i> Sua identidade real está protegida.</span>
+        </div>
+
+        <button class="btn-choice primary" onclick="startChat('anon')">Tudo bem, Iniciar Chat</button>
+        <button class="btn-choice" style="border:none; font-size: 0.7rem;" onclick="backToStep1()">Voltar e escolher outro</button>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3>Histórico de Apoio</h3>
+    </div>
+    <div class="history-list">
+        <div class="history-item active">
+            <h4>Conversa de Hoje</h4>
+            <p>Aguardando início...</p>
+        </div>
+        
+    </div>
+    <button class="new-chat-btn" onclick="abrirModalNovoChat()">Nova Conversa</button>
+</div>
+
+<!-- CONTEÚDO DO CHAT -->
+<div class="main-content">
+    <header class="chat-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <a href="inicial.html" class="back-btn" onclick="salvarEstadoAntesDeSair()"><i class="fas fa-chevron-left"></i></a>
+            <div class="chat-title">
+                <h2 id="display-user-name">Chat com Apoio</h2>
+                <span id="prof-status-container">
+                    <!-- Status será injetado pelo JS -->
+                </span>
+            </div>
+        </div>
+        <i class="fas fa-shield-alt" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <div class="messages-area" id="msg-container">
+        <!-- Mensagem será inserida após a escolha do nome -->
+    </div>
+
+    <div class="input-bar">
+        <div class="input-wrapper">
+            <input type="text" id="msg-input" placeholder="Digite sua mensagem..." autocomplete="off">
+        </div>
+        <button class="send-btn" onclick="send()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+
+
+
+<script>
+  
+    // ========== CARREGAR USUÁRIO - ESTUDANTE ==========
+const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+console.log('🔍 Dados do usuário no chat:', usuario);
+
+if (!usuario || !usuario.matricula) {
+    window.location.href = 'login.html';
+}
+
+let matriculaAtual = usuario.matricula;
+let finalUserName = '';
+let isAnonymous = false;
+let currentChatId = null;
+let conversas = [];
+
+console.log('✅ ALUNO logado com matrícula:', matriculaAtual);
+
+// ========== FUNÇÕES DO BACKEND ==========
+
+async function carregarConversas() {
+    try {
+        const response = await fetch(`http://localhost:5001/api/chats?aluno=${matriculaAtual}`);
+        conversas = await response.json();
+        renderizarHistorico();
+        
+        const ultimoChatId = localStorage.getItem(`ultimo_chat_${matriculaAtual}`);
+        if (ultimoChatId && conversas.find(c => c.id === ultimoChatId)) {
+            await carregarConversa(ultimoChatId);
+        } else if (conversas.length > 0) {
+            await carregarConversa(conversas[0].id);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        conversas = [];
+    }
+}
+
+async function carregarMensagens(chatId) {
+    try {
+        const response = await fetch(`http://localhost:5001/api/chats/${chatId}/mensagens`);
+        return await response.json();
+    } catch (error) {
+        return [];
+    }
+}
+
+async function enviarMensagem(chatId, remetente, texto) {
+    try {
+        await fetch(`http://localhost:5001/api/chats/${chatId}/mensagens`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ remetente, texto })
+        });
+    } catch (error) {
+        console.error('Erro:', error);
+    }
+}
+
+async function criarConversa(id, nome, anonimo) {
+    try {
+        await fetch(`http://localhost:5001/api/chats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: id,
+                matricula_aluno: matriculaAtual,
+                nome_aluno: nome,
+                anonimo: anonimo ? 1 : 0
+            })
+        });
+    } catch (error) {
+        console.error('Erro:', error);
+    }
+}
+
+// ========== FUNÇÕES DO MODAL ==========
+
+function abrirModalNovoChat() {
+    console.log('Abrindo modal');
+    // Resetar os valores
+    isAnonymous = false;
+    finalUserName = '';
+    
+    const modal = document.getElementById('identityModal');
+    const step1 = document.getElementById('modalStep1');
+    const stepAnon = document.getElementById('modalStepAnon');
+    
+    if (modal && step1 && stepAnon) {
+        modal.classList.remove('hidden');
+        step1.classList.remove('hidden');
+        stepAnon.classList.add('hidden');
+    } else {
+        console.error('Elementos do modal não encontrados!');
+    }
+}
+
+function fecharModal() {
+    document.getElementById('identityModal').classList.add('hidden');
+}
+
+function closeIdentityModal() {
+    document.getElementById('identityModal').classList.add('hidden');
+}
+
+function selectIdentity(type) {
+    console.log('Botão clicado:', type);
+    if(type === 'id') {
+        criarNovoChat();
+    }
+}
+
+function generateAndShowAnon() {
+    console.log('Gerando nome anônimo');
+    isAnonymous = true;
+    finalUserName = 'Anon_' + Math.floor(Math.random() * 10000);
+    const displayElement = document.getElementById('generatedNameDisplay');
+    if (displayElement) {
+        displayElement.innerText = finalUserName;
+    }
+    document.getElementById('modalStep1').classList.add('hidden');
+    document.getElementById('modalStepAnon').classList.remove('hidden');
+}
+
+function startChat() {
+    console.log('Iniciando chat anônimo');
+    if (!finalUserName) {
+        console.error('Nome anônimo não gerado!');
+        return;
+    }
+    
+    currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
+    criarConversa(currentChatId, finalUserName, true).then(() => {
+        carregarConversas();
+        carregarConversa(currentChatId);
+        fecharModal();
+        
+       
+    });
+}
+
+function backToStep1() {
+    document.getElementById('modalStep1').classList.remove('hidden');
+    document.getElementById('modalStepAnon').classList.add('hidden');
+}
+
+async function criarNovoChat() {
+    console.log('Criando novo chat identificado');
+    isAnonymous = false;
+    finalUserName = matriculaAtual;
+    currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
+    
+    await criarConversa(currentChatId, finalUserName, false);
+    await carregarConversas();
+    await carregarConversa(currentChatId);
+    fecharModal();
+    
+
+}
+
+// ========== UI ==========
+
+function renderizarHistorico() {
+    const historyList = document.querySelector('.history-list');
+    if (!historyList) return;
+    
+    if (!conversas || conversas.length === 0) {
+        historyList.innerHTML = `<div class="history-item"><h4>Nenhuma conversa</h4><p>Clique em "Nova Conversa" para começar</p></div>`;
+        return;
+    }
+    
+    historyList.innerHTML = conversas.map(conv => `
+        <div class="history-item ${currentChatId === conv.id ? 'active' : ''}" onclick="carregarConversa('${conv.id}')">
+            <h4>${conv.nome_aluno || 'Aluno'} ${conv.anonimo ? '(Anônimo)' : ''}</h4>
+            <p>${conv.ultima_mensagem || 'Clique para conversar'}</p>
+            <small>${formatarHora(conv.ultima_data)}</small>
+        </div>
+    `).join('');
+}
+
+function formatarHora(dataISO) {
+    if (!dataISO) return '';
+    try {
+        const data = new Date(dataISO);
+        return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}`;
+    } catch(e) {
+        return '';
+    }
+}
+
+async function carregarConversa(chatId) {
+    // Verificar se o chat pertence ao aluno atual
+    const conversa = conversas.find(c => c.id === chatId);
+    if (conversa && conversa.matricula_aluno !== matriculaAtual) {
+        console.error('❌ Esta conversa não pertence a este aluno!');
+        mostrarNotificacao('Esta conversa não pertence a você!', 'info');
+        return;
+    }
+    
+    currentChatId = chatId;
+    localStorage.setItem(`ultimo_chat_${matriculaAtual}`, chatId);
+    console.log('🔄 Carregando conversa:', chatId);
+    
+    if (conversa) {
+        document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
+    }
+    
+    const mensagens = await carregarMensagens(chatId);
+    const container = document.getElementById('msg-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!mensagens || mensagens.length === 0) {
+        const time = formatarHora(new Date().toISOString());
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg received';
+        msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+        container.appendChild(msgDiv);
+
+           await enviarMensagem(chatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
+    } else {
+        for (const msg of mensagens) {
+            const isSent = msg.remetente === 'aluno';
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
+            msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
+            container.appendChild(msgDiv);
+        }
+    }
+    container.scrollTop = container.scrollHeight;
+    renderizarHistorico();
+}
+
+
+async function send() {
+    const input = document.getElementById('msg-input');
+    if (!input) return;
+    
+    const texto = input.value.trim();
+    if (!texto || !currentChatId) {
+        if (!currentChatId) {
+            mostrarNotificacao('Inicie uma nova conversa primeiro!', 'info');
+        }
+        return;
+    }
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg sent';
+    msgDiv.innerHTML = `${texto}<span class="msg-time">${formatarHora(new Date().toISOString())}</span>`;
+    document.getElementById('msg-container').appendChild(msgDiv);
+    input.value = '';
+    document.getElementById('msg-container').scrollTop = document.getElementById('msg-container').scrollHeight;
+    
+    await enviarMensagem(currentChatId, 'aluno', texto);
+    
+    // Atualizar última mensagem na conversa
+    const conversa = conversas.find(c => c.id === currentChatId);
+    if (conversa) {
+        conversa.ultima_mensagem = texto;
+        conversa.ultima_data = new Date().toISOString();
+        renderizarHistorico();
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+}
+
+function voltarSalvando() {
+    if (currentChatId) {
+        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+    }
+    window.location.href = 'inicial.html';
+}
+
+// Mostrar notificação estilizada
+function mostrarNotificacao(mensagem, tipo = 'info') {
+    // Criar elemento de notificação temporário
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, ${tipo === 'info' ? '#32B5F1' : '#10b981'}, ${tipo === 'info' ? '#0277bd' : '#059669'});
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        animation: fadeInOut 2.5s ease forwards;
+    `;
+    notif.innerHTML = `<i class="fas ${tipo === 'info' ? 'fa-info-circle' : 'fa-check-circle'}"></i> ${mensagem}`;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.remove();
+    }, 2500);
+}
+
+// Adicionar animação CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+`;
+document.head.appendChild(style);
+
+// ========== BUSCA AUTOMÁTICA DE MENSAGENS (VERSÃO CORRIGIDA) ==========
+let intervaloBusca = null;
+let ultimaMensagemCount = 0;
+
+function iniciarBuscaAutomatica() {
+    if (intervaloBusca) clearInterval(intervaloBusca);
+    
+    intervaloBusca = setInterval(async () => {
+        if (!currentChatId) return;
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/chats/${currentChatId}/mensagens`);
+            const mensagens = await response.json();
+            const container = document.getElementById('msg-container');
+            if (!container) return;
+            
+            // Verificar se tem novas mensagens comparando o conteúdo
+            const mensagensAtuais = Array.from(container.children).filter(c => c.classList && c.classList.contains('msg')).length;
+            
+            if (mensagens && mensagens.length > mensagensAtuais) {
+                console.log(`📨 ${mensagens.length - mensagensAtuais} novas mensagens!`);
+                
+                // Adicionar apenas as mensagens novas, sem recarregar tudo
+                const mensagensExistentes = new Set();
+                for (const child of container.children) {
+                    const text = child.textContent;
+                    if (text) mensagensExistentes.add(text);
+                }
+                
+                for (const msg of mensagens) {
+                    // Verificar se a mensagem já existe na tela
+                    const msgKey = `${msg.texto}_${msg.data_hora}`;
+                    let jaExiste = false;
+                    for (const child of container.children) {
+                        if (child.textContent.includes(msg.texto) && child.innerHTML.includes(formatarHora(msg.data_hora))) {
+                            jaExiste = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!jaExiste && msg.remetente !== 'aluno') {
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `msg received`;
+                        msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
+                        container.appendChild(msgDiv);
+                        
+                        // Mostrar notificação de nova mensagem
+                        mostrarNotificacao('Nova mensagem da psicóloga! 💙', 'info');
+                    }
+                }
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch (error) {
+            console.error('Erro na busca:', error);
+        }
+    }, 2000);
+}
+
+// ========== LIMPAR DADOS AO TROCAR DE USUÁRIO ==========
+function limparDadosUsuario() {
+    // Limpar conversas do chat anterior
+    localStorage.removeItem(`ultimo_chat_${matriculaAtual}`);
+    currentChatId = null;
+    conversas = [];
+    
+    if (intervaloBusca) {
+        clearInterval(intervaloBusca);
+        intervaloBusca = null;
+    }
+}
+
+// Verificar se o usuário mudou (comparar com login anterior)
+const usuarioSalvo = JSON.parse(localStorage.getItem('usuario') || '{}');
+const usuarioAntigo = localStorage.getItem('ultimo_usuario_logado');
+
+if (usuarioAntigo && usuarioAntigo !== usuario.matricula) {
+    console.log('🔄 Usuário diferente detectado! Limpando cache...');
+    limparDadosUsuario();
+}
+localStorage.setItem('ultimo_usuario_logado', usuario.matricula);
+
+// ========== EVENTOS ==========
+document.addEventListener('DOMContentLoaded', () => {
+    const msgInput = document.getElementById('msg-input');
+    if (msgInput) {
+        msgInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') send();
+        });
+    }
+    
+    // Garantir que o modal NÃO seja fechado automaticamente
+    // Removemos a linha que estava fechando o modal
+    
+    // Inicializar
+    carregarConversas();
+    iniciarBuscaAutomatica();
+});
+
+document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.querySelector('.menu-btn');
+    if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && !menuBtn?.contains(e.target)) {
+        sidebar.classList.remove('active');
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (currentChatId) {
+        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+    }
+});
+
+// ========== EXPOR FUNÇÕES GLOBAIS ==========
+window.abrirModalNovoChat = abrirModalNovoChat;
+window.fecharModal = fecharModal;
+window.closeIdentityModal = closeIdentityModal;
+window.selectIdentity = selectIdentity;
+window.generateAndShowAnon = generateAndShowAnon;
+window.startChat = startChat;
+window.backToStep1 = backToStep1;
+window.toggleSidebar = toggleSidebar;
+window.carregarConversa = carregarConversa;
+window.send = send;
+window.voltarSalvando = voltarSalvando;
+    
+
+
+
+// ========== PARTÍCULAS (BOLHAS) ==========
+function createBubble() {
+    const container = document.getElementById('particles-container');
+    if (!container) return;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = Math.random() * 20 + 5;
+    b.style.width = size + 'px';
+    b.style.height = size + 'px';
+    b.style.left = Math.random() * 100 + '%';
+    b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+    container.appendChild(b);
+    setTimeout(() => b.remove(), 10000);
+}
+
+setInterval(createBubble, 1500);
+
+// Função para salvar estado antes de sair (para o botão voltar)
+function salvarEstadoAntesDeSair() {
+    if (currentChatId) {
+        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+    }
+    // Não redireciona aqui, o href da tag <a> já faz isso
+    return true;
+}
+
+// Expor a função globalmente
+window.salvarEstadoAntesDeSair = salvarEstadoAntesDeSair;
+</script>
+
+</body>
+</html>

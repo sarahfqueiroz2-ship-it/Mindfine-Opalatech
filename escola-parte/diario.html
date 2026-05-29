@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Diário Inteligente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --azul-bright: #32B5F1;
+        --azul-escuro: #0277bd;
+        --vermelho-gravando: #ff4757;
+    }
+
+    body, html {
+        margin: 0; padding: 0;
+        height: 100%; overflow: hidden;
+        font-family: 'Montserrat', sans-serif;
+        background: #000;
+    }
+
+    .background-layer {
+        position: fixed; width: 110%; height: 110%;
+        background-image: url('fundos/fundo-a.png'); 
+        background-size: cover; background-position: center;
+        z-index: 1; left: -5%; top: -5%;
+        filter: blur(8px) brightness(0.6);
+    }
+
+    /* --- SIDEBAR E OVERLAY --- */
+    .sidebar-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 3500;
+        display: none;
+    }
+
+    .sidebar {
+        position: fixed; left: -300px; top: 0;
+        width: 300px; height: 100vh;
+        background: #fdfdfd; z-index: 4000;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex; flex-direction: column;
+        box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+    }
+    .sidebar.active { left: 0; }
+
+    .sidebar-header { padding: 25px 20px; background: var(--azul-bright); color: white; }
+    .sidebar-header h3 { margin: 0; font-size: 1rem; font-weight: 800; text-transform: uppercase; }
+
+    .calendar-box { padding: 20px; background: #fff; border-bottom: 1px solid #eee; }
+    .calendar-box label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--azul-bright); margin-bottom: 10px; }
+    .calendar-input { 
+        width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #f0f0f0; 
+        font-family: 'Montserrat'; color: var(--azul-escuro); font-weight: 600; outline: none;
+        box-sizing: border-box;
+    }
+
+    .history-list { flex-grow: 1; overflow-y: auto; padding: 15px; background: #f9f9f9; }
+    .history-item {
+        padding: 12px; border-radius: 12px; background: white; margin-bottom: 10px;
+        font-size: 0.75rem; border: 1px solid #eee; cursor: pointer;
+    }
+
+    /* --- CONTEÚDO PRINCIPAL --- */
+    .main-content { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; }
+
+    .diary-header {
+        background: white; padding: 12px 20px;
+        display: flex; align-items: center; justify-content: space-between;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1); z-index: 500;
+    }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .menu-btn { color: var(--azul-bright); font-size: 1.3rem; cursor: pointer; border: none; background: none; }
+    .diary-title h2 { margin: 0; font-size: 0.85rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; }
+
+    .tabs-container { display: flex; justify-content: center; gap: 10px; padding: 15px; }
+    .tab-btn {
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px 20px; border-radius: 50px; color: white; font-weight: 600; font-size: 0.7rem; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--azul-bright); border-color: white; }
+
+    /* --- CARDS --- */
+    .entries-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; }
+    
+    .entry-card {
+        background: white; padding: 18px; border-radius: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        border-left: 6px solid var(--azul-bright); position: relative;
+        cursor: pointer; transition: all 0.4s ease;
+        max-height: 200px; overflow: hidden;
+    }
+    
+    /* MODIFICAÇÃO: Expansão vertical garantida */
+    .entry-card.expanded { 
+        max-height: 2000px; 
+    }
+
+    .entry-date { font-size: 0.6rem; font-weight: 800; color: var(--azul-bright); margin-bottom: 5px; display: block; }
+    .entry-title { font-size: 0.9rem; font-weight: 800; color: var(--azul-escuro); margin: 0 0 8px 0; }
+    
+   .entry-text { 
+        font-size: 0.85rem; color: #444; line-height: 1.5; margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3; /* Adicionado para compatibilidade padrão */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-wrap: break-word;
+    }
+
+    /* Remove o limite de linhas ao expandir */
+    .entry-card.expanded .entry-text {
+        display: block; 
+        -webkit-line-clamp: unset; 
+        line-clamp: unset; /* Adicionado para compatibilidade padrão */
+        overflow: visible;
+    }
+
+    .expand-hint {
+        text-align: center; font-size: 0.6rem; color: var(--azul-bright);
+        font-weight: 800; margin-top: 10px; opacity: 0.7;
+    }
+    .entry-card.expanded .expand-hint { display: none; }
+
+    .delete-btn {
+        position: absolute; top: 15px; right: 15px;
+        color: #ccc; font-size: 0.9rem; cursor: pointer; padding: 5px;
+        transition: 0.3s; z-index: 5;
+    }
+    .delete-btn:hover { color: var(--vermelho-gravando); }
+
+    .add-btn {
+        position: fixed; bottom: 30px; right: 30px;
+        width: 60px; height: 60px; border-radius: 50%;
+        background: var(--azul-bright); color: white; border: none; font-size: 1.5rem;
+        box-shadow: 0 5px 20px rgba(50, 181, 241, 0.5); z-index: 100; cursor: pointer;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000;
+    }
+    .modal-content { background: white; border-radius: 25px; padding: 25px; width: 85%; max-width: 400px; }
+    
+    .input-field {
+        width: 100%; border: none; background: #f0faff; padding: 15px; border-radius: 12px;
+        margin-bottom: 10px; font-family: 'Montserrat'; box-sizing: border-box; outline: none;
+    }
+
+    .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; animation: rise linear forwards; }
+    @keyframes rise { to { transform: translateY(-110vh); opacity: 0; } }
+
+
+    /* --- NOTIFICAÇÃO E CONFIRM CUSTOM --- */
+#notifModal {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 9999; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0; pointer-events: none; min-width: 300px;
+}
+#notifModal.visible { opacity: 1; pointer-events: all; }
+.notif-box {
+    background: white; border-radius: 20px; padding: 18px 25px;
+    display: flex; align-items: center; gap: 15px;
+    border: 2px solid var(--azul-bright);
+    box-shadow: 0 8px 25px rgba(50,181,241,0.3);
+}
+.notif-icon { font-size: 1.4rem; color: var(--azul-bright); flex-shrink: 0; }
+.notif-icon.error { color: #ff4757; }
+.notif-icon.warning { color: #FF9800; }
+.notif-title { font-weight: 800; color: var(--azul-escuro); font-size: 0.85rem; }
+.notif-msg { font-size: 0.75rem; color: #667; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3><i class="fas fa-search"></i> Histórico</h3>
+    </div>
+    <div class="calendar-box">
+        <label>PESQUISAR DATA:</label>
+        <input type="date" id="search-date" class="calendar-input" onchange="filterEntriesByDate()">
+    </div>
+    <div class="history-list" id="sidebar-results"></div>
+</div>
+
+<div class="main-content">
+    <header class="diary-header">
+        <div class="header-left">
+            <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-calendar-alt"></i></button>
+            <a href="inicial.html" style="color:var(--azul-bright);"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title"><h2>Diário Mindfine</h2></div>
+        </div>
+        <i class="fas fa-shield-alt" style="color: var(--azul-bright); font-size: 0.9rem;"></i>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" id="tab-text" onclick="switchTab('text')">ESCRITOS</button>
+        <button class="tab-btn" id="tab-audio" onclick="switchTab('audio')">ÁUDIOS</button>
+    </div>
+
+    <div class="entries-area" id="entries-container"></div>
+
+    <button class="add-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
+</div>
+
+<div class="modal-overlay" id="entryModal">
+    <div class="modal-content">
+        <h2 style="color: var(--azul-escuro); font-size: 1rem; margin-top:0;">Novo Registro</h2>
+        <input type="text" id="entry-title" class="input-field" style="font-weight:800;" placeholder="Título...">
+        <textarea id="entry-content" class="input-field" style="height:150px; resize:none;" placeholder="Como foi seu dia?"></textarea>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+            <button onclick="startDictation()" style="background:#e1f5fe; border:none; padding:12px; border-radius:12px; color:var(--azul-bright); font-weight:800; cursor:pointer;">
+                <i class="fas fa-microphone"></i> DITADO
+            </button>
+            <button id="record-btn" onclick="toggleAudioRecording()" style="background:#fff0f0; border:none; padding:12px; border-radius:12px; color:var(--vermelho-gravando); font-weight:800; cursor:pointer;">
+                <i class="fas fa-microphone-lines"></i> GRAVAR
+            </button>
+        </div>
+        
+        <div id="audio-preview-container" style="display:none; margin-bottom:10px;">
+            <audio id="audio-preview" controls style="width:100%; height:35px;"></audio>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeModal()" style="flex:1; padding:12px; border:none; background:#eee; border-radius:50px; font-weight:800; cursor:pointer;">VOLTAR</button>
+            <button onclick="saveEntry()" style="flex:1; padding:12px; border:none; background:var(--azul-bright); color:white; border-radius:50px; font-weight:800; cursor:pointer;">SALVAR</button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICAÇÃO TOAST -->
+<div id="notifModal">
+    <div class="notif-box">
+        <i class="notif-icon fas fa-info-circle" id="notifIcon"></i>
+        <div>
+            <div class="notif-title" id="notifTitle"></div>
+            <div class="notif-msg" id="notifMsg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM APAGAR -->
+<div class="modal-overlay" id="confirmDeleteModal">
+    <div class="modal-content" style="text-align:center; max-width:340px;">
+        <i class="fas fa-trash-alt" style="font-size:2rem; color:#ff4757; margin-bottom:15px; display:block;"></i>
+        <h3 style="color:var(--azul-escuro); margin-bottom:8px;">Apagar registro</h3>
+        <p style="font-size:0.85rem; color:#667; margin-bottom:25px;">Deseja apagar este registro permanentemente?</p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="document.getElementById('confirmDeleteModal').style.display='none'"
+                style="flex:1; padding:12px; border-radius:50px; border:2px solid var(--azul-bright); background:white; color:var(--azul-bright); font-weight:800; cursor:pointer;">
+                Cancelar
+            </button>
+            <button id="confirmDeleteBtn"
+                style="flex:1; padding:12px; border-radius:50px; border:none; background:#ff4757; color:white; font-weight:800; cursor:pointer;">
+                Apagar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let diaryEntries = [];
+    let currentTab = 'text';
+    let mediaRecorder;
+    let audioChunks = [];
+    let currentAudioBase64 = null;
+    let isRecording = false;
+    let matriculaAtual = '';
+
+    // ========== FUNÇÕES DE CARREGAR/SALVAR ==========
+    
+    async function carregarDiario() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/diario/${matriculaAtual}`);
+            const dados = await response.json();
+            diaryEntries = dados;
+            console.log('✅ Diário carregado:', diaryEntries.length, 'entradas');
+            renderEntries();
+        } catch (error) {
+            console.error('❌ Erro ao carregar diário:', error);
+            diaryEntries = [];
+            renderEntries();
+        }
+    }
+    
+    async function salvarEntrada(entry) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/diario/${matriculaAtual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(entry)
+            });
+            const result = await response.json();
+            if (result.sucesso) {
+                await carregarDiario(); // Recarregar para mostrar a nova entrada
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('❌ Erro ao salvar entrada:', error);
+            return false;
+        }
+    }
+    
+let _deletePendingId = null;
+async function deletarEntrada(id) {
+    _deletePendingId = id;
+    document.getElementById('confirmDeleteModal').style.display = 'flex';
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        document.getElementById('confirmDeleteModal').style.display = 'none';
+        try {
+            const response = await fetch(`http://localhost:5001/api/diario/${matriculaAtual}/${_deletePendingId}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.sucesso) await carregarDiario();
+        } catch (error) {
+            console.error('❌ Erro ao deletar entrada:', error);
+        }
+    };
+}        
+
+    // ========== FUNÇÕES EXISTENTES MODIFICADAS ==========
+    
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const isActive = sidebar.classList.toggle('active');
+        overlay.style.display = isActive ? 'block' : 'none';
+        if(isActive) renderSidebarHistory();
+    }
+
+    function filterEntriesByDate() {
+        const dateValue = document.getElementById('search-date').value;
+        if(!dateValue) return;
+        
+        const filtered = diaryEntries.filter(e => e.data === dateValue);
+        renderEntries(filtered);
+        toggleSidebar();
+    }
+
+    function renderSidebarHistory() {
+        const res = document.getElementById('sidebar-results');
+        if(diaryEntries.length === 0) {
+            res.innerHTML = '<p style="text-align:center; font-size:0.7rem; color:#999;">Nenhum registro ainda.</p>';
+            return;
+        }
+        res.innerHTML = `<p style="font-size:0.6rem; color:#999; margin-bottom:10px;">RECENTES:</p>` + 
+            diaryEntries.slice(0,5).map(e => `
+                <div class="history-item" onclick="viewSpecificEntry(${e.id})">
+                    <strong>${e.titulo}</strong><br>
+                    <span style="font-size:0.6rem; color:var(--azul-bright)">${formatarData(e.data)}</span>
+                </div>
+            `).join('');
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '';
+        const partes = dataStr.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function viewSpecificEntry(id) {
+        const entry = diaryEntries.find(e => e.id === id);
+        if(entry) {
+            currentTab = entry.tipo;
+            switchTab(entry.tipo);
+            renderEntries([entry]);
+            toggleSidebar();
+        }
+    }
+
+    // Reconhecimento de voz
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    if (Recognition) {
+        recognition = new Recognition();
+        recognition.lang = 'pt-BR';
+        recognition.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            document.getElementById('entry-content').value += text + " ";
+        };
+    }
+
+    function startDictation() { 
+        if(!recognition) return showNotif('Indisponível', 'Ditado não suportado neste navegador.', 'warning');
+        recognition.start();
+    }
+
+    // Gravação de áudio
+    async function toggleAudioRecording() {
+        const btn = document.getElementById('record-btn');
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = () => {
+                        currentAudioBase64 = reader.result;
+                        document.getElementById('audio-preview').src = currentAudioBase64;
+                        document.getElementById('audio-preview-container').style.display = 'block';
+                    };
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                btn.style.background = "var(--vermelho-gravando)";
+                btn.style.color = "white";
+                btn.innerHTML = '<i class="fas fa-stop"></i> PARAR';
+            } catch (err) {
+                showNotif('Erro', 'Não foi possível acessar o microfone.', 'error');
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            btn.style.background = "#fff0f0";
+            btn.style.color = "var(--vermelho-gravando)";
+            btn.innerHTML = '<i class="fas fa-microphone-lines"></i> GRAVAR';
+        }
+    }
+
+    function renderEntries(dataToRender = null) {
+        const container = document.getElementById('entries-container');
+        container.innerHTML = '';
+        
+        const data = dataToRender || diaryEntries.filter(e => e.tipo === currentTab);
+
+        if(data.length === 0) {
+            container.innerHTML = `<p style="color:white; opacity:0.5; text-align:center; margin-top:40px;">Nenhum registro encontrado.</p>`;
+            return;
+        }
+
+        data.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'entry-card';
+            card.onclick = () => card.classList.toggle('expanded');
+            
+            const hasLongText = entry.conteudo && entry.conteudo.length > 100;
+
+            card.innerHTML = `
+                <div class="delete-btn" onclick="event.stopPropagation(); deletarEntrada(${entry.id})">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <span class="entry-date">${formatarData(entry.data)}</span>
+                <h3 class="entry-title">${entry.titulo}</h3>
+                ${entry.conteudo ? `<p class="entry-text">${entry.conteudo}</p>` : ''}
+                ${hasLongText ? `<div class="expand-hint">Clique para ver mais...</div>` : ''}
+                ${entry.audio_base64 ? `<audio controls src="${entry.audio_base64}" style="width:100%; margin-top:10px; height:35px;" onclick="event.stopPropagation()"></audio>` : ''}
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function saveEntry() {
+        const title = document.getElementById('entry-title').value;
+        const content = document.getElementById('entry-content').value;
+        
+if(!content && !currentAudioBase64) return showNotif('Atenção', 'Escreva algo ou grave um áudio.', 'warning');
+
+        const entry = {
+            titulo: title || "Registro Sem Título",
+            conteudo: content,
+            tipo: currentAudioBase64 ? 'audio' : 'text',
+            audio_base64: currentAudioBase64
+        };
+
+        const sucesso = await salvarEntrada(entry);
+        
+        if (sucesso) {
+            closeModal();
+            switchTab(entry.tipo);
+        } else {
+showNotif('Erro', 'Não foi possível salvar. Tente novamente.', 'error');
+        }
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-'+t).classList.add('active');
+        renderEntries();
+    }
+
+    function openModal() { 
+        document.getElementById('entryModal').style.display = 'flex'; 
+    }
+    
+    function closeModal() { 
+        document.getElementById('entryModal').style.display = 'none';
+        document.getElementById('entry-title').value = '';
+        document.getElementById('entry-content').value = '';
+        document.getElementById('audio-preview-container').style.display = 'none';
+        document.getElementById('audio-preview').src = '';
+        currentAudioBase64 = null;
+        isRecording = false;
+        const btn = document.getElementById('record-btn');
+        btn.style.background = "#fff0f0";
+        btn.style.color = "var(--vermelho-gravando)";
+        btn.innerHTML = '<i class="fas fa-microphone-lines"></i> GRAVAR';
+    }
+
+    function showNotif(title, msg, type = 'info') {
+    const icons = { info: 'fa-info-circle', error: 'fa-times-circle', warning: 'fa-exclamation-circle' };
+    const modal = document.getElementById('notifModal');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifMsg').innerText = msg;
+    const icon = document.getElementById('notifIcon');
+    icon.className = `notif-icon fas ${icons[type] || icons.info} ${type}`;
+    modal.classList.add('visible');
+    setTimeout(() => modal.classList.remove('visible'), 3500);
+}
+
+    // Partículas
+    setInterval(() => {
+        const c = document.getElementById('particles-container');
+        if(!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 15 + 5;
+        b.style.width = s+'px'; b.style.height = s+'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 4 + 6) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 8000);
+    }, 2000);
+
+    // Inicializar
+    carregarDiario();
+</script>
+</body>
+</html>

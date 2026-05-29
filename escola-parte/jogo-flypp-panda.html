@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mindfine - Santuário do Panda</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --azul-claro: #e1f5fe;
+            --neon-xp: #00d4ff;
+            --fundo-transparente: rgba(255, 255, 255, 0.98);
+        }
+
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* --- ESTILO DOS BRILHINHOS --- */
+        .sparkle {
+            position: fixed;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 10px white;
+            z-index: 2; /* Acima do fundo, abaixo da UI */
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(110vh) scale(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo\ fly.png'); 
+            background-size: cover; background-position: center;
+            z-index: 0; left: -5%; top: -5%;
+            filter: blur(4px) brightness(0.7);
+        }
+
+        canvas { 
+            display: block; width: 100vw; height: 100vh; 
+            position: absolute; z-index: 1; top: 0; left: 0;
+        }
+
+        /* Header Padrão Mindfine */
+        .diary-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: white; padding: 12px 25px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 500;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .back-btn { color: var(--azul-bright); font-size: 1.4rem; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* BARRA DE XP LATERAL (ESTILO GAMER/ETÉREO) */
+        .side-progress-container {
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 60vh;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 100;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .side-progress-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, var(--azul-escuro), var(--azul-bright), #00ffaa);
+            box-shadow: 0 0 15px var(--neon-xp);
+            transition: height 0.3s ease;
+        }
+
+        #score-counter {
+            position: absolute;
+            right: 55px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 45px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 15px var(--azul-bright);
+            z-index: 100;
+        }
+
+        /* MENSAGENS E TELAS */
+        .container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: var(--fundo-transparente);
+            padding: 35px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: 350px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .message-box {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: var(--azul-escuro);
+            margin-bottom: 20px;
+        }
+
+        .btn-style {
+            padding: 15px 25px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid var(--azul-bright);
+            border-radius: 50px;
+            cursor: pointer;
+            background: white;
+            color: var(--azul-escuro);
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-style:hover { background: var(--azul-bright); color: white; }
+        .btn-filled { background: var(--azul-bright); color: white; }
+
+        #start-msg {
+            position: absolute; top: 65%; width: 100%; text-align: center;
+            z-index: 100; font-weight: 800; color: white;
+            text-shadow: 0 0 10px var(--azul-escuro);
+            animation: pulse 1.5s infinite;
+            pointer-events: none;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <header class="diary-header">
+        <div class="header-left">
+            <a href="sala-de-jogos.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+            <div class="diary-title">
+                <h2>Santuário do Panda</h2>
+            </div>
+        </div>
+        <i class="fas fa-leaf" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+    </header>
+
+    <!-- UI LATERAL -->
+    <div id="score-counter">0</div>
+    <div class="side-progress-container">
+        <div class="side-progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div id="start-msg">CLIQUE PARA VOAR</div>
+
+    <!-- TELA GAME OVER -->
+    <div class="container" id="game-over-screen">
+        <div class="message-box">Jornada Concluída</div>
+        <div style="display: flex; justify-content: space-around; margin-bottom: 25px;">
+            <div>
+                <p style="font-size: 0.6rem; font-weight: 800; color: #888;">PONTOS</p>
+                <p style="font-size: 2rem; font-weight: 800; color: var(--azul-escuro);" id="final-score">0</p>
+            </div>
+            <div>
+                <p style="font-size: 0.6rem; font-weight: 800; color: #888;">RECORDE</p>
+                <p style="font-size: 2rem; font-weight: 800; color: var(--azul-bright);" id="best-score">0</p>
+            </div>
+        </div>
+        <button class="btn-style btn-filled" id="restart-btn">Tentar Novamente</button>
+    </div>
+
+
+   <script src="mindfine-sync.js"></script>
+<script>
+    let matriculaAtual = '';
+    let melhorPontuacao = 0;
+    
+    // ========== FUNÇÕES DE RECORDE ==========
+    
+    async function carregarRecorde() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/flypp_panda`);
+            const dados = await response.json();
+            melhorPontuacao = dados.recorde || 0;
+            console.log(`🏆 Melhor pontuação: ${melhorPontuacao}`);
+        } catch (error) {
+            console.error('Erro ao carregar recorde:', error);
+        }
+    }
+    
+    async function salvarRecorde(pontuacao) {
+        if (pontuacao <= melhorPontuacao) return false;
+        
+        try {
+            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/flypp_panda`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pontuacao: pontuacao })
+            });
+            melhorPontuacao = pontuacao;
+            console.log(`🎉 Novo recorde: ${pontuacao} pontos!`);
+            return true;
+        } catch (error) {
+            console.error('Erro ao salvar recorde:', error);
+            return false;
+        }
+    }
+
+    // ========== FUNÇÃO PARA CRIAR BRILHINHOS ==========
+    
+    function createSparkle() {
+        const sparkle = document.createElement('div');
+        sparkle.classList.add('sparkle');
+        const size = Math.random() * 4 + 2 + 'px';
+        sparkle.style.width = size;
+        sparkle.style.height = size;
+        sparkle.style.left = Math.random() * 100 + 'vw';
+        sparkle.style.animationDuration = Math.random() * 3 + 4 + 's';
+        sparkle.style.opacity = Math.random();
+        document.body.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 7000);
+    }
+    setInterval(createSparkle, 400);
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const progressBar = document.getElementById('progress-bar');
+    const scoreCounter = document.getElementById('score-counter');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const startMsg = document.getElementById('start-msg');
+
+    // Assets
+    const bgImg = new Image(); bgImg.src = 'fundos/fundo fly.png';
+    const birdImg = new Image(); birdImg.src = 'pandas/panda-jogoVoar.png';
+    const birdDeadImg = new Image(); birdDeadImg.src = 'pandas/panda-jogoVoarCair.png';
+    const pipeImg = new Image(); pipeImg.src = 'itens/bambu.png';
+
+    let frames = 0;
+    let score = 0;
+    let highScore = 0;
+    let isGameOver = false;
+    let isPlaying = false;
+    let gameSpeed = 4.5;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const bird = {
+        x: 0, y: 0, w: 110, h: 110,
+        velocity: 0, gravity: 0.48, jump: 8.5,
+        reset() {
+            this.x = canvas.width * 0.25;
+            this.y = canvas.height / 2;
+            this.velocity = 0;
+        },
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            let rotation = Math.min(Math.PI/6, Math.max(-Math.PI/6, this.velocity * 0.05));
+            if(isGameOver) rotation = Math.PI/2;
+            ctx.rotate(rotation);
+            
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = "rgba(0, 212, 255, 0.8)";
+            
+            let img = isGameOver ? birdDeadImg : birdImg;
+            ctx.drawImage(img, -this.w/2, -this.h/2, this.w, this.h);
+            ctx.restore();
+        },
+        update() {
+            if (!isPlaying) {
+                this.y = (canvas.height/2) + Math.sin(frames * 0.1) * 15;
+                return;
+            }
+            this.velocity += this.gravity;
+            this.y += this.velocity;
+            if (this.y + this.h/3 >= canvas.height || this.y - this.h/3 <= 0) gameOver();
+        }
+    };
+
+    const pipes = {
+        list: [], gap: 280, w: 120,
+        add() {
+            let min = 120;
+            let max = canvas.height - this.gap - min;
+            let top = Math.random() * (max - min) + min;
+            this.list.push({ x: canvas.width, top: top, passed: false });
+        },
+        draw() {
+            this.list.forEach(p => {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "rgba(50, 181, 241, 0.6)";
+
+                ctx.save();
+                ctx.translate(p.x + this.w/2, p.top);
+                ctx.scale(1, -1);
+                ctx.drawImage(pipeImg, -this.w/2, 0, this.w, p.top);
+                ctx.restore();
+
+                ctx.drawImage(pipeImg, p.x, p.top + this.gap, this.w, canvas.height);
+            });
+        },
+        update() {
+            if (!isPlaying) return;
+            if (frames % 90 === 0) this.add();
+            
+            this.list.forEach((p, i) => {
+                p.x -= gameSpeed;
+                
+                if (bird.x + 35 > p.x && bird.x - 35 < p.x + this.w) {
+                    if (bird.y - 35 < p.top || bird.y + 35 > p.top + this.gap) gameOver();
+                }
+
+                if (p.x + this.w < bird.x && !p.passed) {
+                    score++;
+                    updateUI();
+                    p.passed = true;
+                }
+                if (p.x < -this.w) this.list.splice(i, 1);
+            });
+        }
+    };
+
+    function updateUI() {
+        scoreCounter.innerText = score;
+        let progress = (score % 20) * 5; 
+        progressBar.style.height = progress + "%";
+        
+        // Verificar recorde
+        if (score > melhorPontuacao) {
+            salvarRecorde(score);
+        }
+    }
+
+    async function gameOver() {
+        if (isGameOver) return;
+        isGameOver = true;
+        isPlaying = false;
+        
+        // Salvar recorde se for maior
+        if (score > melhorPontuacao) {
+            await salvarRecorde(score);
+        }
+        
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('best-score').innerText = melhorPontuacao;
+        gameOverScreen.style.display = 'block';
+    }
+
+    function init() {
+        isGameOver = false; isPlaying = false;
+        score = 0; frames = 0;
+        updateUI();
+        bird.reset();
+        pipes.list = [];
+        gameOverScreen.style.display = 'none';
+        startMsg.style.display = 'block';
+    }
+
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        
+        pipes.update();
+        pipes.draw();
+        bird.update();
+        bird.draw();
+
+        if (!isGameOver) {
+            frames++;
+            requestAnimationFrame(loop);
+        }
+    }
+
+    function handleInput(e) {
+        if (isGameOver) return;
+        if (e.target.id === 'restart-btn') return;
+        
+        if (!isPlaying) {
+            isPlaying = true;
+            startMsg.style.display = 'none';
+        }
+        bird.velocity = -bird.jump;
+    }
+
+    window.addEventListener('mousedown', handleInput);
+    window.addEventListener('touchstart', handleInput);
+
+    document.getElementById('restart-btn').onclick = (e) => {
+        e.stopPropagation();
+        init();
+        loop();
+    };
+
+    // Carregar recorde e iniciar
+    carregarRecorde().then(() => {
+        init();
+        loop();
+    });
+</script>
+
+</body>
+</html>

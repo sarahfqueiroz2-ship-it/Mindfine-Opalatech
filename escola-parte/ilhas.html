@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oceano Mágico - Explorador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-mind: #33BEF4;
+            --verde-completo: #4ade80;
+            --navbar-dark: #1e3a52;
+            --neon-azul: 0 0 20px rgba(50, 181, 241, 0.9);
+            --neon-branco: 0 0 20px rgba(255, 255, 255, 0.8);
+            --font-principal: 'Montserrat', sans-serif;
+            --azul-claro: #e0f4ff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-principal);
+            background-image: url(fundos/fundo-mar.png);
+            background-color: #32B5F1;
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+            background-repeat: no-repeat;
+        }
+
+        .clouds-container { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+        .cloud { position: absolute; background: rgba(255, 255, 255, 0.6); border-radius: 100px; filter: blur(20px); animation: float-cloud linear infinite; }
+        .cloud-1 { width: 120px; height: 40px; top: 10%; animation-duration: 60s; }
+        .cloud-2 { width: 150px; height: 50px; top: 30%; animation-duration: 80s; }
+        @keyframes float-cloud { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } }
+
+        #magic-elements { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+        .sparkle { position: absolute; width: 5px; height: 5px; background: white; border-radius: 50%; box-shadow: 0 0 10px white; animation: blink 3s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+                /* HEADER RESPONSIVO */
+        .header {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            padding: 15px 30px;
+            display: flex; 
+            flex-direction: row; 
+            align-items: center; 
+            justify-content: space-between;
+            gap: 20px; 
+            z-index: 1000; 
+            background: transparent;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+                gap: 10px;
+            }
+            .btn-circle {
+                width: 40px;
+                height: 40px;
+            }
+            .xp-bar-container {
+                max-width: 300px;
+                min-width: 150px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .xp-bar-container {
+                max-width: 200px;
+            }
+            .xp-info span {
+                font-size: 0.6rem;
+            }
+        }
+
+        .btn-circle {
+            background: white; color: var(--azul-bright); border: none;
+            width: 50px; height: 50px; border-radius: 50%;
+            box-shadow: var(--neon-branco); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+
+        .xp-bar-container { flex-grow: 1; max-width: 600px; }
+        .xp-info { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; margin-bottom: 5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .xp-bar { width: 100%; height: 18px; background: rgba(0, 0, 0, 0.2); border-radius: 20px; overflow: hidden; border: 2px solid white; }
+        .xp-fill { height: 100%; background: white; box-shadow: var(--neon-branco); width: 75%; transition: 0.5s; }
+
+        .level-display { 
+            background: white; color: var(--azul-bright); padding: 6px 18px; border-radius: 30px; 
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; 
+            box-shadow: var(--neon-branco); line-height: 1;
+        }
+        .mindcoin-icon { width: 22px; height: 22px; object-fit: contain; }
+
+                #ocean-map { 
+            position: relative; 
+            width: 100%; 
+            max-width: 1400px; 
+            margin: 120px auto 60px; 
+            min-height: 6500px; 
+            z-index: 10; 
+            transition: filter 0.4s;
+        }
+        .blur { filter: blur(15px); pointer-events: none; }
+
+        .island-wrapper { position: absolute; display: flex; flex-direction: column; align-items: center; width: 450px; cursor: pointer; transition: 0.4s; z-index: 10; }
+        
+        .island-ripples { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        .ripple { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 3px solid rgba(255, 255, 255, 0.4); border-radius: 50%; animation: ripple-effect 4s infinite; }
+        .ripple:nth-child(2) { animation-delay: 2s; }
+        @keyframes ripple-effect { 0% { width: 100px; height: 50px; opacity: 1; } 100% { width: 600px; height: 300px; opacity: 0; } }
+
+        .location-pin { position: absolute; top: -10px; z-index: 20; display: flex; flex-direction: column; align-items: center; animation: float 3s infinite ease-in-out; }
+        
+        .pin-head { 
+            width: 80px; height: 80px; background: white; border-radius: 50%; 
+            padding: 4px; border: 4px solid var(--azul-bright); overflow: hidden; 
+            box-shadow: var(--neon-azul);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--azul-bright); font-size: 2rem;
+        }
+        .pin-head img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .island-img { width: 100%; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.4)); }
+        .wood-sign { margin-top: -30px; padding: 12px 35px; background: white; color: var(--azul-bright); border-radius: 30px; box-shadow: var(--neon-branco); z-index: 6; font-weight: 800; text-transform: uppercase; font-size: 1rem; }
+
+        /* NOVO: Estilo do balão de fala para ilhas bloqueadas */
+       .lock-bubble {
+    position: absolute; top: -130px; background: white; color: var(--azul-bright);
+    padding: 10px 20px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;
+    box-shadow: var(--neon-branco); z-index: 100; white-space: nowrap;
+    animation: bubbleShow 3.5s forwards ease-out; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.lock-bubble::after {
+    content: ''; position: absolute; bottom: -10px; left: 50%; 
+    transform: translateX(-50%); border-left: 10px solid transparent;
+    border-right: 10px solid transparent; border-top: 10px solid white;
+}
+.lock-bubble-coin-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--azul-bright); color: white;
+    border: none; border-radius: 20px; padding: 6px 14px;
+    font-weight: 800; font-size: 0.85rem; cursor: pointer;
+    pointer-events: all; box-shadow: var(--neon-azul);
+    transition: transform 0.2s;
+}
+.lock-bubble-coin-btn:hover { transform: scale(1.07); }
+.lock-bubble-coin-btn img { width: 18px; height: 18px; object-fit: contain; }
+        @keyframes bubbleShow {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        .path-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .path-line { fill: none; stroke: white; stroke-width: 6; stroke-dasharray: 15; filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.9)); animation: dashMove 2s linear infinite; }
+        @keyframes dashMove { to { stroke-dashoffset: -30; } }
+
+        .album-btn {
+            position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px;
+            background: white; color: var(--azul-bright); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--neon-branco); cursor: pointer; z-index: 1000;
+            border: 3px solid var(--azul-bright); font-size: 1.5rem;
+        }
+
+        .flash-overlay {
+            position: fixed; inset: 0; background: white;
+            z-index: 10000; pointer-events: none; opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .flash-overlay.active { opacity: 1; }
+
+        .island-wrapper.nova-ilha {
+            animation: pulseNovaIlha 2s infinite ease-in-out;
+            z-index: 1001;
+        }
+        @keyframes pulseNovaIlha {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.08); filter: brightness(1.1); }
+        }
+
+        #treasure-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9000; backdrop-filter: blur(10px);
+        }
+        .treasure-container { position: relative; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .treasure-chest { width: 600px; cursor: pointer; transition: transform 0.3s; z-index: 5; position: relative; }
+        .treasure-chest:hover { transform: scale(1.05); }
+        
+        .sticker-pack {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 220px; opacity: 0; cursor: pointer;
+            display: none; z-index: 10;
+        }
+
+        .sticker-pack.revealed { 
+            display: block; 
+            animation: surgindoFigurinha 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes surgindoFigurinha {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            60% { transform: translate(-50%, -85%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -80%) scale(1); opacity: 1; }
+        }
+
+        .glitter-particle {
+            position: absolute; width: 14px; height: 14px; background: gold;
+            border-radius: 50%; pointer-events: none; z-index: 8;
+            box-shadow: 0 0 15px #fff, 0 0 30px gold, 0 0 45px #fff;
+        }
+
+        .mini-sticker {
+            position: fixed; width: 50px; height: 50px; object-fit: contain;
+            pointer-events: none; z-index: 9500;
+        }
+
+        .album-btn.blink { animation: blinkAlbum 0.8s infinite; }
+        @keyframes blinkAlbum {
+            0%, 100% { box-shadow: var(--neon-branco); transform: scale(1); }
+            50% { box-shadow: 0 0 40px var(--azul-bright), 0 0 60px white; transform: scale(1.2); }
+        }
+
+/* === RESPONSIVIDADE DO MAPA === */
+@media (max-width: 1200px) {
+    #ocean-map {
+        transform: scale(0.9);
+        transform-origin: top center;
+        min-height: 5800px;
+    }
+}
+
+@media (max-width: 992px) {
+    #ocean-map {
+        transform: scale(0.8);
+        transform-origin: top center;
+        min-height: 5200px;
+    }
+    .island-wrapper {
+        width: 380px;
+    }
+    .pin-head {
+        width: 65px;
+        height: 65px;
+    }
+    .wood-sign {
+        font-size: 0.85rem;
+        padding: 10px 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    #ocean-map {
+        transform: scale(0.7);
+        transform-origin: top center;
+        min-height: 4600px;
+        margin: 100px auto 60px;
+    }
+    .island-wrapper {
+        width: 320px;
+    }
+    .pin-head {
+        width: 55px;
+        height: 55px;
+        border-width: 3px;
+    }
+    .wood-sign {
+        font-size: 0.75rem;
+        padding: 8px 20px;
+        margin-top: -25px;
+    }
+    .lock-bubble {
+        font-size: 0.7rem;
+        padding: 6px 12px;
+        white-space: nowrap;
+    }
+    .xp-bar-container {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    #ocean-map {
+        transform: scale(0.55);
+        transform-origin: top center;
+        min-height: 3600px;
+        margin: 80px auto 40px;
+    }
+    .island-wrapper {
+        width: 280px;
+    }
+    .pin-head {
+        width: 45px;
+        height: 45px;
+        border-width: 2px;
+    }
+    .wood-sign {
+        font-size: 0.65rem;
+        padding: 6px 15px;
+        margin-top: -20px;
+    }
+    .lock-bubble {
+        font-size: 0.6rem;
+        padding: 4px 10px;
+        white-space: nowrap;
+        top: -60px;
+    }
+    .header {
+        padding: 10px 12px;
+    }
+    .btn-circle {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+    .level-display {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+    .xp-info {
+        font-size: 0.6rem;
+    }
+    .album-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+        bottom: 15px;
+        right: 15px;
+    }
+}
+
+@media (max-width: 400px) {
+    #ocean-map {
+        transform: scale(0.45);
+        transform-origin: top center;
+        min-height: 3000px;
+    }
+    .island-wrapper {
+        width: 260px;
+    }
+}
+
+/* Ajustes responsivos das ilhas */
+@media (max-width: 1024px) {
+    .island-wrapper {
+        width: 350px !important;
+    }
+    .pin-head {
+        width: 65px !important;
+        height: 65px !important;
+    }
+    .wood-sign {
+        font-size: 0.85rem !important;
+        padding: 8px 20px !important;
+    }
+    .lock-bubble {
+        font-size: 0.75rem !important;
+        padding: 6px 12px !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .island-wrapper {
+        width: 280px !important;
+    }
+    .pin-head {
+        width: 50px !important;
+        height: 50px !important;
+        border-width: 3px !important;
+    }
+    .wood-sign {
+        font-size: 0.7rem !important;
+        padding: 6px 15px !important;
+        margin-top: -20px !important;
+    }
+    .lock-bubble {
+        font-size: 0.65rem !important;
+        padding: 5px 10px !important;
+        top: -55px !important;
+    }
+    .location-pin {
+        top: -30px !important;
+    }
+    .xp-bar-container {
+        max-width: 200px;
+    }
+    .xp-info span {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .island-wrapper {
+        width: 240px !important;
+    }
+    .pin-head {
+        width: 42px !important;
+        height: 42px !important;
+    }
+    .wood-sign {
+        font-size: 0.6rem !important;
+        padding: 5px 12px !important;
+    }
+    .lock-bubble {
+        font-size: 0.55rem !important;
+        padding: 4px 8px !important;
+        top: -50px !important;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <audio id="ocean-sound" loop>
+        <source src="sons/mar-agitado.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="clouds-container">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+    </div>
+    <div id="magic-elements"></div>
+
+    <header class="header">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-circle" onclick="window.location.href='inicial.html'"><i class="fas fa-arrow-left"></i></button>
+            <button class="btn-circle" id="btn-som" onclick="toggleSom()"><i class="fas fa-volume-up"></i></button>
+        </div>
+        <div class="xp-bar-container">
+            <div class="xp-info">
+                <span>XP: 75 / 100</span>
+                <span>NV. 6</span>
+            </div>
+            <div class="xp-bar"><div class="xp-fill"></div></div>
+        </div>
+        <div class="level-display">
+            <img src="itens/mindcoin.png" class="mindcoin-icon">
+            <span>2.500</span>
+        </div>
+    </header>
+
+    <button class="album-btn" id="btn-album" onclick="window.location.href='album.html'"><i class="fas fa-book"></i></button>
+
+    <div id="ocean-map"></div>
+
+    <div class="flash-overlay" id="flash-overlay"></div>
+
+    <div id="treasure-modal">
+        <div class="treasure-container" id="chest-area">
+            <img src="itens/bau-fechado.png" class="treasure-chest" id="treasure-chest">
+            <img src="itens/album-de-figurinhas.png" class="sticker-pack" id="sticker-pack">
+        </div>
+    </div>
+
+    <script src="mindfine-sync.js"></script>
+
+    <script>
+    const dadosIlhas = [
+        { nome: "Porto Inicial", ilhaImg: "ilhas/ilha1.png", pinImg: "pandas/skin.png", desbloqueada: true },
+        { nome: "Baía Pirata", ilhaImg: "ilhas/ilha-pirata.png", pinImg: "pandas/skin.png", desbloqueada: false },
+        { nome: "Recife Bruxo", ilhaImg: "ilhas/ilha-bruxo.png", pinImg: "pandas/skin.png", desbloqueada: false },
+        { nome: "Encosta Brasileira", ilhaImg: "ilhas/ilha-Brasil.png", pinImg: "pandas/icone-brasil.png", desbloqueada: false },
+        { nome: "Recife Musical", ilhaImg: "ilhas/ilha-musica.png", pinImg: "pandas/icone-musica.png", desbloqueada: false },
+        { nome: "Encosta Chinesa", ilhaImg: "ilhas/ilha-china.png", pinImg: "pandas/icone-china.png", desbloqueada: false },
+        { nome: "Baía das Bailarinas", ilhaImg: "ilhas/ilha2.png", pinImg: "pandas/icone-ballet.png", desbloqueada: false },
+        { nome: "Ilha Astronauta", ilhaImg: "ilhas/ilha-astronauta.png", pinImg: "pandas/icone-espaco.png", desbloqueada: false },
+        { nome: "Recife das princesas", ilhaImg: "ilhas/ilha-princesa.png", pinImg: "pandas/icone-coroa.png", desbloqueada: false },
+        { nome: "Ilha Ninja", ilhaImg: "ilhas/ilha-ninja.png", pinImg: "pandas/icone-ninja.png", desbloqueada: false },
+        { nome: "vale das Fadas", ilhaImg: "ilhas/ilha-fada.png", pinImg: "pandas/icone-fada.png", desbloqueada: false },
+    ];
+
+    let novaIlhaDesbloqueada = null;
+    const som = document.getElementById('ocean-sound');
+    let matriculaAtual = '';
+
+    // ========== FUNÇÃO DE NOTIFICAÇÃO ==========
+    function showNotif(title, msg, type = 'info') {
+        // Criar notificação temporária
+        const notif = document.createElement('div');
+        notif.style.cssText = `
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            background: white; border-radius: 20px; padding: 15px 25px;
+            display: flex; align-items: center; gap: 12px; z-index: 10001;
+            border: 2px solid ${type === 'success' ? '#4CAF50' : '#32B5F1'};
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: fadeInOut 3s forwards;
+        `;
+        notif.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}" style="color: ${type === 'success' ? '#4CAF50' : '#32B5F1'}; font-size: 1.5rem;"></i>
+            <div><div style="font-weight: 800; color: #0277bd;">${title}</div><div style="font-size: 0.8rem; color: #666;">${msg}</div></div>
+        `;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    }
+
+    // ========== VERIFICAR PRIMEIRA VEZ NO MAPA ==========
+    function getChavePrimeiraVez() {
+        return `primeira_vez_mapa_${matriculaAtual}`;
+    }
+
+    async function verificarPrimeiraVez() {
+        const chave = getChavePrimeiraVez();
+        const primeiraVez = localStorage.getItem(chave);
+        return !primeiraVez;
+    }
+
+    async function marcarPrimeiraVez() {
+        const chave = getChavePrimeiraVez();
+        localStorage.setItem(chave, 'false');
+    }
+
+    // Função para desbloquear figurinhas aleatórias
+   // Função para desbloquear TODAS as figurinhas da página "capa-back" (Porto Inicial)
+async function desbloquearPacoteFigurinhas() {
+    // Figurinhas da primeira página (Porto Inicial / capa-back)
+    const figurinhasDaPaginaInicial = [
+        { pagina: 'capa-back', slot: 0, figurinha_id: 'fig_capa-back_0' },
+        { pagina: 'capa-back', slot: 1, figurinha_id: 'fig_capa-back_1' },
+        { pagina: 'capa-back', slot: 2, figurinha_id: 'fig_capa-back_2' },
+        { pagina: 'capa-back', slot: 3, figurinha_id: 'fig_capa-back_3' }
+    ];
+    
+    let desbloqueadas = 0;
+    
+    for (const fig of figurinhasDaPaginaInicial) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    matricula: matriculaAtual,
+                    pagina: fig.pagina,
+                    slot: fig.slot,
+                    figurinha_id: fig.figurinha_id
+                })
+            });
+            
+            const result = await response.json();
+            if (result.sucesso) {
+                desbloqueadas++;
+                console.log(`✅ Figurinha ${fig.slot} desbloqueada!`);
+            } else if (result.ja_desbloqueada) {
+                console.log(`📌 Figurinha ${fig.slot} já estava desbloqueada`);
+                desbloqueadas++; // Conta como já tinha
+            }
+        } catch (error) {
+            console.error('Erro ao desbloquear figurinha:', error);
+        }
+    }
+    
+    return { total: desbloqueadas, pagina: 'Porto Inicial' };
+}
+
+    function init() {
+        createMagic();
+        buildMap();
+        verificarNovaIlha();
+        
+        document.body.addEventListener('click', () => {
+            if (som.paused) som.play().catch(e => console.log("Som bloqueado"));
+        }, { once: true });
+
+        const modal = document.getElementById('treasure-modal');
+        modal.onclick = (e) => {
+            if(e.target === modal) fecharModal();
+        };
+    }
+
+    function toggleSom() {
+        const btn = document.getElementById('btn-som');
+        if (som.muted) {
+            som.muted = false;
+            btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+        } else {
+            som.muted = true;
+            btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+        }
+    }
+    
+   function verificarNovaIlha() {
+    const nivelAtual = 15; 
+    for(let i = 0; i < dadosIlhas.length; i++) {
+        const nivelNecessario = (i + 1) * 2;
+        if(!dadosIlhas[i].desbloqueada && nivelAtual >= nivelNecessario) {
+            dadosIlhas[i].desbloqueada = true;
+            novaIlhaDesbloqueada = i;
+            
+            // ===== ADICIONE ESTA LINHA =====
+            desbloquearUniversoPorIlha(dadosIlhas[i].nome);
+            // ================================
+            
+            mostrarClarao(() => {
+                buildMap(); 
+                const ilhas = document.querySelectorAll('.island-wrapper');
+                if(ilhas[i]) {
+                    ilhas[i].classList.add('nova-ilha');
+                    ilhas[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            break;
+        }
+    }
+}
+
+    function createMagic() {
+        const container = document.getElementById('magic-elements');
+        for(let i=0; i<40; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.style.left = Math.random() * 100 + 'vw';
+            s.style.top = Math.random() * 6500 + 'px';
+            s.style.animationDelay = Math.random() * 3 + 's';
+            container.appendChild(s);
+        }
+    }
+
+    function buildMap() {
+        const map = document.getElementById('ocean-map');
+        map.innerHTML = ""; 
+        let pathD = "";
+        
+        const screenWidth = window.innerWidth;
+        const isMobile = screenWidth <= 768;
+        const isTablet = screenWidth <= 1024 && screenWidth > 768;
+        
+        let spacingY = 550;
+        let offsetX = 225;
+        let ilhaWidth = isMobile ? 280 : (isTablet ? 350 : 450);
+        
+        if (isMobile) {
+            spacingY = 350;
+            offsetX = 140;
+        } else if (isTablet) {
+            spacingY = 450;
+            offsetX = 175;
+        }
+
+        for(let i=0; i < dadosIlhas.length; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'island-wrapper';
+            
+            const baseLeft = i % 2 === 0 ? 5 : 65;
+            const variavel = isMobile ? 5 : 10;
+            const x = baseLeft + (Math.random() * variavel);
+            const y = 100 + (i * spacingY);
+            
+            wrapper.style.left = x + '%';
+            wrapper.style.top = y + 'px';
+            wrapper.style.width = ilhaWidth + 'px';
+
+            const pinContent = dadosIlhas[i].desbloqueada 
+                ? `<img src="${dadosIlhas[i].pinImg}">` 
+                : `<i class="fas fa-lock"></i>`;
+
+            wrapper.innerHTML = `
+                <div class="island-ripples"><div class="ripple"></div><div class="ripple"></div></div>
+                <div class="location-pin">
+                    <div class="pin-head">${pinContent}</div>
+                </div>
+                <img src="${dadosIlhas[i].ilhaImg}" class="island-img">
+                <div class="wood-sign">${dadosIlhas[i].nome}</div>
+            `;
+
+            wrapper.onclick = async () => {
+                if(dadosIlhas[i].desbloqueada) {
+                    const ehNova = (i === novaIlhaDesbloqueada);
+                    const ehPrimeiraVez = i === 0 ? await verificarPrimeiraVez() : false;
+                    
+                    mostrarClarao(async () => {
+                        await abrirBau(ehNova, ehPrimeiraVez);
+                        if(ehPrimeiraVez) {
+                            await marcarPrimeiraVez();
+                        }
+                        if(ehNova) wrapper.classList.remove('nova-ilha');
+                    });
+                } else {
+                    const nivelNecessario = (i + 1) * 2;
+                    const custoCoins = (i + 1) * 500;
+                    if (wrapper.querySelector('.lock-bubble')) return;
+
+                    const bubble = document.createElement('div');
+                    bubble.className = 'lock-bubble';
+                    bubble.innerHTML = `
+                        <span>Chegue ao nível ${nivelNecessario} para desbloquear</span>
+                        <button class="lock-bubble-coin-btn">
+                            <img src="itens/mindcoin.png"> ${custoCoins.toLocaleString('pt-BR')} MindCoins
+                        </button>
+                    `;
+
+                    const btn = bubble.querySelector('.lock-bubble-coin-btn');
+                    btn.onclick = (e) => {
+    e.stopPropagation();
+    const coinDisplay = document.querySelector('.level-display span');
+    const moedas = parseInt((coinDisplay?.innerText || '0').replace(/\D/g, ''));
+    if (moedas >= custoCoins) {
+        if (coinDisplay) coinDisplay.innerText = (moedas - custoCoins).toLocaleString('pt-BR');
+        dadosIlhas[i].desbloqueada = true;
+        bubble.remove();
+        
+        // ===== ADICIONE ESTA LINHA =====
+        desbloquearUniversoPorIlha(dadosIlhas[i].nome);
+        // ================================
+        
+        mostrarClarao(() => {
+            buildMap();
+            const ilhas = document.querySelectorAll('.island-wrapper');
+            if (ilhas[i]) {
+                ilhas[i].classList.add('nova-ilha');
+                ilhas[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    } else {
+        btn.innerText = '❌ Coins insuficientes!';
+        btn.style.background = '#e55';
+        setTimeout(() => bubble.remove(), 1500);
+    }
+};
+
+                    wrapper.appendChild(bubble);
+                    setTimeout(() => bubble.remove(), 3500);
+                }
+            };
+            map.appendChild(wrapper);
+
+            if(i < dadosIlhas.length - 1) {
+                const nextXBase = (i+1) % 2 === 0 ? 5 : 65;
+                const nextX = nextXBase + (Math.random() * variavel);
+                const nextY = 100 + ((i + 1) * spacingY);
+                const x1 = (x / 100) * map.offsetWidth + (ilhaWidth/2);
+                const y1 = y + (isMobile ? 150 : 200);
+                const x2 = (nextX / 100) * map.offsetWidth + (ilhaWidth/2);
+                const y2 = nextY + (isMobile ? 80 : 100);
+                pathD += `M ${x1} ${y1} Q ${x1 > x2 ? x1+100 : x2+100} ${(y1+y2)/2} ${x2} ${y2} `;
+            }
+        }
+
+        const mapHeight = (dadosIlhas.length * spacingY) + 300;
+        map.style.minHeight = mapHeight + 'px';
+
+        if (pathD) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "path-svg");
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = mapHeight + 'px';
+            svg.innerHTML = `
+                <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="white" /></marker></defs>
+                <path d="${pathD}" class="path-line" style="marker-end: url(#arrow); marker-start: url(#arrow);" />
+            `;
+            map.prepend(svg);
+        }
+    }
+
+    // Função para desbloquear o universo correspondente à ilha
+async function desbloquearUniversoPorIlha(nomeIlha) {
+    // Mapeamento de ilha para universo
+    const mapaUniverso = {
+        "Porto Inicial": "Santuário",
+        "Baía Pirata": "Ilha do Pirata",
+        "Recife Bruxo": "Ilha do Bruxo",
+        "Encosta Brasileira": "Ilha do Brasil",
+        "Encosta Chinesa": "Ilha da China",
+        "Baía das Bailarinas": "Ilha dos Piratas"
+    };
+    
+    const nomeUniverso = mapaUniverso[nomeIlha];
+    if (!nomeUniverso) return;
+    
+    try {
+        // Buscar universos já desbloqueados
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const dados = await response.json();
+        const universosAtuais = dados.universos_desbloqueados || [];
+        
+        // Se já estiver desbloqueado, não faz nada
+        if (universosAtuais.includes(nomeUniverso)) return;
+        
+        // Adicionar novo universo
+        universosAtuais.push(nomeUniverso);
+        
+        // Salvar no backend
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ universos_desbloqueados: universosAtuais })
+        });
+        
+        showNotif('🌍 Novo Universo!', `Você desbloqueou o universo ${nomeUniverso}!`, 'success');
+        
+    } catch (error) {
+        console.error('Erro ao desbloquear universo:', error);
+    }
+}
+
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (document.getElementById('ocean-map')) {
+                buildMap();
+            }
+        }, 250);
+    });
+
+    function mostrarClarao(callback) {
+        const flash = document.getElementById('flash-overlay');
+        flash.classList.add('active');
+        setTimeout(() => {
+            flash.classList.remove('active');
+            if(callback) callback();
+        }, 400);
+    }
+
+  
+
+              async function abrirBau(comFigurinha, ehPrimeiraVez = false) {
+    const modal = document.getElementById('treasure-modal');
+    const chest = document.getElementById('treasure-chest');
+    const pack = document.getElementById('sticker-pack');
+    const map = document.getElementById('ocean-map');
+    
+    let bauAberto = false; 
+
+    map.classList.add('blur');
+    modal.style.display = 'flex';
+    chest.src = "itens/bau-fechado.png";
+    pack.style.display = "none";
+    pack.classList.remove('revealed');
+    
+    modal.dataset.primeiraVez = ehPrimeiraVez ? 'true' : 'false';
+
+    chest.onclick = async (e) => {
+        e.stopPropagation();
+        if(bauAberto) return; 
+        
+        bauAberto = true;
+        chest.src = "itens/bau-aberto.png";
+        
+        if(comFigurinha || ehPrimeiraVez) {
+            lancarGlitter();
+            setTimeout(async () => {
+// Dentro de abrirBau, quando ehPrimeiraVez for true:
+if (ehPrimeiraVez) {
+    const resultado = await desbloquearPacoteFigurinhas();
+    showNotif('🎁 Álbum Completo!', `Você ganhou TODAS as figurinhas da página "${resultado.pagina}"!`, 'success');
+    
+}pack.style.display = "block";
+                pack.classList.add('revealed');
+                
+                pack.onclick = (e) => {
+                    e.stopPropagation();
+                    pack.style.opacity = "0";
+                    pack.style.transform = "translate(-50%, -100%) scale(0)";
+                    const mostrarNovidades = modal.dataset.primeiraVez === 'true';
+                    voarParaAlbum(mostrarNovidades);
+                };
+            }, 300);
+        } else {
+            setTimeout(() => {
+                fecharModal();
+            }, 1500);
+        }
+    };
+}
+
+    function lancarGlitter() {
+        const container = document.getElementById('chest-area');
+        for(let i = 0; i < 60; i++) {
+            const g = document.createElement('div');
+            g.className = 'glitter-particle';
+            g.style.left = '50%';
+            g.style.top = '40%';
+            container.appendChild(g);
+
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 60 + Math.random() * 250;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist - 120;
+
+            g.animate([
+                { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 1 },
+                { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${Math.random() + 0.8}) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+            ], {
+                duration: 1500 + Math.random() * 1500,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }).onfinish = () => g.remove();
+        }
+    }
+
+    function fecharModal() {
+        const modal = document.getElementById('treasure-modal');
+        const map = document.getElementById('ocean-map');
+        modal.style.display = 'none';
+        map.classList.remove('blur');
+    }
+
+    function voarParaAlbum(mostrarNovidades = false) {
+        const albumBtn = document.getElementById('btn-album');
+        const albumPos = albumBtn.getBoundingClientRect();
+        const pack = document.getElementById('sticker-pack');
+        const packPos = pack.getBoundingClientRect();
+
+        for(let i = 0; i < 15; i++) {
+            setTimeout(() => {
+                const p = document.createElement('img');
+                p.src = "itens/album-de-figurinhas.png";
+                p.className = 'mini-sticker';
+                p.style.left = (packPos.left + packPos.width/2 - 25) + 'px';
+                p.style.top = (packPos.top + packPos.height/2 - 25) + 'px';
+                document.body.appendChild(p);
+
+                p.animate([
+                    { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${albumPos.left - packPos.left + 10}px, ${albumPos.top - packPos.top + 10}px) scale(0.2) rotate(720deg)`, opacity: 0.5 }
+                ], {
+                    duration: 800 + Math.random() * 600,
+                    easing: 'ease-in'
+                }).onfinish = () => {
+                    p.remove();
+                    if(i === 14) finalizarSequencia(mostrarNovidades);
+                };
+            }, i * 60);
+        }
+    }
+
+    function finalizarSequencia(mostrarNovidades = false) {
+        fecharModal();
+        const albumBtn = document.getElementById('btn-album');
+        
+        if (mostrarNovidades) {
+            albumBtn.classList.add('blink');
+            showNotif('✨ Novas Figurinhas!', 'Clique no álbum para ver suas conquistas!', 'success');
+        }
+        
+        albumBtn.onclick = () => {
+            albumBtn.classList.remove('blink');
+            novaIlhaDesbloqueada = null;
+            window.location.href = 'album.html';
+        };
+    }
+
+    window.addEventListener('load', async () => {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+            const dados = await response.json();
+            
+            const coinDisplay = document.querySelector('.level-display span');
+            if (coinDisplay) {
+                coinDisplay.innerText = dados.moedas.toLocaleString('pt-BR');
+            }
+            
+            const xpInfo = document.querySelector('.xp-info');
+            if (xpInfo) {
+                xpInfo.innerHTML = `
+                    <span>XP: ${dados.xp} / 100</span>
+                    <span>NV. ${dados.nivel}</span>
+                `;
+            }
+            
+            const xpFill = document.querySelector('.xp-fill');
+            if (xpFill) {
+                xpFill.style.width = dados.xp + '%';
+            }
+            
+            for(let i = 0; i < dadosIlhas.length; i++) {
+                if(i === 0) {
+                    dadosIlhas[i].desbloqueada = true;
+                } else {
+                    dadosIlhas[i].desbloqueada = false;
+                }
+            }
+            
+            buildMap();
+            createMagic();
+            
+            document.body.addEventListener('click', () => {
+                if (som.paused) som.play().catch(e => console.log("Som bloqueado"));
+            }, { once: true });
+            
+            const modal = document.getElementById('treasure-modal');
+            modal.onclick = (e) => {
+                if(e.target === modal) fecharModal();
+            };
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+        }
+    });
+</script>
+
+</body>
+</html>

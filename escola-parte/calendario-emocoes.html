@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário de Humor - Mindfine</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            color: #2c3e50;
+        }
+
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        .main-content {
+            position: relative; 
+            z-index: 10;
+            display: flex; 
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .diary-header {
+            background: white; 
+            padding: 15px 20px;
+            display: flex; 
+            align-items: center; 
+            gap: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            z-index: 500;
+            position: sticky;
+            top: 0;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .back-btn { color: var(--azul-bright); font-size: 1.2rem; cursor: pointer; border: none; background: none; text-decoration: none; }
+        .diary-title h2 { margin: 0; font-size: 1rem; color: var(--azul-escuro); font-weight: 800; text-transform: uppercase; }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px 40px 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            animation: fadeIn 0.5s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+
+        .section h2 {
+            color: var(--azul-escuro);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+        }
+
+        .calendar-container {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 15px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: var(--azul-bright);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .calendar-month {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--azul-escuro);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            color: var(--azul-bright);
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid #eee;
+        }
+
+        .calendar-day.selected { border: 2px solid var(--azul-bright); background: #f0faff; }
+
+        .calendar-day .day-number {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 9px;
+            color: #bbb;
+            font-weight: 700;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            background: #f0faff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .quick-stat {
+            background: #f8fbff;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #eef2f5;
+        }
+
+        .quick-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--azul-bright);
+        }
+
+        .quick-stat-label {
+            font-size: 0.6rem;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .chart-container {
+            background: #f8fbff;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .pie-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pie-visual {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(#10b981 0deg, #10b981 var(--positive-end), #ef4444 var(--positive-end), #ef4444 360deg);
+        }
+
+        .pie-legend { font-size: 0.8rem; }
+        .pie-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .pie-color { width: 12px; height: 12px; border-radius: 3px; }
+
+        .insight-card {
+            background: #f0faff;
+            padding: 15px;
+            border-radius: 15px;
+            border-left: 4px solid var(--azul-bright);
+            margin-bottom: 10px;
+        }
+
+        .insight-title { font-size: 0.85rem; font-weight: 800; color: var(--azul-escuro); margin-bottom: 5px; }
+        .insight-text { font-size: 0.75rem; line-height: 1.4; color: #444; }
+
+        .day-details { display: none; }
+        .day-details.show { display: block; }
+
+        #particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; animation: rise linear forwards; }
+        @keyframes rise { to { transform: translateY(-110vh); opacity: 0; } }
+    </style>
+</head>
+
+<body>
+
+    <div class="background-layer"></div>
+    <div id="particles-container"></div>
+
+    <div class="main-content">
+        <header class="diary-header">
+            <div class="header-left">
+                <a href="inicial.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+                <div class="diary-title">
+                    <h2>Calendário de Humor</h2>
+                </div>
+            </div>
+            <i class="fas fa-calendar-alt" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
+        </header>
+
+    <main>
+    <!-- SEÇÃO DE BOAS-VINDAS/EXPLICAÇÃO -->
+    <section class="section">
+        <h2 style="color: var(--azul-escuro);"><i class="fas fa-chart-line"></i> Seu Diário de Emoções</h2>
+        <p style="font-size: 0.9rem; color: #444; margin-bottom: 10px;">
+            Aqui você acompanha como tem se sentido ao longo do tempo.
+        </p>
+        <p style="font-size: 0.75rem; color: var(--azul-bright); background: #f0faff; padding: 10px; border-radius: 12px; margin-top: 10px;">
+            <i class="fas fa-lightbulb"></i> <strong>Dica:</strong> Quanto mais dias você registrar sua emoção na página inicial, 
+            mais completo fica seu calendário e você ganha recompensas!
+        </p>
+    </section>
+
+    <!-- RESUMO (Stats) -->
+    <section class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin-bottom: 0;"><i class="fas fa-chart-simple"></i> Resumo</h2>
+            <i class="fas fa-circle-info" style="color: var(--azul-bright); cursor: help;" 
+               title="Registros = dias que você compartilhou | Sequência = dias seguidos | Bem-estar = % de dias positivos"></i>
+        </div>
+        <div class="quick-stats">
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="totalDays">0</div>
+                <div class="quick-stat-label"><i class="fas fa-pen"></i> Registros</div>
+                <div style="font-size: 0.6rem; color: #999; margin-top: 5px;">Dias que você compartilhou</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="currentStreak">0</div>
+                <div class="quick-stat-label"><i class="fas fa-fire"></i> Sequência</div>
+                <div style="font-size: 0.6rem; color: #999; margin-top: 5px;">Dias seguidos registrando</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="bestMood" style="font-size: 1.1rem;">-</div>
+                <div class="quick-stat-label"><i class="fas fa-smile"></i> Emoção frequente</div>
+                <div style="font-size: 0.6rem; color: #999; margin-top: 5px;">A que mais apareceu</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="positivePercent">0%</div>
+                <div class="quick-stat-label"><i class="fas fa-heart"></i> Bem-Estar</div>
+                <div style="font-size: 0.6rem; color: #999; margin-top: 5px;">Dias positivos vs negativos</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALENDÁRIO -->
+    <section class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin-bottom: 0;"><i class="fas fa-calendar-day"></i> Seu Calendário</h2>
+            <i class="fas fa-circle-info" style="color: var(--azul-bright); cursor: help;" 
+               title="Cada ícone representa como você se sentiu naquele dia"></i>
+        </div>
+        
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="calendar-nav" id="prevMonth">←</button>
+                <div class="calendar-month" id="currentMonth"></div>
+                <button class="calendar-nav" id="nextMonth">→</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div class="weekday">Dom</div><div class="weekday">Seg</div><div class="weekday">Ter</div>
+                <div class="weekday">Qua</div><div class="weekday">Qui</div><div class="weekday">Sex</div><div class="weekday">Sáb</div>
+            </div>
+            <div class="calendar-days" id="calendarDays"></div>
+        </div>
+
+        <!-- LEGENDA (simplificada, sem texto extra) -->
+        <div class="legend">
+            <div class="legend-item"><i class="fas fa-face-smile" style="color: #fbbf24;"></i> Alegria</div>
+            <div class="legend-item"><i class="fas fa-face-relaxed" style="color: #10b981;"></i> Relaxado</div>
+            <div class="legend-item"><i class="fas fa-face-grin-tongue-squint" style="color: #f59e0b;"></i> Animado</div>
+            <div class="legend-item"><i class="fas fa-face-angry" style="color: #ef4444;"></i> Raiva</div>
+            <div class="legend-item"><i class="fas fa-face-frown" style="color: #8b5cf6;"></i> Ansioso</div>
+        </div>
+    </section>
+</main>
+    </div>
+
+       <script>
+    // Configura a data inicial para o mês atual
+    let currentDate = new Date();
+    let historyData = {};
+    let matriculaAtual = '';
+    
+    const emotionEmojis = {
+        'alegria': '😊',
+        'relaxado': '😌',
+        'animado': '😁',
+        'raiva': '😠',
+        'ansioso': '😰'
+    };
+    
+    const emotionNames = {
+        'alegria': 'Alegria',
+        'relaxado': 'Relaxado',
+        'animado': 'Animado',
+        'raiva': 'Raiva',
+        'ansioso': 'Ansioso'
+    };
+    
+    // Mapeamento do frontend para o backend
+    const emocaoParaBackend = {
+        'alegria': 'Alegria',
+        'relaxado': 'Relaxado',
+        'animado': 'Animado',
+        'raiva': 'Raiva',
+        'ansioso': 'Ansioso'
+    };
+    
+    // ========== CARREGAR DADOS DO BACKEND ==========
+    
+    async function carregarHistorico() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula || '123456';
+        
+        try {
+            const response = await fetch(`http://localhost:5001/api/emocoes/${matriculaAtual}`);
+            const dados = await response.json();
+            
+            // Converter para o formato do calendário
+            historyData = {};
+            for (const [data, info] of Object.entries(dados)) {
+                // Mapear o nome da emoção para o formato usado no calendário
+                let feeling = info.feeling || info.emocao;
+                if (feeling === 'Alegria') feeling = 'alegria';
+                if (feeling === 'Relaxado') feeling = 'relaxado';
+                if (feeling === 'Animado') feeling = 'animado';
+                if (feeling === 'Raiva') feeling = 'raiva';
+                if (feeling === 'Ansioso') feeling = 'ansioso';
+                
+                historyData[data] = { 
+                    feeling: feeling, 
+                    type: feeling === 'alegria' || feeling === 'relaxado' || feeling === 'animado' ? 'positive' : 'negative'
+                };
+            }
+            
+            console.log('✅ Histórico carregado:', historyData);
+            renderCalendar();
+            calculateStats();
+            
+        } catch (error) {
+            console.error('❌ Erro ao carregar histórico:', error);
+            historyData = {};
+            renderCalendar();
+            calculateStats();
+        }
+    }
+    
+    // ========== FUNÇÕES DO CALENDÁRIO ==========
+    
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        document.getElementById('currentMonth').textContent = `${monthNames[month]} de ${year}`;
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const calendarDays = document.getElementById('calendarDays');
+        calendarDays.innerHTML = '';
+        
+        for (let i = 0; i < firstDay; i++) {
+            calendarDays.appendChild(Object.assign(document.createElement('div'), { className: 'calendar-day empty' }));
+        }
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            
+            const hoje = new Date();
+            const isToday = (year === hoje.getFullYear() && month === hoje.getMonth() && day === hoje.getDate());
+            
+            if (historyData[dateStr]) {
+                const data = historyData[dateStr];
+                dayElement.textContent = emotionEmojis[data.feeling] || '😊';
+            } else {
+                dayElement.innerHTML = `<span class="day-number">${day}</span>`;
+            }
+            
+            if (isToday) {
+                dayElement.classList.add('selected');
+            }
+            
+            calendarDays.appendChild(dayElement);
+        }
+    }
+    
+    function calculateStats() {
+        const entries = Object.values(historyData);
+        const total = entries.length;
+        let pos = 0, neg = 0;
+        let counts = {};
+        
+        entries.forEach(e => {
+            if (e.type === 'positive') pos++; 
+            else if (e.type === 'negative') neg++;
+            counts[e.feeling] = (counts[e.feeling] || 0) + 1;
+        });
+        
+        const mostFrequent = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        const posPerc = total > 0 ? Math.round((pos / total) * 100) : 0;
+        
+        document.getElementById('totalDays').textContent = total;
+        document.getElementById('bestMood').textContent = mostFrequent ? emotionEmojis[mostFrequent[0]] : '-';
+        document.getElementById('positivePercent').textContent = posPerc + '%';
+        
+        // Calcular sequência atual (streak)
+        let streak = 0;
+        const hoje = new Date();
+        for (let i = 0; i < 30; i++) {
+            const data = new Date(hoje);
+            data.setDate(hoje.getDate() - i);
+            const dataStr = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+            if (historyData[dataStr]) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+        document.getElementById('currentStreak').textContent = streak + (streak === 1 ? ' dia' : ' dias');
+    }
+    
+    // ========== EVENTOS ==========
+    
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+        calculateStats();
+    });
+    
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+        calculateStats();
+    });
+    
+    // ========== PARTÍCULAS ==========
+    
+    function createBubble() {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    
+    setInterval(createBubble, 1500);
+    
+    // ========== INICIALIZAÇÃO ==========
+    
+    carregarHistorico();
+</script>
+</body>
+</html>

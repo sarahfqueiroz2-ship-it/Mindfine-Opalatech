@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Chat de Apoio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+             :root {
+            --azul-bright: #32B5F1;
+            --azul-escuro: #0277bd;
+            --bg-glass: rgba(255, 255, 255, 0.9);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+        }
+
+        /* BACKGROUND & PARTICLES */
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        #particles-container { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; z-index: 2; 
+        }
+        
+        .bubble { 
+            position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); 
+            border-radius: 50%; animation: rise linear forwards; 
+        }
+        
+        @keyframes rise { 
+            to { transform: translateY(-110vh); opacity: 0; } 
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER RESPONSIVO */
+        .diary-header {
+            background: white; 
+            padding: 12px 20px;
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            z-index: 500;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        
+        .header-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        
+        .back-btn { 
+            color: #ef4444; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            border: none; 
+            background: none; 
+            text-decoration: none; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .diary-title h2 { 
+            margin: 0; 
+            font-size: 0.9rem; 
+            color: var(--azul-escuro); 
+            font-weight: 800; 
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* LAYOUT RESPONSIVO */
+        .chat-layout {
+            flex: 1;
+            display: flex;
+            padding: 15px;
+            gap: 15px;
+            overflow: hidden;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* LISTA DE CONVERSAS - RESPONSIVA */
+        .conversations-list {
+            width: 320px;
+            min-width: 280px;
+            background: var(--bg-glass);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+           .conv-header {
+            padding: 15px;
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .conv-header h3 {
+            color: var(--azul-escuro);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+                .conv-count {
+            background: var(--azul-bright);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+
+        .filter-tabs { 
+            display: flex; 
+            gap: 5px; 
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            flex: 1;
+            padding: 6px 8px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: #666;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .filter-tab.active { 
+            background: var(--azul-bright); 
+            color: white; 
+            border-color: var(--azul-bright); 
+        }
+
+        .conversations-body { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 10px; 
+        }
+
+        /* CARDS DE CONVERSA */
+        .conversation-item {
+            background: white;
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .conversation-item:hover { transform: translateX(5px); }
+        .conversation-item.active { border-color: var(--azul-bright); background: #f0faff; }
+        .conversation-item.urgent { border-left: 5px solid #ef4444; }
+
+        .conv-info-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 5px; 
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .conv-name { 
+            font-weight: 800; 
+            color: var(--azul-escuro); 
+            font-size: 0.8rem;
+            word-break: break-word;
+        }
+        
+        .conv-time { 
+            font-size: 0.65rem; 
+            color: #999; 
+        }
+        
+        .conv-preview { 
+            font-size: 0.7rem; 
+            color: #666; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+
+        /* BOTÕES DENTRO DO CARD */
+        .conversation-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #f0f0f0;
+            flex-wrap: wrap;
+        }
+
+        .conversation-action-btn {
+            flex: 1;
+            padding: 5px 4px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            font-size: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .urgent-btn { color: #ef4444; border-color: #fee2e2; }
+        .urgent-btn.active { background: #fee2e2; }
+        .resolve-btn { color: #10b981; border-color: #d1fae5; }
+        .reopen-btn { color: var(--azul-bright); border-color: #e3f2fd; }
+
+        /* ÁREA DO CHAT */
+        .chat-area {
+            flex: 1;
+            background: var(--bg-glass);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .chat-main-header {
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chat-user-info {
+            min-width: 0;
+            flex: 1;
+        }
+        
+        .conv-name { 
+            font-size: 0.9rem; 
+            word-break: break-word;
+        }
+        
+        #chatUserStatus { 
+            font-size: 0.65rem; 
+            color: #10b981; 
+            font-weight: 600; 
+        }
+
+        .chat-messages {
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            background: rgba(255,255,255,0.5);
+        }
+
+        .message { margin-bottom: 12px; display: flex; }
+        .message.student { justify-content: flex-start; }
+        .message.professional { justify-content: flex-end; }
+        
+        .message-content {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        
+        .message.student .message-content { 
+            background: white; 
+            color: #333; 
+            border-bottom-left-radius: 4px; 
+        }
+        
+        .message.professional .message-content { 
+            background: var(--azul-bright); 
+            color: white; 
+            border-bottom-right-radius: 4px; 
+        }
+        
+        .message-time {
+            font-size: 0.55rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* INPUT ÁREA */
+        .chat-input-area {
+            padding: 12px 15px;
+            background: white;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .chat-input {
+            flex: 1; 
+            border: 2px solid #f0f0f0; 
+            border-radius: 15px;
+            padding: 10px 15px; 
+            font-family: inherit; 
+            resize: none;
+            min-height: 40px; 
+            max-height: 100px; 
+            outline: none; 
+            font-size: 0.85rem;
+        }
+
+        .send-btn-chat {
+            background: var(--azul-escuro); 
+            color: white; 
+            border: none;
+            border-radius: 15px; 
+            padding: 0 20px; 
+            font-weight: 800;
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 0.7rem;
+            height: 44px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            flex-shrink: 0; 
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        
+        .send-btn-chat:hover {
+            background: var(--azul-bright);
+        }
+
+        /* BADGES */
+        .status-badge { 
+            font-size: 7px; 
+            padding: 2px 5px; 
+            border-radius: 4px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            margin-top: 5px; 
+            display: inline-block; 
+        }
+        
+        .status-badge.urgent { background: #fee2e2; color: #ef4444; }
+        .status-badge.resolved { background: #d1fae5; color: #10b981; }
+        .unread-badge { 
+            background: #ef4444; 
+            color: white; 
+            border-radius: 50%; 
+            padding: 2px 5px; 
+            font-size: 8px; 
+        }
+
+        .empty-state {
+            height: 100%; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+        
+        .empty-state p {
+            font-size: 0.8rem;
+        }
+
+               /* ========== RESPONSIVIDADE ========== */
+        
+        /* Telas médias (600px-900px) - mantém lado a lado mas reduz */
+        @media (max-width: 900px) and (min-width: 601px) {
+            .chat-layout {
+                padding: 12px;
+                gap: 12px;
+            }
+            
+            .conversations-list {
+                width: 240px;
+                min-width: 240px;
+            }
+            
+            .conv-name {
+                font-size: 0.7rem;
+            }
+            
+            .conv-preview {
+                font-size: 0.6rem;
+            }
+            
+            .conv-time {
+                font-size: 0.55rem;
+            }
+            
+            .conversation-action-btn {
+                font-size: 0.55rem;
+                padding: 4px 2px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+                font-size: 0.7rem;
+                padding: 8px 12px;
+            }
+            
+            .chat-main-header {
+                padding: 10px 15px;
+            }
+            
+            #chatUserName {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Telas pequenas (até 600px) - vira coluna */
+        @media (max-width: 600px) {
+            .diary-header {
+                padding: 10px 15px;
+            }
+            
+            .back-btn {
+                font-size: 0.75rem;
+            }
+            
+            .diary-title h2 {
+                font-size: 0.75rem;
+                white-space: normal;
+            }
+            
+            .chat-layout {
+                padding: 10px;
+                gap: 10px;
+                flex-direction: column;
+            }
+            
+            /* Lista de conversas em cima */
+            .conversations-list {
+                width: 100%;
+                min-width: auto;
+                max-height: 220px;
+            }
+            
+            .conversations-body {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            .conversation-item {
+                min-width: 200px;
+                flex-shrink: 0;
+                margin-bottom: 0;
+            }
+            
+            /* Remove ações dos cards em mobile (deixa só o essencial) */
+            .conversation-actions {
+                display: none;
+            }
+            
+            .chat-area {
+                min-height: 300px;
+            }
+            
+            .chat-messages {
+                padding: 15px;
+            }
+            
+            .message-content {
+                max-width: 90%;
+                font-size: 0.7rem;
+                padding: 8px 12px;
+            }
+            
+            .send-btn-chat {
+                padding: 0 12px;
+                font-size: 0.6rem;
+                height: 38px;
+            }
+            
+            .chat-input {
+                font-size: 0.75rem;
+                padding: 8px 12px;
+            }
+        }
+        
+        /* Telas muito pequenas (até 400px) */
+        @media (max-width: 400px) {
+            .header-left {
+                gap: 6px;
+            }
+            
+            .back-btn {
+                font-size: 0.65rem;
+            }
+            
+            .diary-title h2 {
+                font-size: 0.65rem;
+            }
+            
+            .conversation-item {
+                min-width: 160px;
+            }
+            
+            .conv-name {
+                font-size: 0.65rem;
+            }
+            
+            .conv-preview {
+                font-size: 0.55rem;
+            }
+        }
+
+                .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 8px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .clear-btn:hover {
+            background: #fee2e2;
+            transform: scale(1.05);
+        }
+
+        #notifModal {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 9999; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0; pointer-events: none; min-width: 300px;
+}
+#notifModal.visible { opacity: 1; pointer-events: all; }
+.notif-box {
+    background: white; border-radius: 20px; padding: 18px 25px;
+    display: flex; align-items: center; gap: 15px;
+    border: 2px solid var(--azul-bright);
+    box-shadow: 0 8px 25px rgba(50,181,241,0.3);
+}
+.notif-icon { font-size: 1.4rem; color: var(--azul-bright); flex-shrink: 0; }
+.notif-icon.warning { color: #FF9800; }
+.notif-title { font-weight: 800; color: var(--azul-escuro); font-size: 0.85rem; }
+.notif-msg { font-size: 0.75rem; color: #667; margin-top: 3px; }
+    </style>
+</head>
+
+<body>
+
+    <div class="background-layer"></div>
+    <div id="particles-container"></div>
+
+    <div class="main-content">
+                <header class="diary-header">
+            <div class="header-left">
+                <a href="login.html" class="back-btn">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+                <div class="diary-title">
+                    <h2>Atendimentos</h2>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="clear-btn" onclick="clearAllChats();">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="chat-layout">
+                        <div class="conversations-list">
+                <div class="conv-header">
+                    <h3>Conversas</h3>
+                    <span class="conv-count" id="convCount">0</span>
+                </div>
+                <div class="conversations-body" id="conversationsList"></div>
+            </div>
+
+            <div class="chat-area">
+                <div class="chat-main-header" id="chatHeader" style="display: none;">
+                    <div class="chat-user-info">
+                        <div class="conv-name" id="chatUserName" style="font-size: 1rem;">Nome do Aluno</div>
+                        <div id="chatUserStatus" style="font-size: 0.7rem; color: #10b981; font-weight: 600;">Online</div>
+                    </div>
+                    <button class="send-btn-chat" style="height: auto; padding: 8px 15px; font-size: 0.7rem;" onclick="viewProfile()">Ver Perfil</button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state">
+                        <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.2;"></i>
+                        <p>Selecione um atendimento</p>
+                    </div>
+                </div>
+
+                <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                    <textarea class="chat-input" id="messageInput" placeholder="Escreva sua mensagem..." rows="1"></textarea>
+                    <button class="send-btn-chat" onclick="sendMessage()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- TOAST -->
+<div id="notifModal">
+    <div class="notif-box">
+        <i class="notif-icon fas fa-info-circle" id="notifIcon"></i>
+        <div>
+            <div class="notif-title" id="notifTitle"></div>
+            <div class="notif-msg" id="notifMsg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM LIMPAR CONVERSAS -->
+<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;" id="confirmClearModal">
+    <div style="background:white;border-radius:20px;padding:30px;max-width:340px;width:90%;text-align:center;">
+        <i class="fas fa-trash-alt" style="font-size:2rem;color:#ef4444;margin-bottom:15px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:8px;">Limpar conversas</h3>
+        <p style="font-size:0.85rem;color:#667;margin-bottom:25px;">Deseja realmente limpar todas as conversas?</p>
+        <div style="display:flex;gap:10px;">
+            <button onclick="document.getElementById('confirmClearModal').style.display='none'"
+                style="flex:1;padding:12px;border-radius:50px;border:2px solid var(--azul-bright);background:white;color:var(--azul-bright);font-weight:800;cursor:pointer;">Cancelar</button>
+            <button id="confirmClearBtn"
+                style="flex:1;padding:12px;border-radius:50px;border:none;background:#ef4444;color:white;font-weight:800;cursor:pointer;">Limpar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM FINALIZAR ATENDIMENTO -->
+<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;" id="confirmResolveModal">
+    <div style="background:white;border-radius:20px;padding:30px;max-width:340px;width:90%;text-align:center;">
+        <i class="fas fa-check-circle" style="font-size:2rem;color:#10b981;margin-bottom:15px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:8px;">Finalizar atendimento</h3>
+        <p style="font-size:0.85rem;color:#667;margin-bottom:25px;">Deseja finalizar este atendimento?</p>
+        <div style="display:flex;gap:10px;">
+            <button onclick="document.getElementById('confirmResolveModal').style.display='none'"
+                style="flex:1;padding:12px;border-radius:50px;border:2px solid var(--azul-bright);background:white;color:var(--azul-bright);font-weight:800;cursor:pointer;">Cancelar</button>
+            <button id="confirmResolveBtn"
+                style="flex:1;padding:12px;border-radius:50px;border:none;background:#10b981;color:white;font-weight:800;cursor:pointer;">Finalizar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PERFIL DO ALUNO -->
+<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:none;align-items:center;justify-content:center;" id="profileModal">
+    <div style="background:white;border-radius:20px;padding:30px;max-width:340px;width:90%;text-align:center;">
+        <i class="fas fa-user-circle" style="font-size:2.5rem;color:var(--azul-bright);margin-bottom:15px;display:block;"></i>
+        <h3 style="color:#0277bd;margin-bottom:15px;" id="profileModalTitle">Perfil</h3>
+        <div id="profileModalBody" style="font-size:0.85rem;color:#444;margin-bottom:25px;"></div>
+        <button onclick="document.getElementById('profileModal').style.display='none'"
+            style="width:100%;padding:12px;border-radius:50px;border:none;background:var(--azul-bright);color:white;font-weight:800;cursor:pointer;">Fechar</button>
+    </div>
+</div>
+
+<script>
+    let conversations = [];
+    let currentConversation = null;
+    let currentFilter = 'all';
+    let lastConversationsJSON = "";
+    let lastMessagesLength = 0;
+
+// ========== CARREGAR USUÁRIO - PSICÓLOGA ==========
+const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+if (!usuario || !usuario.matricula) {
+    window.location.href = 'login.html';
+}
+
+// Verificação mais flexível - se não for psicóloga, só avisa mas não bloqueia
+if (usuario.tipo !== 'psicologia') {
+    console.warn('⚠️ Tipo de usuário não é psicólogo, mas vamos tentar continuar:', usuario.tipo);
+    // Não bloqueia mais, apenas avisa
+}
+
+let matriculaAtual = usuario.matricula;
+console.log('✅ PSICÓLOGA logada com matrícula:', matriculaAtual);
+    // ========== FUNÇÕES DO BACKEND ==========
+    
+   async function loadConversations() {
+    try {
+        const response = await fetch(`http://localhost:5001/api/chats`);
+        const dados = await response.json();
+        console.log('📌 Todas as conversas do backend:', dados);
+        conversations = dados;
+        renderConversations();
+    } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+        conversations = [];
+        renderConversations();
+    }
+}
+    
+    async function loadMessages(conversaId) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/mensagens`);
+            const dados = await response.json();
+            return dados;
+        } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
+            return [];
+        }
+    }
+    
+    async function sendMessageToBackend(conversaId, remetente, texto) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/mensagens`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remetente, texto })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            return null;
+        }
+    }
+    
+    async function updateConversaStatus(conversaId, acao) {
+        try {
+            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/${acao}`, {
+                method: 'PUT'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Erro ao atualizar conversa:', error);
+            return null;
+        }
+    }
+    
+async function clearAllChats() {
+    document.getElementById('confirmClearModal').style.display = 'flex';
+    document.getElementById('confirmClearBtn').onclick = async () => {
+        document.getElementById('confirmClearModal').style.display = 'none';
+        try {
+            await fetch(`http://localhost:5001/api/chats`, { method: 'DELETE' });
+            await loadConversations();
+            currentConversation = null;
+            document.getElementById('chatHeader').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Selecione um atendimento</p></div>';
+        } catch (error) { console.error('Erro ao limpar conversas:', error); }
+    };
+}
+
+    // ========== FUNÇÕES DE UI ==========
+    
+    function renderConversations() {
+        const container = document.getElementById('conversationsList');
+        const filtered = conversations.filter(conv => {
+            if (currentFilter === 'urgent') return conv.urgente && !conv.resolvido;
+            if (currentFilter === 'resolved') return conv.resolvido;
+            return !conv.resolvido;
+        });
+
+        const convCount = document.getElementById('convCount');
+        if (convCount) convCount.textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-comments"></i><p>Nenhuma conversa</p></div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(conv => `
+            <div class="conversation-item ${conv.urgente ? 'urgent' : ''} ${currentConversation?.id === conv.id ? 'active' : ''}"
+                 onclick="selectConversation('${conv.id}')">
+                <div class="conv-info-top">
+                    <span class="conv-name">${conv.nome_aluno}</span>
+                    <span class="conv-time">${formatarData(conv.ultima_data)}</span>
+                </div>
+                <div class="conv-preview">${conv.ultima_mensagem || 'Inicie a conversa...'}</div>
+                <div class="conversation-actions">
+                    <button class="conversation-action-btn urgent-btn" onclick="event.stopPropagation(); toggleUrgent('${conv.id}')">${conv.urgente ? '⚠️ Urgente' : '🔔 Marcar'}</button>
+                    ${!conv.resolvido ? `<button class="conversation-action-btn resolve-btn" onclick="event.stopPropagation(); markAsResolved('${conv.id}')">✓ Finalizar</button>` : ''}
+                    ${conv.resolvido ? `<button class="conversation-action-btn reopen-btn" onclick="event.stopPropagation(); reopenConversation('${conv.id}')">↺ Reabrir</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function formatarData(dataISO) {
+        if (!dataISO) return '';
+        const data = new Date(dataISO);
+        return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    async function selectConversation(id) {
+        currentConversation = conversations.find(c => c.id === id);
+        if (!currentConversation) return;
+
+        document.getElementById('chatHeader').style.display = 'flex';
+        document.getElementById('chatInputArea').style.display = 'flex';
+        document.getElementById('chatUserName').innerText = currentConversation.nome_aluno;
+        
+        const messages = await loadMessages(id);
+        renderMessages(messages);
+        renderConversations();
+        document.getElementById('messageInput').focus();
+    }
+
+    function renderMessages(messages) {
+        const container = document.getElementById('chatMessages');
+        if (!messages) return;
+
+        container.innerHTML = messages.map(msg => `
+            <div class="message ${msg.remetente === 'aluno' ? 'student' : 'professional'}">
+                <div class="message-content">
+                    ${msg.texto}
+                    <div class="message-time">${formatarData(msg.data_hora)}</div>
+                </div>
+            </div>
+        `).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !currentConversation) return;
+
+        const now = new Date();
+        const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+        const container = document.getElementById('chatMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message professional';
+        msgDiv.innerHTML = `<div class="message-content">${text}<div class="message-time">${time}</div></div>`;
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+        input.value = '';
+
+        await sendMessageToBackend(currentConversation.id, 'professional', text);
+        await loadConversations();
+    }
+
+    async function toggleUrgent(id) {
+        await updateConversaStatus(id, 'urgente');
+        await loadConversations();
+        renderConversations();
+    }
+
+   async function markAsResolved(id) {
+    document.getElementById('confirmResolveModal').style.display = 'flex';
+    document.getElementById('confirmResolveBtn').onclick = async () => {
+        document.getElementById('confirmResolveModal').style.display = 'none';
+        await updateConversaStatus(id, 'resolver');
+        await loadConversations();
+        if (currentConversation?.id === id) {
+            currentConversation = null;
+            document.getElementById('chatHeader').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Selecione um atendimento</p></div>';
+        }
+    };
+}
+
+    async function reopenConversation(id) {
+        await updateConversaStatus(id, 'reabrir');
+        await loadConversations();
+    }
+
+    function viewProfile() {
+    const modal = document.getElementById('profileModal');
+    if (currentConversation.anonimo) {
+        document.getElementById('profileModalTitle').innerText = 'Perfil Protegido';
+        document.getElementById('profileModalBody').innerHTML = '<i class="fas fa-user-secret" style="font-size:1.5rem;color:#667;"></i><br>Este aluno escolheu ser anônimo.';
+    } else {
+        document.getElementById('profileModalTitle').innerText = currentConversation.nome_aluno;
+        document.getElementById('profileModalBody').innerHTML = `<strong>Matrícula:</strong> ${currentConversation.matricula_aluno}`;
+    }
+    modal.style.display = 'flex';
+}
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.filter;
+            renderConversations();
+        });
+    });
+
+    document.getElementById('messageInput').addEventListener('input', function() {
+        this.style.height = '50px';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    function showNotif(title, msg, type = 'info') {
+    const icons = { info: 'fa-info-circle', warning: 'fa-exclamation-circle' };
+    const modal = document.getElementById('notifModal');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifMsg').innerText = msg;
+    document.getElementById('notifIcon').className = `notif-icon fas ${icons[type] || icons.info} ${type}`;
+    modal.classList.add('visible');
+    setTimeout(() => modal.classList.remove('visible'), 3500);
+}
+
+    function createBubble() {
+        const container = document.getElementById('particles-container');
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const size = Math.random() * 20 + 5;
+        b.style.width = size + 'px'; b.style.height = size + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+
+    setInterval(() => {
+        loadConversations();
+        if (currentConversation) {
+            loadMessages(currentConversation.id).then(messages => {
+                renderMessages(messages);
+            });
+        }
+    }, 3000);
+
+    setInterval(createBubble, 1500);
+    
+    document.getElementById('messageInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    loadConversations();
+</script>
+    </body>
+</html>

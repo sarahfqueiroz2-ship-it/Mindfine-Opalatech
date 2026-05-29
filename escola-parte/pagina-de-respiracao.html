@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindfine - Respiração</title>
+    
+    <!-- Google Fonts e Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+       :root {
+    --azul-bright: #32B5F1;
+    --azul-escuro: #0277bd;  /* ADICIONE ESTA LINHA */
+    --azul-mind: #33BEF4;
+    --azul-claro: #f0faff;
+    --branco: #ffffff;
+    --texto: #2c3e50;
+    --neon: 0 0 15px rgba(50, 181, 241, 0.6);
+    --neon-branco: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.4);
+    --neon-border: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
+    
+    /* Cores por fase */
+    --cor-inspire: #32B5F1;
+    --cor-segure: #ffffff;
+    --cor-expire: #2ecc71;
+    --cor-aguarde: #f1c40f;
+}
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #000;
+            color: white;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .background-layer {
+            position: fixed; width: 110%; height: 110%;
+            background-image: url('fundos/fundo-a.png'); 
+            background-size: cover; background-position: center;
+            z-index: 1; left: -5%; top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            padding: 50px 20px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+      .neon-title {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: var(--neon);
+    letter-spacing: 2px;
+}
+
+        .main-content {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px 120px 20px;
+        }
+
+       #menu-container {
+    background: white;
+    border: 2px solid var(--azul-bright);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border-radius: 30px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+}
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin: 15px 0;
+            border: none;
+            background-color: var(--azul-bright);
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        #exercise-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 70vh;
+            position: relative;
+        }
+
+        #exercise-container.show { display: flex; animation: fadeIn 0.5s ease; }
+
+        .btn-back {
+            position: fixed; top: 50px; left: 20px;
+            background-color: white; color: var(--azul-bright);
+            border: none; width: 50px; height: 50px; border-radius: 50%;
+            font-size: 1.3rem; cursor: pointer; z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #status-text {
+            font-size: 2rem; color: white; font-weight: 800;
+            height: 60px; margin-bottom: 40px; 
+            text-transform: uppercase; letter-spacing: 2px;
+            transition: color 0.8s ease, text-shadow 0.8s ease;
+        }
+
+        .breathing-circle {
+            width: 65vw; height: 65vw; max-width: 300px; max-height: 300px;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px); 
+            border: 8px solid rgba(255, 255, 255, 0.5);
+            display: flex; justify-content: center; align-items: center;
+            transition: border-color 0.8s ease, box-shadow 0.8s ease;
+        }
+
+        .breathing-circle img { width: 70%; height: 70%; object-fit: contain; }
+
+        /* ANIMAÇÕES DE RESPIRAÇÃO */
+        @keyframes anim-478 { 0% { transform: scale(1); } 21% { transform: scale(1.4); } 58% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        @keyframes anim-box { 0% { transform: scale(1); } 25% { transform: scale(1.4); } 50% { transform: scale(1.4); } 75% { transform: scale(1); } 100% { transform: scale(1); } }
+        @keyframes anim-balance { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+        .run-478 { animation: anim-478 19s infinite ease-in-out; }
+        .run-box { animation: anim-box 16s infinite linear; }
+        .run-balance { animation: anim-balance 10s infinite ease-in-out; }
+
+        .nav-pill {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 12px 30px; border-radius: 100px;
+            display: flex; gap: 25px; align-items: center;
+            border: 2px solid white; box-shadow: var(--neon-border); z-index: 2000;
+        }
+        .nav-item { 
+            text-decoration: none; color: var(--azul-bright); 
+            font-weight: 800; font-size: 0.65rem; text-transform: uppercase; 
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .neon-title { font-size: 1.2rem; }
+            #status-text { font-size: 1.5rem; }
+            .nav-pill { gap: 15px; padding: 10px 20px; }
+        }
+
+        .subtitle {
+    color: var(--azul-bright);
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+    </style>
+</head>
+<body>
+
+    <div class="background-layer"></div>
+
+    <header id="header-main">
+        <div class="neon-title">RESPIRAÇÃO</div>
+    </header>
+
+    <div class="main-content">
+        <div id="menu-container">
+            <h2 style="color: var(--azul-escuro); font-weight: 800; margin-bottom: 5px; font-size: 1.8rem;">Mindfine</h2>
+<p style="color: var(--azul-bright); margin-bottom: 30px; font-size: 0.95rem; font-weight: 600;">Escolha uma técnica para relaxar agora</p>
+
+            <button class="btn" onclick="startBreathing('478')">Relaxamento (4-7-8)</button>
+            <button class="btn" onclick="startBreathing('box')">Quadrada (Box)</button>
+            <button class="btn" onclick="startBreathing('balance')">Equilíbrio (5-5)</button>
+        </div>
+
+        <div id="exercise-container">
+            <button class="btn-back" onclick="resetApp()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            
+            <p id="status-text">Prepare-se...</p>
+            
+            <div class="breathing-circle" id="circle">
+                <img src="pandas/skin.png" alt="Mascote">
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-pill" id="navbar">
+        <a href="inicial.html" class="nav-item"><i class="fas fa-home"></i><span>Início</span></a>
+        <a href="diario.html" class="nav-item"><i class="fas fa-book"></i><span>Diário</span></a>
+        <a href="chat-com-psicologa.html" class="nav-item"><i class="fas fa-comments"></i><span>Apoio</span></a>
+        <a href="pagina-de-respiracao.html" class="nav-item"><i class="fas fa-wind"></i><span>Respiração</span></a>
+        <a href="playlist.html" class="nav-item"><i class="fas fa-music"></i><span>Playlist</span></a>
+    </nav>
+
+    <script>
+        const menu = document.getElementById('menu-container');
+        const exercise = document.getElementById('exercise-container');
+        const navbar = document.getElementById('navbar');
+        const header = document.getElementById('header-main');
+        const circle = document.getElementById('circle');
+        const text = document.getElementById('status-text');
+        let textInterval;
+
+        // Configuração de cores por estado
+        const phaseColors = {
+            inspire: "#32B5F1", // Azul
+            segure: "#ffffff",  // Branco (Alterado)
+            expire: "#2ecc71",  // Verde
+            aguarde: "#f1c40f"  // Amarelo
+        };
+
+        function updatePhase(status, color) {
+            text.innerText = status;
+            text.style.color = color;
+            text.style.textShadow = `0 0 15px ${color}`;
+            circle.style.borderColor = color;
+            circle.style.boxShadow = `0 0 20px ${color}, 0 0 40px ${color}66`;
+        }
+
+        function startBreathing(type) {
+            menu.style.display = 'none';
+            navbar.style.display = 'none';
+            header.style.display = 'none';
+            exercise.classList.add('show');
+            
+            circle.className = 'breathing-circle';
+            updatePhase("Inspire...", phaseColors.inspire);
+
+            if (type === '478') {
+                circle.classList.add('run-478');
+                runTextCycle(4000, 7000, 8000, 0);
+            } else if (type === 'box') {
+                circle.classList.add('run-box');
+                runTextCycle(4000, 4000, 4000, 4000);
+            } else if (type === 'balance') {
+                circle.classList.add('run-balance');
+                runTextCycle(5000, 0, 5000, 0);
+            }
+        }
+
+        function runTextCycle(inTime, holdTime, outTime, holdEmptyTime) {
+            const totalTime = inTime + holdTime + outTime + holdEmptyTime;
+            const cycle = () => {
+                // INSPIRAR
+                updatePhase("Inspire...", phaseColors.inspire);
+                
+                setTimeout(() => {
+                    // SEGURAR (Cheio)
+                    if (holdTime > 0) {
+                        updatePhase("Segure...", phaseColors.segure);
+                    }
+                    
+                    setTimeout(() => {
+                        // EXPIRAR
+                        updatePhase("Expire...", phaseColors.expire);
+                        
+                        setTimeout(() => {
+                            // AGUARDAR (Vazio)
+                            if (holdEmptyTime > 0) {
+                                updatePhase("Aguarde...", phaseColors.aguarde);
+                            }
+                        }, outTime);
+                    }, holdTime);
+                }, inTime);
+            };
+            
+            cycle();
+            textInterval = setInterval(cycle, totalTime);
+        }
+
+        function resetApp() {
+            clearInterval(textInterval);
+            circle.className = 'breathing-circle';
+            circle.style.borderColor = "rgba(255, 255, 255, 0.5)";
+            circle.style.boxShadow = "var(--neon-branco)";
+            text.style.color = "white";
+            text.style.textShadow = "var(--neon)";
+            text.innerText = "Prepare-se...";
+            exercise.classList.remove('show');
+            navbar.style.display = 'flex';
+            header.style.display = 'flex';
+            menu.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
