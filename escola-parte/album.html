@@ -288,12 +288,12 @@
         
         try {
             // Carregar páginas desbloqueadas
-            const respPaginas = await fetch(`http://localhost:5001/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`);
+            const respPaginas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`);
             const dadosPaginas = await respPaginas.json();
             paginasDesbloqueadas = dadosPaginas.paginas_desbloqueadas || 1;
             
             // Carregar figurinhas desbloqueadas
-            const respFigurinhas = await fetch(`http://localhost:5001/api/figurinhas/${matriculaAtual}`);
+            const respFigurinhas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/${matriculaAtual}`);
             figurinhasDesbloqueadas = await respFigurinhas.json();
             
             console.log('✅ Álbum carregado:', { paginasDesbloqueadas, figurinhasDesbloqueadas });
@@ -307,7 +307,7 @@
         if (paginaIndex <= paginasDesbloqueadas) return true;
         
         try {
-            await fetch(`http://localhost:5001/api/figurinhas/paginas-desbloqueadas`, {
+            await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -325,7 +325,7 @@
     
     async function desbloquearFigurinha(paginaKey, slot, figurinhaId) {
         try {
-            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/desbloquear`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

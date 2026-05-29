@@ -395,7 +395,7 @@ console.log('NOME DO USUÁRIO:', finalUserName);
             btnLogin.textContent = 'Entrando...';
             
             try {
-                const resposta = await fetch('http://localhost:5001/api/login', {
+                const resposta = await fetch('https://mindfine-backend.onrender.com/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

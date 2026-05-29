@@ -1120,7 +1120,7 @@ function atualizarBadgeAlertas() {
 
 async function buscarAlertasDoBackend() {
     try {
-        const response = await fetch('http://localhost:5001/api/alertas');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/alertas');
         const alertas = await response.json();
         const ativos = alertas.filter(a => a.resolvido !== 1).length;
         

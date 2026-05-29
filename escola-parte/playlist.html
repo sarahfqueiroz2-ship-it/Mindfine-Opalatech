@@ -292,7 +292,7 @@
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/playlist/${matriculaAtual}`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}`);
             const dados = await response.json();
             favoritos = dados.favoritos || [];
             console.log('✅ Favoritos carregados:', favoritos.length);
@@ -306,7 +306,7 @@
     
     async function adicionarFavorito(musicaId, titulo, artista) {
         try {
-            const response = await fetch(`http://localhost:5001/api/playlist/${matriculaAtual}`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -330,7 +330,7 @@
     
     async function removerFavorito(musicaId) {
         try {
-            const response = await fetch(`http://localhost:5001/api/playlist/${matriculaAtual}/${musicaId}`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}/${musicaId}`, {
                 method: 'DELETE'
             });
             const result = await response.json();

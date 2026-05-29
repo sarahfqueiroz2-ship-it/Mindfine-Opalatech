@@ -726,7 +726,7 @@ c<!DOCTYPE html>
     
     async function carregarDistribuicaoEmocional() {
         try {
-            const url = new URL('http://localhost:5001/api/relatorio/emocoes');
+            const url = new URL('https://mindfine-backend.onrender.com/api/relatorio/emocoes');
             url.searchParams.set('periodo', filtros.periodo);
             url.searchParams.set('curso', filtros.curso);
             url.searchParams.set('ano', filtros.ano);
@@ -752,7 +752,7 @@ c<!DOCTYPE html>
     
     async function carregarHistorico() {
         try {
-            const url = new URL('http://localhost:5001/api/relatorio/historico');
+            const url = new URL('https://mindfine-backend.onrender.com/api/relatorio/historico');
             url.searchParams.set('curso', filtros.curso);
             url.searchParams.set('ano', filtros.ano);
             
@@ -766,7 +766,7 @@ c<!DOCTYPE html>
     
     async function carregarRanking() {
         try {
-            const response = await fetch('http://localhost:5001/api/escola/turmas');
+            const response = await fetch('https://mindfine-backend.onrender.com/api/escola/turmas');
             const turmas = await response.json();
             
             dadosGlobais.ranking = turmas.map(t => ({
@@ -786,7 +786,7 @@ c<!DOCTYPE html>
     
     async function carregarCursos() {
     try {
-        const response = await fetch('http://localhost:5001/api/relatorio/cursos');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/relatorio/cursos');
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -807,7 +807,7 @@ c<!DOCTYPE html>
     
     async function carregarParticipacao() {
         try {
-            const response = await fetch('http://localhost:5001/api/escola/turmas');
+            const response = await fetch('https://mindfine-backend.onrender.com/api/escola/turmas');
             const turmas = await response.json();
             
             dadosGlobais.participacao = turmas.map(t => ({
@@ -823,7 +823,7 @@ c<!DOCTYPE html>
     
     async function carregarRecomendacoes() {
         try {
-            const url = new URL('http://localhost:5001/api/relatorio/recomendacoes');
+            const url = new URL('https://mindfine-backend.onrender.com/api/relatorio/recomendacoes');
             url.searchParams.set('curso', filtros.curso);
             url.searchParams.set('ano', filtros.ano);
             
@@ -1162,7 +1162,7 @@ function atualizarBadgeAlertas() {
 
 async function buscarAlertasDoBackend() {
     try {
-        const response = await fetch('http://localhost:5001/api/alertas');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/alertas');
         const alertas = await response.json();
         const ativos = alertas.filter(a => a.resolvido !== 1).length;
         

@@ -384,7 +384,7 @@
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/emocoes/${matriculaAtual}`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/emocoes/${matriculaAtual}`);
             const dados = await response.json();
             
             // Converter para o formato do calendário

@@ -542,7 +542,7 @@ async function desbloquearPacoteFigurinhas() {
     
     for (const fig of figurinhasDaPaginaInicial) {
         try {
-            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/desbloquear`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -788,7 +788,7 @@ async function desbloquearUniversoPorIlha(nomeIlha) {
     
     try {
         // Buscar universos já desbloqueados
-        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         const universosAtuais = dados.universos_desbloqueados || [];
         
@@ -799,7 +799,7 @@ async function desbloquearUniversoPorIlha(nomeIlha) {
         universosAtuais.push(nomeUniverso);
         
         // Salvar no backend
-        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
+        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ universos_desbloqueados: universosAtuais })
@@ -964,7 +964,7 @@ if (ehPrimeiraVez) {
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
             const dados = await response.json();
             
             const coinDisplay = document.querySelector('.level-display span');

@@ -665,7 +665,7 @@
    async function carregarAlertas() {
     try {
         // Buscar alertas salvos no backend
-        const response = await fetch('http://localhost:5001/api/alertas');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/alertas');
         const alertasSalvos = await response.json();
         
         if (alertasSalvos && alertasSalvos.length > 0) {
@@ -677,13 +677,13 @@
             }));
         } else {
             // Gerar alertas automáticos baseados nos alunos
-            const responseAlunos = await fetch('http://localhost:5001/api/escola/alunos');
+            const responseAlunos = await fetch('https://mindfine-backend.onrender.com/api/escola/alunos');
             const alunos = await responseAlunos.json();
             alertas = gerarAlertasReais(alunos);
             
             // Salvar alertas gerados no backend
             for (const alerta of alertas) {
-                await fetch('http://localhost:5001/api/alertas', {
+                await fetch('https://mindfine-backend.onrender.com/api/alertas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(alerta)
@@ -891,7 +891,7 @@
     if (!alerta) return;
     
     try {
-        await fetch(`http://localhost:5001/api/alertas/${id}/resolver`, {
+        await fetch(`https://mindfine-backend.onrender.com/api/alertas/${id}/resolver`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -1008,16 +1008,16 @@
 async function carregarInsights() {
     try {
         // Buscar dados reais para gerar insights
-        const response = await fetch('http://localhost:5001/api/escola/estatisticas');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/escola/estatisticas');
         const stats = await response.json();
         
-        const responseTurmas = await fetch('http://localhost:5001/api/escola/turmas');
+        const responseTurmas = await fetch('https://mindfine-backend.onrender.com/api/escola/turmas');
         const turmas = await responseTurmas.json();
         
         const insights = [];
         
         // Insight 1: Ansiedade (se houver dados de emoção)
-        const responseEmocoes = await fetch('http://localhost:5001/api/relatorio/emocoes?periodo=mes');
+        const responseEmocoes = await fetch('https://mindfine-backend.onrender.com/api/relatorio/emocoes?periodo=mes');
         const emocoes = await responseEmocoes.json();
         
         if (emocoes.ansioso && emocoes.ansioso > 25) {
@@ -1046,7 +1046,7 @@ async function carregarInsights() {
         }
         
         // Insight 3: Aluno crítico
-        const responseAlunos = await fetch('http://localhost:5001/api/escola/alunos');
+        const responseAlunos = await fetch('https://mindfine-backend.onrender.com/api/escola/alunos');
         const alunos = await responseAlunos.json();
         const alunosCriticos = alunos.filter(a => (a.nivel || 1) <= 2);
         
@@ -1125,7 +1125,7 @@ async function criarAlerta() {
     };
     
   try {
-        await fetch('http://localhost:5001/api/alertas', {
+        await fetch('https://mindfine-backend.onrender.com/api/alertas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(novoAlerta)

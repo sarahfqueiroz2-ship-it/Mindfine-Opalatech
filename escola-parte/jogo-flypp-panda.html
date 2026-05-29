@@ -212,7 +212,7 @@
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/flypp_panda`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`);
             const dados = await response.json();
             melhorPontuacao = dados.recorde || 0;
             console.log(`🏆 Melhor pontuação: ${melhorPontuacao}`);
@@ -225,7 +225,7 @@
         if (pontuacao <= melhorPontuacao) return false;
         
         try {
-            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/flypp_panda`, {
+            await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pontuacao: pontuacao })
