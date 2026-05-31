@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 
 // Servir os arquivos HTML da pasta escola-parte
-app.use(express.static('C:/Users/Lenovo/Downloads/escola-parte'));
+app.use(express.static(path.join(__dirname, 'escola-parte')));
 
 // Conectar ao banco de dados
 const db = new sqlite3.Database(path.join(__dirname, 'mindfine.db'));
