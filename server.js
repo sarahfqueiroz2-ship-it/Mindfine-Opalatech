@@ -6,7 +6,12 @@ const path = require('path');
 const app = express();
 const PORT = 5001;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '50mb' }));
 
 // Servir os arquivos HTML da pasta escola-parte
