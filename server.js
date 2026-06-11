@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// CORS - TEM QUE VIR PRIMEIRO
+// CORS
 app.use(cors({
     origin: '*',
     credentials: true,
@@ -14,16 +14,199 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
-app.use(express.json({ limit: '50mb' }));
+app.options('*', cors());
 
-// Servir os arquivos estáticos
+app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'escola-parte')));
 
-// Conectar ao banco de dados
-const db = new sqlite3.Database(path.join(__dirname, 'mindfine.db'));
+// ========== CONEXÃO POSTGRESQL ==========
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+});
+
+// Criar tabelas automaticamente
+async function criarTabelas() {
+    const client = await pool.connect();
+    try {
+        // Tabela usuarios
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                matricula TEXT PRIMARY KEY,
+                nome TEXT,
+                email TEXT,
+                nivel INTEGER DEFAULT 1,
+                xp INTEGER DEFAULT 0,
+                moedas INTEGER DEFAULT 0,
+                skin_atual TEXT DEFAULT 'pandas/skin.png',
+                fundo_atual TEXT DEFAULT 'fundos/fundo-a.png'
+            )
+        `);
+        
+        // Tabela emocoes
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS emocoes (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                data TEXT,
+                emocao TEXT,
+                emoji TEXT
+            )
+        `);
+        
+        // Tabela universos_desbloqueados
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS universos_desbloqueados (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                universo TEXT
+            )
+        `);
+        
+        // Tabela figurinhas_desbloqueadas
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS figurinhas_desbloqueadas (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                pagina TEXT,
+                slot INTEGER,
+                figurinha_id TEXT,
+                data_desbloqueio TEXT
+            )
+        `);
+        
+        // Tabela usuario_config
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS usuario_config (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                chave TEXT,
+                valor TEXT
+            )
+        `);
+        
+        // Tabela diario_entradas
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS diario_entradas (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                data TEXT,
+                titulo TEXT,
+                conteudo TEXT,
+                tipo TEXT DEFAULT 'text',
+                audio_base64 TEXT,
+                data_hora TEXT
+            )
+        `);
+        
+        // Tabela galeria_arte
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS galeria_arte (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                data TEXT,
+                imagem_base64 TEXT
+            )
+        `);
+        
+        // Tabela recordes_jogos
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS recordes_jogos (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                jogo_nome TEXT,
+                pontuacao INTEGER,
+                data_record TEXT
+            )
+        `);
+        
+        // Tabela musicas_favoritas
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS musicas_favoritas (
+                id SERIAL PRIMARY KEY,
+                matricula TEXT REFERENCES usuarios(matricula),
+                musica_id INTEGER,
+                titulo TEXT,
+                artista TEXT,
+                data_adicionado TEXT
+            )
+        `);
+        
+        // Tabela conversas
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS conversas (
+                id TEXT PRIMARY KEY,
+                matricula_aluno TEXT REFERENCES usuarios(matricula),
+                nome_aluno TEXT,
+                anonimo INTEGER DEFAULT 0,
+                ultima_mensagem TEXT,
+                ultima_data TEXT,
+                urgente INTEGER DEFAULT 1,
+                resolvido INTEGER DEFAULT 0
+            )
+        `);
+        
+        // Tabela mensagens
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS mensagens (
+                id SERIAL PRIMARY KEY,
+                conversa_id TEXT REFERENCES conversas(id),
+                remetente TEXT,
+                texto TEXT,
+                data_hora TEXT
+            )
+        `);
+        
+        // Tabela alertas
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS alertas (
+                id TEXT PRIMARY KEY,
+                titulo TEXT,
+                descricao TEXT,
+                turma TEXT,
+                aluno TEXT,
+                severidade TEXT,
+                tipo TEXT,
+                emoji TEXT,
+                detalhes TEXT,
+                resolvido INTEGER DEFAULT 0,
+                data_criacao TEXT,
+                data_resolucao TEXT
+            )
+        `);
+        
+        // Tabela intervencoes
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS intervencoes (
+                id TEXT PRIMARY KEY,
+                titulo TEXT,
+                descricao TEXT,
+                turma TEXT,
+                aluno TEXT,
+                prioridade TEXT,
+                tipo TEXT,
+                responsavel TEXT,
+                data_prevista TEXT,
+                progresso INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pendente',
+                curso TEXT,
+                data_criacao TEXT,
+                data_atualizacao TEXT
+            )
+        `);
+        
+        console.log('✅ Todas as tabelas criadas/verificadas!');
+    } catch (err) {
+        console.error('Erro ao criar tabelas:', err);
+    } finally {
+        client.release();
+    }
+}
+
+criarTabelas();
 
 // ========== ROTA DE LOGIN ==========
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { tipo_usuario, identificador, senha } = req.body;
     
     console.log(`Login tentativa: ${identificador} - ${tipo_usuario}`);
@@ -36,206 +219,503 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Rota de teste para verificar CORS
-app.get('/api/teste', (req, res) => {
-    res.json({ mensagem: 'CORS funcionando!', status: 'ok' });
-});
-
 // ========== ROTAS DO PROGRESSO ==========
-app.get('/api/progresso/:matricula', (req, res) => {
+
+app.get('/api/progresso/:matricula', async (req, res) => {
     const { matricula } = req.params;
     
-    db.get('SELECT * FROM usuarios WHERE matricula = ?', [matricula], (err, usuario) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ erro: err.message });
-        }
+    try {
+        let usuario = await pool.query('SELECT * FROM usuarios WHERE matricula = $1', [matricula]);
         
-        if (!usuario) {
-            db.run(`INSERT INTO usuarios (matricula, nome, email, nivel, xp, moedas, skin_atual, fundo_atual) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [matricula, "Usuário", `${matricula}@mindfine.com`, 1, 0, 0, "pandas/skin.png", "fundos/fundo-a.png"],
-                function(err) {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({ erro: err.message });
-                    }
-                    
-                    db.get('SELECT * FROM usuarios WHERE matricula = ?', [matricula], (err, novoUsuario) => {
-                        if (err) return res.status(500).json({ erro: err.message });
-                        
-                        const universosPadrao = ["Santuário", "Ilha do Pirata", "Ilha do Bruxo"];
-                        universosPadrao.forEach(universo => {
-                            db.run('INSERT INTO universos_desbloqueados (matricula, universo) VALUES (?, ?)',
-                                [matricula, universo]);
-                        });
-                        
-                        return res.json({
-                            moedas: novoUsuario.moedas,
-                            xp: novoUsuario.xp,
-                            nivel: novoUsuario.nivel,
-                            skin_atual: novoUsuario.skin_atual,
-                            universos_desbloqueados: universosPadrao,
-                            figurinhas_desbloqueadas: [],
-                            recordes_jogos: {},
-                            galeria_arte: []
-                        });
-                    });
-                }
+        if (usuario.rows.length === 0) {
+            await pool.query(
+                `INSERT INTO usuarios (matricula, nome, email, nivel, xp, moedas, skin_atual, fundo_atual) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [matricula, "Usuário", `${matricula}@mindfine.com`, 1, 0, 0, "pandas/skin.png", "fundos/fundo-a.png"]
             );
-            return;
-        }
-        
-        db.all('SELECT universo FROM universos_desbloqueados WHERE matricula = ?', [matricula], (err, universos) => {
-            if (err) return res.status(500).json({ erro: err.message });
             
-            const listaUniversos = universos.map(u => u.universo);
-            if (listaUniversos.length === 0) {
-                listaUniversos.push("Santuário", "Ilha do Pirata", "Ilha do Bruxo");
+            const universosPadrao = ["Santuário", "Ilha do Pirata", "Ilha do Bruxo"];
+            for (const universo of universosPadrao) {
+                await pool.query('INSERT INTO universos_desbloqueados (matricula, universo) VALUES ($1, $2)',
+                    [matricula, universo]);
             }
             
-            res.json({
-                moedas: usuario.moedas,
-                xp: usuario.xp,
-                nivel: usuario.nivel,
-                skin_atual: usuario.skin_atual,
-                fundo_atual: usuario.fundo_atual || 'fundos/fundo-a.png',
-                universos_desbloqueados: listaUniversos,
-                figurinhas_desbloqueadas: [],
-                recordes_jogos: {},
-                galeria_arte: []
-            });
+            usuario = await pool.query('SELECT * FROM usuarios WHERE matricula = $1', [matricula]);
+        }
+        
+        const universos = await pool.query('SELECT universo FROM universos_desbloqueados WHERE matricula = $1', [matricula]);
+        const listaUniversos = universos.rows.map(u => u.universo);
+        if (listaUniversos.length === 0) {
+            listaUniversos.push("Santuário", "Ilha do Pirata", "Ilha do Bruxo");
+        }
+        
+        res.json({
+            moedas: usuario.rows[0].moedas,
+            xp: usuario.rows[0].xp,
+            nivel: usuario.rows[0].nivel,
+            skin_atual: usuario.rows[0].skin_atual,
+            fundo_atual: usuario.rows[0].fundo_atual || 'fundos/fundo-a.png',
+            universos_desbloqueados: listaUniversos,
+            figurinhas_desbloqueadas: [],
+            recordes_jogos: {},
+            galeria_arte: []
         });
-    });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.post('/api/progresso/:matricula', (req, res) => {
+app.post('/api/progresso/:matricula', async (req, res) => {
     const { matricula } = req.params;
     const updates = req.body;
     
     const campos = [];
     const valores = [];
+    let idx = 1;
     
-    if (updates.moedas !== undefined) { campos.push('moedas = ?'); valores.push(updates.moedas); }
-    if (updates.xp !== undefined) { campos.push('xp = ?'); valores.push(updates.xp); }
-    if (updates.nivel !== undefined) { campos.push('nivel = ?'); valores.push(updates.nivel); }
-    if (updates.skin_atual !== undefined) { campos.push('skin_atual = ?'); valores.push(updates.skin_atual); }
-    if (updates.fundo_atual !== undefined) { campos.push('fundo_atual = ?'); valores.push(updates.fundo_atual); }
+    if (updates.moedas !== undefined) { campos.push(`moedas = $${idx++}`); valores.push(updates.moedas); }
+    if (updates.xp !== undefined) { campos.push(`xp = $${idx++}`); valores.push(updates.xp); }
+    if (updates.nivel !== undefined) { campos.push(`nivel = $${idx++}`); valores.push(updates.nivel); }
+    if (updates.skin_atual !== undefined) { campos.push(`skin_atual = $${idx++}`); valores.push(updates.skin_atual); }
+    if (updates.fundo_atual !== undefined) { campos.push(`fundo_atual = $${idx++}`); valores.push(updates.fundo_atual); }
+    if (updates.universos_desbloqueados !== undefined) { 
+        // Para universos, precisa de lógica separada
+        await pool.query('DELETE FROM universos_desbloqueados WHERE matricula = $1', [matricula]);
+        for (const universo of updates.universos_desbloqueados) {
+            await pool.query('INSERT INTO universos_desbloqueados (matricula, universo) VALUES ($1, $2)', [matricula, universo]);
+        }
+    }
     
     if (campos.length > 0) {
         valores.push(matricula);
-        const sql = `UPDATE usuarios SET ${campos.join(', ')} WHERE matricula = ?`;
-        db.run(sql, valores, (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json({ sucesso: true });
-        });
-    } else {
-        res.json({ sucesso: true });
+        const sql = `UPDATE usuarios SET ${campos.join(', ')} WHERE matricula = $${idx}`;
+        await pool.query(sql, valores);
     }
+    
+    res.json({ sucesso: true });
 });
 
 // ========== ROTA DE EMOCÕES ==========
-app.post('/api/emocao/:matricula', (req, res) => {
+
+app.post('/api/emocao/:matricula', async (req, res) => {
     const { matricula } = req.params;
     const { emocao, emoji } = req.body;
     const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
     
-    db.get('SELECT * FROM emocoes WHERE matricula = ? AND data = ?', [matricula, hoje], (err, existente) => {
-        if (err) return res.status(500).json({ erro: err.message });
+    try {
+        const existente = await pool.query('SELECT * FROM emocoes WHERE matricula = $1 AND data = $2', [matricula, hoje]);
         
-        if (existente) {
+        if (existente.rows.length > 0) {
             return res.status(400).json({ erro: "Você já registrou sua emoção hoje!" });
         }
         
-        db.run('INSERT INTO emocoes (matricula, data, emocao, emoji) VALUES (?, ?, ?, ?)',
-            [matricula, hoje, emocao, emoji],
-            (err) => {
-                if (err) return res.status(500).json({ erro: err.message });
-                
-                db.run('UPDATE usuarios SET moedas = moedas + 25, xp = xp + 25 WHERE matricula = ?', [matricula]);
-                db.run('UPDATE usuarios SET nivel = nivel + 1, xp = 0 WHERE matricula = ? AND xp >= 100', [matricula]);
-                
-                db.get('SELECT moedas FROM usuarios WHERE matricula = ?', [matricula], (err, result) => {
-                    res.json({ sucesso: true, moedas_ganhas: 25, xp_ganhas: 25, total_moedas: result?.moedas });
-                });
-            }
-        );
-    });
+        await pool.query('INSERT INTO emocoes (matricula, data, emocao, emoji) VALUES ($1, $2, $3, $4)',
+            [matricula, hoje, emocao, emoji]);
+        
+        await pool.query('UPDATE usuarios SET moedas = moedas + 25, xp = xp + 25 WHERE matricula = $1', [matricula]);
+        await pool.query('UPDATE usuarios SET nivel = nivel + 1, xp = 0 WHERE matricula = $1 AND xp >= 100', [matricula]);
+        
+        const result = await pool.query('SELECT moedas FROM usuarios WHERE matricula = $1', [matricula]);
+        res.json({ sucesso: true, moedas_ganhas: 25, xp_ganhas: 25, total_moedas: result.rows[0]?.moedas });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/check-emocao/:matricula', (req, res) => {
+app.get('/api/check-emocao/:matricula', async (req, res) => {
     const { matricula } = req.params;
     const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
     
-    db.get('SELECT * FROM emocoes WHERE matricula = ? AND data = ?', [matricula, hoje], (err, result) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json({ ja_registrou: !!result });
-    });
+    try {
+        const result = await pool.query('SELECT * FROM emocoes WHERE matricula = $1 AND data = $2', [matricula, hoje]);
+        res.json({ ja_registrou: result.rows.length > 0 });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/emocoes/:matricula', (req, res) => {
+app.get('/api/emocoes/:matricula', async (req, res) => {
     const { matricula } = req.params;
     
-    db.all('SELECT data, emocao, emoji FROM emocoes WHERE matricula = ? ORDER BY data DESC', [matricula], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        
+    try {
+        const result = await pool.query('SELECT data, emocao, emoji FROM emocoes WHERE matricula = $1 ORDER BY data DESC', [matricula]);
         const historico = {};
-        rows.forEach(row => {
+        result.rows.forEach(row => {
             historico[row.data] = { feeling: row.emocao, type: "positive" };
         });
         res.json(historico);
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DE FIGURINHAS ==========
+
+app.get('/api/figurinhas/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT pagina, slot, figurinha_id FROM figurinhas_desbloqueadas WHERE matricula = $1', [matricula]);
+        const figurinhas = {};
+        result.rows.forEach(row => {
+            if (!figurinhas[row.pagina]) {
+                figurinhas[row.pagina] = {};
+            }
+            figurinhas[row.pagina][row.slot] = row.figurinha_id;
+        });
+        res.json(figurinhas);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/figurinhas/desbloquear', async (req, res) => {
+    const { matricula, pagina, slot, figurinha_id } = req.body;
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    try {
+        const existente = await pool.query('SELECT * FROM figurinhas_desbloqueadas WHERE matricula = $1 AND pagina = $2 AND slot = $3',
+            [matricula, pagina, slot]);
+        
+        if (existente.rows.length > 0) {
+            return res.json({ sucesso: false, ja_desbloqueada: true });
+        }
+        
+        await pool.query(`INSERT INTO figurinhas_desbloqueadas (matricula, pagina, slot, figurinha_id, data_desbloqueio)
+                         VALUES ($1, $2, $3, $4, $5)`,
+            [matricula, pagina, slot, figurinha_id, hoje]);
+        
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.get('/api/figurinhas/paginas-desbloqueadas/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT valor FROM usuario_config WHERE matricula = $1 AND chave = $2',
+            [matricula, 'paginas_album']);
+        const paginas = result.rows.length > 0 ? JSON.parse(result.rows[0].valor) : 1;
+        res.json({ paginas_desbloqueadas: paginas });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/figurinhas/paginas-desbloqueadas', async (req, res) => {
+    const { matricula, paginas } = req.body;
+    
+    try {
+        await pool.query(`INSERT INTO usuario_config (matricula, chave, valor) VALUES ($1, $2, $3)
+                         ON CONFLICT (id) DO UPDATE SET valor = EXCLUDED.valor`,
+            [matricula, 'paginas_album', JSON.stringify(paginas)]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DO DIÁRIO ==========
+
+app.get('/api/diario/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT * FROM diario_entradas WHERE matricula = $1 ORDER BY data DESC', [matricula]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/diario/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    const { titulo, conteudo, tipo, audio_base64 } = req.body;
+    const hoje = new Date().toISOString().split('T')[0];
+    const agora = new Date().toISOString();
+    
+    try {
+        const result = await pool.query(
+            `INSERT INTO diario_entradas (matricula, data, titulo, conteudo, tipo, audio_base64, data_hora)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+            [matricula, hoje, titulo || "Sem título", conteudo || "", tipo || "text", audio_base64 || null, agora]);
+        
+        res.json({ sucesso: true, id: result.rows[0].id, mensagem: "Entrada salva com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/diario/:matricula/:id', async (req, res) => {
+    const { matricula, id } = req.params;
+    
+    try {
+        await pool.query('DELETE FROM diario_entradas WHERE matricula = $1 AND id = $2', [matricula, id]);
+        res.json({ sucesso: true, mensagem: "Entrada removida" });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DA GALERIA ==========
+
+app.get('/api/galeria/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT * FROM galeria_arte WHERE matricula = $1 ORDER BY data DESC', [matricula]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/galeria/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    const { imagem_base64 } = req.body;
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    
+    try {
+        const result = await pool.query(
+            `INSERT INTO galeria_arte (matricula, data, imagem_base64) VALUES ($1, $2, $3) RETURNING id`,
+            [matricula, hoje, imagem_base64]);
+        
+        res.json({ sucesso: true, id: result.rows[0].id, mensagem: "Desenho salvo com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/galeria/:matricula/:id', async (req, res) => {
+    const { matricula, id } = req.params;
+    
+    try {
+        await pool.query('DELETE FROM galeria_arte WHERE matricula = $1 AND id = $2', [matricula, id]);
+        res.json({ sucesso: true, mensagem: "Desenho removido" });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DE RECORDES ==========
+
+app.get('/api/recorde/:matricula/:jogo', async (req, res) => {
+    const { matricula, jogo } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT pontuacao FROM recordes_jogos WHERE matricula = $1 AND jogo_nome = $2',
+            [matricula, jogo]);
+        res.json({ recorde: result.rows.length > 0 ? result.rows[0].pontuacao : 0 });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/recorde/:matricula/:jogo', async (req, res) => {
+    const { matricula, jogo } = req.params;
+    const { pontuacao } = req.body;
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    try {
+        const result = await pool.query('SELECT pontuacao FROM recordes_jogos WHERE matricula = $1 AND jogo_nome = $2',
+            [matricula, jogo]);
+        
+        const isMemoria = jogo.startsWith('jogo_memoria');
+        const isMelhor = result.rows.length === 0 || (isMemoria ? pontuacao < result.rows[0].pontuacao : pontuacao > result.rows[0].pontuacao);
+        
+        if (isMelhor) {
+            await pool.query(`INSERT INTO recordes_jogos (matricula, jogo_nome, pontuacao, data_record)
+                             VALUES ($1, $2, $3, $4)
+                             ON CONFLICT (id) DO UPDATE SET pontuacao = EXCLUDED.pontuacao, data_record = EXCLUDED.data_record`,
+                [matricula, jogo, pontuacao, hoje]);
+            res.json({ sucesso: true, novo_recorde: true, recorde: pontuacao });
+        } else {
+            res.json({ sucesso: true, novo_recorde: false, recorde: result.rows[0].pontuacao });
+        }
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DA PLAYLIST ==========
+
+app.get('/api/playlist/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT musica_id FROM musicas_favoritas WHERE matricula = $1', [matricula]);
+        const favoritos = result.rows.map(row => row.musica_id);
+        res.json({ favoritos: favoritos });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/playlist/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    const { musica_id, titulo, artista } = req.body;
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    try {
+        const existente = await pool.query('SELECT * FROM musicas_favoritas WHERE matricula = $1 AND musica_id = $2',
+            [matricula, musica_id]);
+        
+        if (existente.rows.length > 0) {
+            return res.json({ sucesso: false, ja_existe: true });
+        }
+        
+        await pool.query(`INSERT INTO musicas_favoritas (matricula, musica_id, titulo, artista, data_adicionado)
+                         VALUES ($1, $2, $3, $4, $5)`,
+            [matricula, musica_id, titulo || '', artista || '', hoje]);
+        
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/playlist/:matricula/:musica_id', async (req, res) => {
+    const { matricula, musica_id } = req.params;
+    
+    try {
+        await pool.query('DELETE FROM musicas_favoritas WHERE matricula = $1 AND musica_id = $2', [matricula, musica_id]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DO CHAT ==========
+
+app.get('/api/chats', async (req, res) => {
+    const { aluno } = req.query;
+    let query = 'SELECT * FROM conversas ORDER BY urgente DESC, ultima_data DESC';
+    let params = [];
+    
+    if (aluno) {
+        query = 'SELECT * FROM conversas WHERE matricula_aluno = $1 ORDER BY ultima_data DESC';
+        params = [aluno];
+    }
+    
+    try {
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.get('/api/chats/:conversa_id/mensagens', async (req, res) => {
+    const { conversa_id } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT * FROM mensagens WHERE conversa_id = $1 ORDER BY data_hora ASC', [conversa_id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/chats', async (req, res) => {
+    const { id, matricula_aluno, nome_aluno, anonimo } = req.body;
+    const agora = new Date().toISOString();
+    
+    try {
+        await pool.query(`INSERT INTO conversas (id, matricula_aluno, nome_aluno, anonimo, ultima_data, urgente, resolvido)
+                         VALUES ($1, $2, $3, $4, $5, 1, 0)`,
+            [id, matricula_aluno, nome_aluno, anonimo ? 1 : 0, agora]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/chats/:conversa_id/mensagens', async (req, res) => {
+    const { conversa_id } = req.params;
+    const { remetente, texto } = req.body;
+    const agora = new Date().toISOString();
+    
+    try {
+        await pool.query(`INSERT INTO mensagens (conversa_id, remetente, texto, data_hora)
+                         VALUES ($1, $2, $3, $4)`,
+            [conversa_id, remetente, texto, agora]);
+        
+        await pool.query(`UPDATE conversas SET ultima_mensagem = $1, ultima_data = $2 WHERE id = $3`,
+            [texto, agora, conversa_id]);
+        
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.put('/api/chats/:conversa_id/:acao', async (req, res) => {
+    const { conversa_id, acao } = req.params;
+    
+    try {
+        if (acao === 'urgente') {
+            await pool.query(`UPDATE conversas SET urgente = CASE WHEN urgente = 1 THEN 0 ELSE 1 END WHERE id = $1`, [conversa_id]);
+        } else if (acao === 'resolver') {
+            await pool.query(`UPDATE conversas SET resolvido = 1, urgente = 0 WHERE id = $1`, [conversa_id]);
+        } else if (acao === 'reabrir') {
+            await pool.query(`UPDATE conversas SET resolvido = 0 WHERE id = $1`, [conversa_id]);
+        } else {
+            return res.status(400).json({ erro: 'Ação inválida' });
+        }
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/chats', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM mensagens');
+        await pool.query('DELETE FROM conversas');
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
 // ========== ROTAS DA ESCOLA ==========
-app.get('/api/escola/alunos', (req, res) => {
-    db.all('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        
-        function getTurmaFromMatricula(matricula) {
-            if (!matricula || matricula.length < 5) return "Turma não definida";
-            const anoIngresso = parseInt(matricula.substring(0, 4));
-            const codigoTurma = matricula.charAt(4);
-            const anoAtual = new Date().getFullYear();
-            let ano = anoAtual - anoIngresso + 1;
-            if (ano < 1) ano = 1;
-            if (ano > 3) ano = 3;
-            const cursos = { '1': 'Informática', '2': 'Administração', '3': 'Meio Ambiente' };
-            const curso = cursos[codigoTurma] || 'Desconhecido';
-            return `${ano}° ${curso}`;
-        }
-        
-        const alunos = rows.map(aluno => ({
+
+function getTurmaFromMatricula(matricula) {
+    if (!matricula || matricula.length < 5) return "Turma não definida";
+    const anoIngresso = parseInt(matricula.substring(0, 4));
+    const codigoTurma = matricula.charAt(4);
+    const anoAtual = new Date().getFullYear();
+    let ano = anoAtual - anoIngresso + 1;
+    if (ano < 1) ano = 1;
+    if (ano > 3) ano = 3;
+    const cursos = { '1': 'Informática', '2': 'Administração', '3': 'Meio Ambiente' };
+    const curso = cursos[codigoTurma] || 'Desconhecido';
+    return `${ano}° ${curso}`;
+}
+
+app.get('/api/escola/alunos', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios');
+        const alunos = result.rows.map(aluno => ({
             ...aluno,
             turma: getTurmaFromMatricula(aluno.matricula)
         }));
-        
         res.json(alunos);
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/escola/turmas', (req, res) => {
-    db.all('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        
-        function getTurmaFromMatricula(matricula) {
-            if (!matricula || matricula.length < 5) return "Turma não definida";
-            const anoIngresso = parseInt(matricula.substring(0, 4));
-            const codigoTurma = matricula.charAt(4);
-            const anoAtual = new Date().getFullYear();
-            let ano = anoAtual - anoIngresso + 1;
-            if (ano < 1) ano = 1;
-            if (ano > 3) ano = 3;
-            const cursos = { '1': 'Informática', '2': 'Administração', '3': 'Meio Ambiente' };
-            const curso = cursos[codigoTurma] || 'Desconhecido';
-            return `${ano}° ${curso}`;
-        }
-        
+app.get('/api/escola/turmas', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios');
         const turmas = {};
-        rows.forEach(aluno => {
+        
+        result.rows.forEach(aluno => {
             const turma = getTurmaFromMatricula(aluno.matricula);
             if (!turmas[turma]) {
                 turmas[turma] = {
@@ -259,12 +739,15 @@ app.get('/api/escola/turmas', (req, res) => {
         });
         
         res.json(Object.values(turmas));
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/escola/estatisticas', (req, res) => {
-    db.all('SELECT matricula, nivel, xp, moedas FROM usuarios', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
+app.get('/api/escola/estatisticas', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nivel, xp, moedas FROM usuarios');
+        const rows = result.rows;
         
         const totalAlunos = rows.length;
         const totalMoedas = rows.reduce((sum, a) => sum + (a.moedas || 0), 0);
@@ -286,52 +769,57 @@ app.get('/api/escola/estatisticas', (req, res) => {
             nivelMedio,
             niveis
         });
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
 // ========== ROTAS DE RELATÓRIOS ==========
-app.get('/api/relatorio/emocoes', (req, res) => {
+
+app.get('/api/relatorio/emocoes', async (req, res) => {
     const { curso, ano, periodo } = req.query;
     const dias = periodo === 'semana' ? 7 : periodo === 'mes' ? 30 : periodo === 'trimestre' ? 90 : 365;
-    
-    let cursoFiltro = '';
-    if (curso === 'inf') cursoFiltro = 'INF';
-    else if (curso === 'adm') cursoFiltro = 'ADM';
-    else if (curso === 'ma') cursoFiltro = 'AMB';
     
     let sql = `
         SELECT e.emocao, COUNT(*) as total 
         FROM emocoes e
         JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= date('now', '-' || ? || ' days')
+        WHERE e.data >= CURRENT_DATE - INTERVAL '${dias} days'
     `;
-    let params = [dias];
+    let params = [];
+    let idx = 1;
     
-    if (cursoFiltro) {
-        sql += ` AND u.matricula LIKE '%${cursoFiltro}%'`;
+    if (curso && curso !== 'todos' && curso !== 'all') {
+        const cursoMap = { 'inf': 'INF', 'adm': 'ADM', 'ma': 'AMB' };
+        const cursoCode = cursoMap[curso] || curso.toUpperCase();
+        sql += ` AND u.matricula LIKE $${idx}`;
+        params.push(`%${cursoCode}%`);
+        idx++;
     }
     if (ano && ano !== 'todos' && ano !== 'all') {
-        sql += ` AND substr(u.matricula, 5, 1) = ?`;
+        sql += ` AND SUBSTRING(u.matricula, 5, 1) = $${idx}`;
         params.push(ano);
+        idx++;
     }
     
     sql += ` GROUP BY e.emocao`;
     
-    db.all(sql, params, (err, rows) => {
-        if (err) {
-            console.error('Erro em /api/relatorio/emocoes:', err);
-            return res.status(500).json({ erro: err.message });
-        }
+    try {
+        const result = await pool.query(sql, params);
         
-        const emocoes = { alegria: 0, animado: 0, relaxado: 0, tristeza: 0, ansioso: 0, raiva: 0 };
-        rows.forEach(row => {
+        const emocoes = { 
+            alegria: 0, animado: 0, relaxado: 0, 
+            tristeza: 0, ansioso: 0, raiva: 0 
+        };
+        
+        result.rows.forEach(row => {
             const emocao = row.emocao;
-            if (emocao === 'Alegria') emocoes.alegria = row.total;
-            else if (emocao === 'Animado') emocoes.animado = row.total;
-            else if (emocao === 'Relaxado') emocoes.relaxado = row.total;
-            else if (emocao === 'Tristeza') emocoes.tristeza = row.total;
-            else if (emocao === 'Ansioso') emocoes.ansioso = row.total;
-            else if (emocao === 'Raiva') emocoes.raiva = row.total;
+            if (emocao === 'Alegria') emocoes.alegria = parseInt(row.total);
+            else if (emocao === 'Animado') emocoes.animado = parseInt(row.total);
+            else if (emocao === 'Relaxado') emocoes.relaxado = parseInt(row.total);
+            else if (emocao === 'Tristeza') emocoes.tristeza = parseInt(row.total);
+            else if (emocao === 'Ansioso') emocoes.ansioso = parseInt(row.total);
+            else if (emocao === 'Raiva') emocoes.raiva = parseInt(row.total);
         });
         
         const total = Object.values(emocoes).reduce((a,b) => a + b, 0);
@@ -349,50 +837,51 @@ app.get('/api/relatorio/emocoes', (req, res) => {
         }
         
         res.json(emocoes);
-    });
+    } catch (err) {
+        console.error('Erro:', err);
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/relatorio/cursos', (req, res) => {
-    db.all(`
-        SELECT 
-            CASE 
-                WHEN matricula LIKE '%INF%' THEN 'Informática'
-                WHEN matricula LIKE '%ADM%' THEN 'Administração'
-                WHEN matricula LIKE '%AMB%' THEN 'Meio Ambiente'
-                ELSE 'Outro'
-            END as curso,
-            COUNT(DISTINCT matricula) as alunos,
-            ROUND(AVG(nivel), 1) as nivel_medio,
-            SUM(CASE WHEN nivel < 5 THEN 1 ELSE 0 END) as alertas
-        FROM usuarios
-        GROUP BY curso
-    `, [], (err, rows) => {
-        if (err) {
-            console.error('Erro em /api/relatorio/cursos:', err);
-            return res.status(500).json({ erro: err.message });
-        }
+app.get('/api/relatorio/cursos', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                CASE 
+                    WHEN matricula LIKE '%INF%' THEN 'Informática'
+                    WHEN matricula LIKE '%ADM%' THEN 'Administração'
+                    WHEN matricula LIKE '%AMB%' THEN 'Meio Ambiente'
+                    ELSE 'Outro'
+                END as curso,
+                COUNT(DISTINCT matricula) as alunos,
+                ROUND(AVG(nivel), 1) as nivel_medio,
+                SUM(CASE WHEN nivel < 5 THEN 1 ELSE 0 END) as alertas
+            FROM usuarios
+            GROUP BY curso
+        `);
         
-        const resultado = (rows || [])
+        const resultado = result.rows
             .filter(row => row.curso !== 'Outro')
             .map(row => ({
                 curso: row.curso,
                 cursoCod: row.curso === 'Informática' ? 'inf' : row.curso === 'Administração' ? 'adm' : 'meio',
                 turmas: 3,
-                alunos: row.alunos,
+                alunos: parseInt(row.alunos),
                 score: parseFloat(row.nivel_medio).toFixed(1),
-                alertas: row.alertas || 0
+                alertas: parseInt(row.alertas)
             }));
         
         res.json(resultado);
-    });
+    } catch (err) {
+        console.error('Erro:', err);
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/relatorio/recomendacoes', (req, res) => {
-    db.all('SELECT matricula, nivel FROM usuarios', [], (err, usuarios) => {
-        if (err) {
-            console.error('Erro em /api/relatorio/recomendacoes:', err);
-            return res.status(500).json({ erro: err.message });
-        }
+app.get('/api/relatorio/recomendacoes', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nivel FROM usuarios');
+        const usuarios = result.rows;
         
         const recs = [];
         let somaNiveis = 0;
@@ -447,592 +936,47 @@ app.get('/api/relatorio/recomendacoes', (req, res) => {
         });
         
         res.json(recs);
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-app.get('/api/relatorio/historico', (req, res) => {
+app.get('/api/relatorio/historico', async (req, res) => {
     const { curso, ano } = req.query;
     
     let sql = `
-        SELECT strftime('%Y-%m', e.data) as mes,
+        SELECT TO_CHAR(e.data, 'YYYY-MM') as mes,
                AVG(u.nivel) as nivel_medio,
                COUNT(e.id) as total_emocoes
         FROM emocoes e
         JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= date('now', '-5 months')
+        WHERE e.data >= CURRENT_DATE - INTERVAL '5 months'
     `;
     let params = [];
-    
-    if (curso && curso !== 'todos') {
-        sql += ` AND u.matricula LIKE '%${curso === 'inf' ? 'INF' : curso === 'adm' ? 'ADM' : 'AMB'}%'`;
-    }
-    if (ano && ano !== 'todos') {
-        sql += ` AND substr(u.matricula, 5, 1) = ?`;
-        params.push(ano);
-    }
-    
-    sql += ` GROUP BY strftime('%Y-%m', e.data) ORDER BY mes DESC LIMIT 5`;
-    
-    db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        
-        const meses = { 1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez' };
-        
-        const historico = rows.map(row => {
-            const mesNum = parseInt(row.mes.split('-')[1]);
-            return {
-                mes: meses[mesNum] || row.mes,
-                val: parseFloat(row.nivel_medio).toFixed(1),
-                badge: row.nivel_medio > 7 ? 'up' : row.nivel_medio < 6 ? 'down' : 'same'
-            };
-        });
-        
-        res.json(historico);
-    });
-});
-
-// ========== ROTAS DE FIGURINHAS (adicione estas) ==========
-
-// GET - Carregar páginas desbloqueadas
-app.get('/api/figurinhas/paginas-desbloqueadas/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.get('SELECT valor FROM usuario_config WHERE matricula = ? AND chave = ?',
-        [matricula, 'paginas_album'],
-        (err, row) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            const paginas = row ? JSON.parse(row.valor) : 1;
-            res.json({ paginas_desbloqueadas: paginas });
-        }
-    );
-});
-
-// GET - Carregar figurinhas desbloqueadas do usuário
-app.get('/api/figurinhas/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.all('SELECT pagina, slot, figurinha_id FROM figurinhas_desbloqueadas WHERE matricula = ?', 
-        [matricula], 
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            
-            const figurinhas = {};
-            rows.forEach(row => {
-                if (!figurinhas[row.pagina]) {
-                    figurinhas[row.pagina] = {};
-                }
-                figurinhas[row.pagina][row.slot] = row.figurinha_id;
-            });
-            
-            res.json(figurinhas);
-        }
-    );
-});
-
-// ========== ROTAS DE FIGURINHAS (COMPLETAS) ==========
-
-// GET - Carregar figurinhas desbloqueadas do usuário
-app.get('/api/figurinhas/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.all('SELECT pagina, slot, figurinha_id FROM figurinhas_desbloqueadas WHERE matricula = ?', 
-        [matricula], 
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            
-            const figurinhas = {};
-            rows.forEach(row => {
-                if (!figurinhas[row.pagina]) {
-                    figurinhas[row.pagina] = {};
-                }
-                figurinhas[row.pagina][row.slot] = row.figurinha_id;
-            });
-            
-            res.json(figurinhas);
-        }
-    );
-});
-
-// GET - Carregar páginas desbloqueadas
-app.get('/api/figurinhas/paginas-desbloqueadas/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.get('SELECT valor FROM usuario_config WHERE matricula = ? AND chave = ?',
-        [matricula, 'paginas_album'],
-        (err, row) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            const paginas = row ? JSON.parse(row.valor) : 1;
-            res.json({ paginas_desbloqueadas: paginas });
-        }
-    );
-});
-
-// POST - Desbloquear uma figurinha
-app.post('/api/figurinhas/desbloquear', (req, res) => {
-    const { matricula, pagina, slot, figurinha_id } = req.body;
-    const hoje = new Date().toISOString().split('T')[0];
-    
-    db.get('SELECT * FROM figurinhas_desbloqueadas WHERE matricula = ? AND pagina = ? AND slot = ?',
-        [matricula, pagina, slot],
-        (err, existente) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            
-            if (existente) {
-                return res.json({ sucesso: false, ja_desbloqueada: true });
-            }
-            
-            db.run(`INSERT INTO figurinhas_desbloqueadas (matricula, pagina, slot, figurinha_id, data_desbloqueio)
-                    VALUES (?, ?, ?, ?, ?)`,
-                [matricula, pagina, slot, figurinha_id, hoje],
-                (err) => {
-                    if (err) return res.status(500).json({ erro: err.message });
-                    res.json({ sucesso: true });
-                }
-            );
-        }
-    );
-});
-
-// POST - Atualizar páginas desbloqueadas do álbum
-app.post('/api/figurinhas/paginas-desbloqueadas', (req, res) => {
-    const { matricula, paginas } = req.body;
-    
-    db.run(`INSERT OR REPLACE INTO usuario_config (matricula, chave, valor)
-            VALUES (?, ?, ?)`,
-        [matricula, 'paginas_album', JSON.stringify(paginas)],
-        (err) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true });
-        }
-    );
-});
-
-// ========== ROTAS DO DIÁRIO ==========
-
-// GET - Carregar todas as entradas do diário do usuário
-app.get('/api/diario/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.all('SELECT * FROM diario_entradas WHERE matricula = ? ORDER BY data DESC', 
-        [matricula], 
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json(rows || []);
-        }
-    );
-});
-
-// POST - Criar nova entrada no diário
-app.post('/api/diario/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    const { titulo, conteudo, tipo, audio_base64 } = req.body;
-    const hoje = new Date().toISOString().split('T')[0];
-    const agora = new Date().toISOString();
-    
-    console.log(`📝 Salvando diário para ${matricula}`);
-    console.log(`Título: ${titulo}, Tipo: ${tipo}`);
-    
-    const sql = `INSERT INTO diario_entradas (matricula, data, titulo, conteudo, tipo, audio_base64, data_hora)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    
-    db.run(sql, [matricula, hoje, titulo || "Sem título", conteudo || "", tipo || "text", audio_base64 || null, agora],
-        function(err) {
-            if (err) {
-                console.error('❌ Erro ao criar entrada:', err);
-                return res.status(500).json({ erro: err.message, sucesso: false });
-            }
-            console.log(`✅ Entrada salva com ID: ${this.lastID}`);
-            res.json({ 
-                sucesso: true, 
-                id: this.lastID,
-                mensagem: "Entrada salva com sucesso!"
-            });
-        }
-    );
-});
-
-// DELETE - Remover uma entrada do diário
-app.delete('/api/diario/:matricula/:id', (req, res) => {
-    const { matricula, id } = req.params;
-    
-    db.run('DELETE FROM diario_entradas WHERE matricula = ? AND id = ?',
-        [matricula, id],
-        function(err) {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true, mensagem: "Entrada removida" });
-        }
-    );
-});
-
-// ========== ROTAS DO CHAT ==========
-
-// GET - Carregar todas as conversas
-app.get('/api/chats', (req, res) => {
-    const { aluno } = req.query;
-    let sql = 'SELECT * FROM conversas ORDER BY urgente DESC, ultima_data DESC';
-    let params = [];
-    
-    if (aluno) {
-        sql = 'SELECT * FROM conversas WHERE matricula_aluno = ? ORDER BY ultima_data DESC';
-        params = [aluno];
-    }
-    
-    db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows || []);
-    });
-});
-
-// GET - Carregar mensagens de uma conversa
-app.get('/api/chats/:conversa_id/mensagens', (req, res) => {
-    const { conversa_id } = req.params;
-    
-    db.all('SELECT * FROM mensagens WHERE conversa_id = ? ORDER BY data_hora ASC',
-        [conversa_id],
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json(rows || []);
-        }
-    );
-});
-
-// POST - Criar nova conversa
-app.post('/api/chats', (req, res) => {
-    const { id, matricula_aluno, nome_aluno, anonimo } = req.body;
-    const agora = new Date().toISOString();
-    
-    db.run(`INSERT INTO conversas (id, matricula_aluno, nome_aluno, anonimo, ultima_data, urgente, resolvido)
-            VALUES (?, ?, ?, ?, ?, 1, 0)`,
-        [id, matricula_aluno, nome_aluno, anonimo ? 1 : 0, agora],
-        (err) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true });
-        }
-    );
-});
-
-// POST - Enviar mensagem
-app.post('/api/chats/:conversa_id/mensagens', (req, res) => {
-    const { conversa_id } = req.params;
-    const { remetente, texto } = req.body;
-    const agora = new Date().toISOString();
-    
-    db.run(`INSERT INTO mensagens (conversa_id, remetente, texto, data_hora)
-            VALUES (?, ?, ?, ?)`,
-        [conversa_id, remetente, texto, agora],
-        (err) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            
-            db.run(`UPDATE conversas SET ultima_mensagem = ?, ultima_data = ? WHERE id = ?`,
-                [texto, agora, conversa_id],
-                (err) => {
-                    res.json({ sucesso: true });
-                }
-            );
-        }
-    );
-});
-
-// PUT - Marcar conversa como urgente ou resolvida
-app.put('/api/chats/:conversa_id/:acao', (req, res) => {
-    const { conversa_id, acao } = req.params;
-    let campo = '';
-    
-    if (acao === 'urgente') campo = 'urgente = CASE WHEN urgente = 1 THEN 0 ELSE 1 END';
-    if (acao === 'resolver') campo = 'resolvido = 1, urgente = 0';
-    if (acao === 'reabrir') campo = 'resolvido = 0';
-    
-    if (!campo) return res.status(400).json({ erro: 'Ação inválida' });
-    
-    db.run(`UPDATE conversas SET ${campo} WHERE id = ?`,
-        [conversa_id],
-        (err) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true });
-        }
-    );
-});
-
-// DELETE - Limpar todas as conversas
-app.delete('/api/chats', (req, res) => {
-    db.run('DELETE FROM mensagens', (err) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        db.run('DELETE FROM conversas', (err) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true });
-        });
-    });
-});
-
-// ========== ROTAS DA PLAYLIST ==========
-
-// GET - Carregar músicas favoritas do usuário
-app.get('/api/playlist/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.all('SELECT musica_id FROM musicas_favoritas WHERE matricula = ?', 
-        [matricula], 
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            const favoritos = rows.map(row => row.musica_id);
-            res.json({ favoritos: favoritos });
-        }
-    );
-});
-
-// POST - Adicionar música aos favoritos
-app.post('/api/playlist/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    const { musica_id, titulo, artista } = req.body;
-    const hoje = new Date().toISOString().split('T')[0];
-    
-    db.get('SELECT * FROM musicas_favoritas WHERE matricula = ? AND musica_id = ?',
-        [matricula, musica_id],
-        (err, existente) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            
-            if (existente) {
-                return res.json({ sucesso: false, ja_existe: true });
-            }
-            
-            db.run(`INSERT INTO musicas_favoritas (matricula, musica_id, titulo, artista, data_adicionado)
-                    VALUES (?, ?, ?, ?, ?)`,
-                [matricula, musica_id, titulo || '', artista || '', hoje],
-                (err) => {
-                    if (err) return res.status(500).json({ erro: err.message });
-                    res.json({ sucesso: true });
-                }
-            );
-        }
-    );
-});
-
-// DELETE - Remover música dos favoritos
-app.delete('/api/playlist/:matricula/:musica_id', (req, res) => {
-    const { matricula, musica_id } = req.params;
-    
-    db.run('DELETE FROM musicas_favoritas WHERE matricula = ? AND musica_id = ?',
-        [matricula, musica_id],
-        function(err) {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true });
-        }
-    );
-});
-// ========== ROTAS DE RECORDES DOS JOGOS ==========
-
-// GET - Carregar recorde de um jogo específico
-app.get('/api/recorde/:matricula/:jogo', (req, res) => {
-    const { matricula, jogo } = req.params;
-    
-    console.log(`📊 Buscando recorde: ${jogo} para ${matricula}`);
-    
-    db.get('SELECT pontuacao FROM recordes_jogos WHERE matricula = ? AND jogo_nome = ?',
-        [matricula, jogo],
-        (err, row) => {
-            if (err) {
-                console.error('Erro:', err);
-                return res.status(500).json({ erro: err.message });
-            }
-            console.log(`🏆 Recorde encontrado: ${row ? row.pontuacao : 'nenhum'}`);
-            res.json({ recorde: row ? row.pontuacao : 0 });
-        }
-    );
-});
-
-// POST - Salvar recorde de um jogo
-app.post('/api/recorde/:matricula/:jogo', (req, res) => {
-    const { matricula, jogo } = req.params;
-    const { pontuacao } = req.body;
-    const hoje = new Date().toISOString().split('T')[0];
-    
-    console.log(`📝 Salvando recorde: ${jogo} = ${pontuacao} para ${matricula}`);
-    
-    db.get('SELECT pontuacao FROM recordes_jogos WHERE matricula = ? AND jogo_nome = ?',
-        [matricula, jogo],
-        (err, row) => {
-            if (err) {
-                console.error('Erro:', err);
-                return res.status(500).json({ erro: err.message });
-            }
-            
-            // Para jogo da memória: menor pontuação é melhor
-            const isMemoria = jogo.startsWith('jogo_memoria');
-            const isMelhor = !row || (isMemoria ? pontuacao < row.pontuacao : pontuacao > row.pontuacao);
-            
-            if (isMelhor) {
-                db.run(`INSERT OR REPLACE INTO recordes_jogos (matricula, jogo_nome, pontuacao, data_record)
-                        VALUES (?, ?, ?, ?)`,
-                    [matricula, jogo, pontuacao, hoje],
-                    (err) => {
-                        if (err) {
-                            console.error('Erro:', err);
-                            return res.status(500).json({ erro: err.message });
-                        }
-                        console.log(`🎉 Novo recorde salvo: ${pontuacao}`);
-                        res.json({ sucesso: true, novo_recorde: true, recorde: pontuacao });
-                    }
-                );
-            } else {
-                console.log(`📌 Recorde mantido: ${row.pontuacao} (novo: ${pontuacao} não superou)`);
-                res.json({ sucesso: true, novo_recorde: false, recorde: row.pontuacao });
-            }
-        }
-    );
-});
-
-
-// ========== ROTAS DA GALERIA DE ARTE ==========
-
-// GET - Carregar todos os desenhos do usuário
-app.get('/api/galeria/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    
-    db.all('SELECT * FROM galeria_arte WHERE matricula = ? ORDER BY data DESC', 
-        [matricula], 
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json(rows || []);
-        }
-    );
-});
-
-// POST - Salvar um novo desenho
-app.post('/api/galeria/:matricula', (req, res) => {
-    const { matricula } = req.params;
-    const { imagem_base64 } = req.body;
-    const hoje = new Date().toLocaleDateString('pt-BR');
-    
-    db.run(`INSERT INTO galeria_arte (matricula, data, imagem_base64)
-            VALUES (?, ?, ?)`,
-        [matricula, hoje, imagem_base64],
-        function(err) {
-            if (err) {
-                console.error('Erro ao salvar desenho:', err);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json({ 
-                sucesso: true, 
-                id: this.lastID,
-                mensagem: "Desenho salvo com sucesso!"
-            });
-        }
-    );
-});
-
-// DELETE - Remover um desenho
-app.delete('/api/galeria/:matricula/:id', (req, res) => {
-    const { matricula, id } = req.params;
-    
-    db.run('DELETE FROM galeria_arte WHERE matricula = ? AND id = ?',
-        [matricula, id],
-        function(err) {
-            if (err) return res.status(500).json({ erro: err.message });
-            res.json({ sucesso: true, mensagem: "Desenho removido" });
-        }
-    );
-});
-
-// ========== ROTAS DE RELATÓRIOS ==========
-
-// GET - Distribuição emocional real
-app.get('/api/relatorio/emocoes', (req, res) => {
-    const { curso, ano, periodo } = req.query;
-    const dias = periodo === 'semana' ? 7 : periodo === 'mes' ? 30 : periodo === 'trimestre' ? 90 : 365;
-    
-    let sql = `
-        SELECT e.emocao, COUNT(*) as total 
-        FROM emocoes e
-        JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= date('now', '-' || ? || ' days')
-    `;
-    let params = [dias];
-    
-    if (curso && curso !== 'todos' && curso !== 'all') {
-        const cursoMap = { 'inf': 'INF', 'adm': 'ADM', 'ma': 'AMB' };
-        const cursoCode = cursoMap[curso] || curso.toUpperCase();
-        sql += ` AND u.matricula LIKE '%${cursoCode}%'`;
-    }
-    if (ano && ano !== 'todos' && ano !== 'all') {
-        sql += ` AND substr(u.matricula, 5, 1) = ?`;
-        params.push(ano);
-    }
-    
-    sql += ` GROUP BY e.emocao`;
-    
-    db.all(sql, params, (err, rows) => {
-        if (err) {
-            console.error('Erro em /api/relatorio/emocoes:', err);
-            return res.status(500).json({ erro: err.message });
-        }
-        
-        const emocoes = { 
-            alegria: 0, animado: 0, relaxado: 0, 
-            tristeza: 0, ansioso: 0, raiva: 0 
-        };
-        
-        rows.forEach(row => {
-            const emocao = row.emocao;
-            if (emocao === 'Alegria') emocoes.alegria = row.total;
-            else if (emocao === 'Animado') emocoes.animado = row.total;
-            else if (emocao === 'Relaxado') emocoes.relaxado = row.total;
-            else if (emocao === 'Tristeza') emocoes.tristeza = row.total;
-            else if (emocao === 'Ansioso') emocoes.ansioso = row.total;
-            else if (emocao === 'Raiva') emocoes.raiva = row.total;
-        });
-        
-        const total = Object.values(emocoes).reduce((a,b) => a + b, 0);
-        if (total > 0) {
-            Object.keys(emocoes).forEach(k => {
-                emocoes[k] = Math.round((emocoes[k] / total) * 100);
-            });
-        } else {
-            // Dados mock para teste quando não há registros
-            emocoes.alegria = 35;
-            emocoes.animado = 20;
-            emocoes.relaxado = 25;
-            emocoes.tristeza = 10;
-            emocoes.ansioso = 8;
-            emocoes.raiva = 2;
-        }
-        
-        res.json(emocoes);
-    });
-});
-
-// GET - Histórico mensal de bem-estar
-app.get('/api/relatorio/historico', (req, res) => {
-    const { curso, ano } = req.query;
-    
-    let sql = `
-        SELECT strftime('%Y-%m', e.data) as mes,
-               AVG(u.nivel) as nivel_medio,
-               COUNT(e.id) as total_emocoes
-        FROM emocoes e
-        JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= date('now', '-5 months')
-    `;
-    let params = [];
+    let idx = 1;
     
     if (curso && curso !== 'todos') {
         const cursoMap = { 'inf': 'INF', 'adm': 'ADM', 'ma': 'AMB' };
         const cursoCode = cursoMap[curso] || curso.toUpperCase();
-        sql += ` AND u.matricula LIKE '%${cursoCode}%'`;
+        sql += ` AND u.matricula LIKE $${idx}`;
+        params.push(`%${cursoCode}%`);
+        idx++;
     }
     if (ano && ano !== 'todos') {
-        sql += ` AND substr(u.matricula, 5, 1) = ?`;
+        sql += ` AND SUBSTRING(u.matricula, 5, 1) = $${idx}`;
         params.push(ano);
+        idx++;
     }
     
-    sql += ` GROUP BY strftime('%Y-%m', e.data) ORDER BY mes DESC LIMIT 5`;
+    sql += ` GROUP BY TO_CHAR(e.data, 'YYYY-MM') ORDER BY mes DESC LIMIT 5`;
     
-    db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
+    try {
+        const result = await pool.query(sql, params);
         
         const meses = { 1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun', 
                         7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez' };
         
-        const historico = rows.map(row => {
+        const historico = result.rows.map(row => {
             const mesNum = parseInt(row.mes.split('-')[1]);
             return {
                 mes: meses[mesNum] || row.mes,
@@ -1042,104 +986,108 @@ app.get('/api/relatorio/historico', (req, res) => {
         });
         
         res.json(historico);
-    });
-});
-
-// GET - Bem-estar por curso
-app.get('/api/relatorio/cursos', (req, res) => {
-    db.all(`
-        SELECT 
-            CASE 
-                WHEN matricula LIKE '%INF%' THEN 'Informática'
-                WHEN matricula LIKE '%ADM%' THEN 'Administração'
-                WHEN matricula LIKE '%AMB%' THEN 'Meio Ambiente'
-                ELSE 'Outro'
-            END as curso,
-            COUNT(DISTINCT matricula) as alunos,
-            ROUND(AVG(nivel), 1) as nivel_medio,
-            SUM(CASE WHEN nivel < 5 THEN 1 ELSE 0 END) as alertas
-        FROM usuarios
-        GROUP BY curso
-    `, [], (err, rows) => {
-        if (err) {
-            console.error('Erro em /api/relatorio/cursos:', err);
-            return res.status(500).json({ erro: err.message });
-        }
-        
-        const resultado = (rows || [])
-            .filter(row => row.curso !== 'Outro')
-            .map(row => ({
-                curso: row.curso,
-                cursoCod: row.curso === 'Informática' ? 'inf' : row.curso === 'Administração' ? 'adm' : 'meio',
-                turmas: 3,
-                alunos: row.alunos,
-                score: parseFloat(row.nivel_medio).toFixed(1),
-                alertas: row.alertas || 0
-            }));
-        
-        res.json(resultado);
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
 // ========== ROTAS DE ALERTAS ==========
 
-// GET - Carregar todos os alertas
-app.get('/api/alertas', (req, res) => {
-    db.all('SELECT * FROM alertas ORDER BY data_criacao DESC', [], (err, rows) => {
-        if (err) {
-            console.error('Erro ao buscar alertas:', err);
-            return res.status(500).json({ erro: err.message });
-        }
-        res.json(rows || []);
-    });
+app.get('/api/alertas', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM alertas ORDER BY data_criacao DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-// POST - Criar novo alerta
-app.post('/api/alertas', (req, res) => {
+app.post('/api/alertas', async (req, res) => {
     const { id, titulo, desc, turma, aluno, severidade, tipo, emoji, detalhes } = req.body;
     const agora = new Date().toISOString();
     
-    db.run(`INSERT INTO alertas (id, titulo, descricao, turma, aluno, severidade, tipo, emoji, detalhes, resolvido, data_criacao)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
-        [id, titulo || '', desc || '', turma || '', aluno || '', severidade || 'medio', tipo || '', emoji || 'alert-circle', JSON.stringify(detalhes || {}), agora],
-        (err) => {
-            if (err) {
-                console.error('Erro ao criar alerta:', err);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json({ sucesso: true });
-        }
-    );
-});
-
-// PUT - Resolver alerta
-app.put('/api/alertas/:id/resolver', (req, res) => {
-    const { id } = req.params;
-    db.run('UPDATE alertas SET resolvido = 1, data_resolucao = ? WHERE id = ?', 
-        [new Date().toISOString(), id],
-        (err) => {
-            if (err) {
-                console.error('Erro ao resolver alerta:', err);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json({ sucesso: true });
-        }
-    );
-});
-
-// DELETE - Remover alerta
-app.delete('/api/alertas/:id', (req, res) => {
-    const { id } = req.params;
-    db.run('DELETE FROM alertas WHERE id = ?', [id], (err) => {
-        if (err) {
-            console.error('Erro ao remover alerta:', err);
-            return res.status(500).json({ erro: err.message });
-        }
+    try {
+        await pool.query(`INSERT INTO alertas (id, titulo, descricao, turma, aluno, severidade, tipo, emoji, detalhes, resolvido, data_criacao)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, $10)`,
+            [id, titulo || '', desc || '', turma || '', aluno || '', severidade || 'medio', tipo || '', emoji || 'alert-circle', JSON.stringify(detalhes || {}), agora]);
         res.json({ sucesso: true });
-    });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
 });
 
-// Iniciar servidor
+app.put('/api/alertas/:id/resolver', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await pool.query('UPDATE alertas SET resolvido = 1, data_resolucao = $1 WHERE id = $2', [new Date().toISOString(), id]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/alertas/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await pool.query('DELETE FROM alertas WHERE id = $1', [id]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTAS DE INTERVENÇÕES ==========
+
+app.get('/api/intervencoes', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM intervencoes ORDER BY data_criacao DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.post('/api/intervencoes', async (req, res) => {
+    const { id, titulo, desc, turma, aluno, prioridade, tipo, responsavel, data, progresso, status, curso } = req.body;
+    const agora = new Date().toISOString();
+    
+    try {
+        await pool.query(`INSERT INTO intervencoes (id, titulo, descricao, turma, aluno, prioridade, tipo, responsavel, data_prevista, progresso, status, curso, data_criacao)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+            [id, titulo, desc, turma, aluno, prioridade, tipo, responsavel, data, progresso || 0, status || 'pendente', curso || '', agora]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.put('/api/intervencoes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { status, progresso } = req.body;
+    
+    try {
+        await pool.query('UPDATE intervencoes SET status = $1, progresso = $2, data_atualizacao = $3 WHERE id = $4',
+            [status, progresso, new Date().toISOString(), id]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+app.delete('/api/intervencoes/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await pool.query('DELETE FROM intervencoes WHERE id = $1', [id]);
+        res.json({ sucesso: true });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== INICIAR SERVIDOR ==========
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
