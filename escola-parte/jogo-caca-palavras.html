@@ -265,7 +265,7 @@
         const nomeJogo = `caca_palavras_${dificuldade}`;
         
         try {
-            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/${nomeJogo}`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/${nomeJogo}`);
             const dados = await response.json();
             melhorPontuacao[dificuldade] = dados.recorde || 0;
             console.log(`🏆 Recorde ${dificuldade}: ${melhorPontuacao[dificuldade]} pontos`);
@@ -280,7 +280,7 @@
         const nomeJogo = `caca_palavras_${dificuldade}`;
         
         try {
-            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/${nomeJogo}`, {
+            await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/${nomeJogo}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pontuacao: pontuacao })

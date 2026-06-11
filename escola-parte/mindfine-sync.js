@@ -3,7 +3,7 @@
 // Arquivo: mindfine-sync.js
 // ==========================================
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'https://mindfine-backend.onrender.com/api';
 
 // ========== FUNÇÕES AUXILIARES ==========
 

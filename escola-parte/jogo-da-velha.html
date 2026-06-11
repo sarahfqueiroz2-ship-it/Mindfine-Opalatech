@@ -294,7 +294,7 @@
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/jogo_da_velha`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/jogo_da_velha`);
             const dados = await response.json();
             melhorSequencia = dados.recorde || 0;
             document.getElementById('recordeText').innerHTML = `🏆 Melhor sequência: ${melhorSequencia}`;
@@ -307,7 +307,7 @@
         if (pontuacao <= melhorSequencia) return;
         
         try {
-            await fetch(`http://localhost:5001/api/recorde/${matriculaAtual}/jogo_da_velha`, {
+            await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/jogo_da_velha`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pontuacao: pontuacao })

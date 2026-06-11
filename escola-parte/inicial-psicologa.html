@@ -751,7 +751,7 @@ console.log('✅ PSICÓLOGA logada com matrícula:', matriculaAtual);
     
    async function loadConversations() {
     try {
-        const response = await fetch(`http://localhost:5001/api/chats`);
+        const response = await fetch(`https://mindfine-backend.onrender.com/api/chats`);
         const dados = await response.json();
         console.log('📌 Todas as conversas do backend:', dados);
         conversations = dados;
@@ -765,7 +765,7 @@ console.log('✅ PSICÓLOGA logada com matrícula:', matriculaAtual);
     
     async function loadMessages(conversaId) {
         try {
-            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/mensagens`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/mensagens`);
             const dados = await response.json();
             return dados;
         } catch (error) {
@@ -776,7 +776,7 @@ console.log('✅ PSICÓLOGA logada com matrícula:', matriculaAtual);
     
     async function sendMessageToBackend(conversaId, remetente, texto) {
         try {
-            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/mensagens`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/mensagens`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ remetente, texto })
@@ -790,7 +790,7 @@ console.log('✅ PSICÓLOGA logada com matrícula:', matriculaAtual);
     
     async function updateConversaStatus(conversaId, acao) {
         try {
-            const response = await fetch(`http://localhost:5001/api/chats/${conversaId}/${acao}`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/${acao}`, {
                 method: 'PUT'
             });
             return await response.json();
@@ -805,7 +805,7 @@ async function clearAllChats() {
     document.getElementById('confirmClearBtn').onclick = async () => {
         document.getElementById('confirmClearModal').style.display = 'none';
         try {
-            await fetch(`http://localhost:5001/api/chats`, { method: 'DELETE' });
+            await fetch(`https://mindfine-backend.onrender.com/api/chats`, { method: 'DELETE' });
             await loadConversations();
             currentConversation = null;
             document.getElementById('chatHeader').style.display = 'none';

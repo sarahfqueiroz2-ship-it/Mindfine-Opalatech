@@ -754,7 +754,7 @@
     
     async function carregarTurmas() {
         try {
-            const response = await fetch('http://localhost:5001/api/escola/turmas');
+            const response = await fetch('https://mindfine-backend.onrender.com/api/escola/turmas');
             turmas = await response.json();
             render();
         } catch (error) {
@@ -766,7 +766,7 @@
     
     async function carregarEstatisticas() {
         try {
-            const response = await fetch('http://localhost:5001/api/escola/estatisticas');
+            const response = await fetch('https://mindfine-backend.onrender.com/api/escola/estatisticas');
             const dados = await response.json();
             
             document.querySelectorAll('.summary-chip .chip-value')[0].textContent = turmas.length;
@@ -982,7 +982,7 @@ function atualizarBadgeAlertas() {
 
 async function buscarAlertasDoBackend() {
     try {
-        const response = await fetch('http://localhost:5001/api/alertas');
+        const response = await fetch('https://mindfine-backend.onrender.com/api/alertas');
         const alertas = await response.json();
         const ativos = alertas.filter(a => a.resolvido !== 1).length;
         

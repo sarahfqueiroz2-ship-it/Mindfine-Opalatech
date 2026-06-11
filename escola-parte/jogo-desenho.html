@@ -250,7 +250,7 @@
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}`);
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/galeria/${matriculaAtual}`);
             desenhos = await response.json();
             console.log('✅ Galeria carregada:', desenhos.length, 'desenhos');
             renderGallery();
@@ -263,7 +263,7 @@
     
     async function salvarDesenhoNoBackend(imagemBase64) {
         try {
-            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/galeria/${matriculaAtual}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imagem_base64: imagemBase64 })
@@ -285,7 +285,7 @@
     document.getElementById('confirmDeleteDrawingBtn').onclick = async () => {
         document.getElementById('confirmDeleteDrawingModal').style.display = 'none';
         try {
-            const response = await fetch(`http://localhost:5001/api/galeria/${matriculaAtual}/${id}`, { method: 'DELETE' });
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/galeria/${matriculaAtual}/${id}`, { method: 'DELETE' });
             const result = await response.json();
             if (result.sucesso) await carregarGaleria();
         } catch (error) { console.error('❌ Erro ao deletar desenho:', error); }
