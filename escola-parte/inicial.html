@@ -789,7 +789,7 @@ async function carregarDados() {
     matriculaAtual = usuario.matricula || '123456';
     
     try {
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         
         currentCoins = dados.moedas || 0;
@@ -822,7 +822,7 @@ async function carregarDados() {
 initUniverses();
 
 // Salvar no backend apenas o Santuário
-await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ universos_desbloqueados: ["Santuário"] })
@@ -846,7 +846,7 @@ await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtua
         }
         
         try {
-            await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+            await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -912,7 +912,7 @@ async function resetarUniversosIniciais() {
         // SEMPRE FORÇAR APENAS SANTUÁRIO DESBLOQUEADO
         const universosIniciais = ["Santuário"];
         
-        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ universos_desbloqueados: universosIniciais })
@@ -937,7 +937,7 @@ async function resetarUniversosIniciais() {
 
 async function salvarFundo(fundoImg) {
     try {
-        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fundo_atual: fundoImg })
@@ -950,7 +950,7 @@ async function salvarFundo(fundoImg) {
     
     // SALVAR APENAS NO BACKEND, NÃO NO LOCALSTORAGE
     try {
-        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ skin_atual: skinImg })
@@ -1052,7 +1052,8 @@ showNotif('Já registrado!', 'Você já registrou sua emoção hoje.', 'warning'
         document.getElementById('rewardModal').classList.remove('hidden');
     }
 
-   async function collectReward() {
+  
+async function collectReward() {
     document.getElementById('rewardModal').classList.add('hidden');
     const target = document.getElementById('coin-target').getBoundingClientRect();
     const startX = window.innerWidth / 2;
@@ -1075,14 +1076,30 @@ showNotif('Já registrado!', 'Você já registrou sua emoção hoje.', 'warning'
                     currentCoins += wonAmount;
                     await salvarProgresso();
                     await addXP(25);
-                    // ATUALIZAR A INTERFACE DEPOIS DE GANHAR
                     await atualizarInterface();
 
-                    const primeiraVez = !localStorage.getItem(`onboard_${matriculaAtual}`);
-if (primeiraVez) {
-    localStorage.setItem(`onboard_${matriculaAtual}`, 'true');
-    setTimeout(() => mostrarOnboarding(), 600);
-}
+                    // ===== ONBOARDING =====
+                    console.log('🎉 Tentando mostrar onboarding...');
+                    const matriculaStorage = localStorage.getItem('usuario');
+                    let matricula = '123456';
+                    if (matriculaStorage) {
+                        try {
+                            const usuarioObj = JSON.parse(matriculaStorage);
+                            matricula = usuarioObj.matricula || '123456';
+                        } catch(e) {}
+                    }
+                    const chaveOnboard = `onboard_${matricula}`;
+                    const primeiraVez = !localStorage.getItem(chaveOnboard);
+                    console.log('Chave:', chaveOnboard, 'Primeira vez?', primeiraVez);
+                    
+                    if (primeiraVez) {
+                        localStorage.setItem(chaveOnboard, 'true');
+                        console.log('🎉 MOSTRANDO ONBOARDING AGORA!');
+                        // Chamar diretamente a função
+                        onboardStep = 0;
+                        renderOnboardStep();
+                        document.getElementById('onboardingModal').classList.add('active');
+                    }
                 }
             };
         }, i * 30);
@@ -1221,7 +1238,7 @@ function buildCalendar() {
 
 async function carregarHistoricoEmocoes() {
     try {
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/emocoes/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/emocoes/${matriculaAtual}`);
         const historico = await response.json();
         
         emotionHistory = {};
@@ -1255,7 +1272,7 @@ function getEmojiPorEmocao(emocao) {
 // Atualizar a interface com os novos valores
 async function atualizarInterface() {
     try {
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         
         currentCoins = dados.moedas || 0;
@@ -1287,7 +1304,7 @@ function showNotif(title, msg, type = 'info') {
 async function sincronizarUniversos() {
     try {
         // Buscar as ilhas desbloqueadas do backend
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         
         // Universos que o usuário já desbloqueou (vem do backend)
@@ -1317,7 +1334,7 @@ async function sincronizarUniversos() {
 async function desbloquearUniverso(nomeUniverso) {
     try {
         // Buscar universos já desbloqueados
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         const universosAtuais = dados.universos_desbloqueados || [];
         
@@ -1328,7 +1345,7 @@ async function desbloquearUniverso(nomeUniverso) {
         universosAtuais.push(nomeUniverso);
         
         // Salvar no backend
-        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ universos_desbloqueados: universosAtuais })
@@ -1422,8 +1439,7 @@ aguardarAPI(async () => {
     
     // Resetar universos iniciais
     await resetarUniversosIniciais();
-    
-    
+
     const jaRegistrou = await window.mindfineAPI.jaRegistrouEmocaoHoje();
     console.log('📌 Ja registrou hoje?', jaRegistrou);
     
@@ -1433,6 +1449,15 @@ aguardarAPI(async () => {
         document.getElementById('checkinModal').classList.remove('hidden');
     }
 });
+
+
+// Forçar onboarding para teste (remover depois)
+window.forcarOnboarding = function() {
+    onboardStep = 0;
+    renderOnboardStep();
+    document.getElementById('onboardingModal').classList.add('active');
+    console.log('🔥 Onboarding forçado!');
+};
 </script>
 </body>
 </html>

@@ -526,11 +526,7 @@
         const chave = getChavePrimeiraVez();
         localStorage.setItem(chave, 'false');
     }
-
-    // Função para desbloquear figurinhas aleatórias
-   // Função para desbloquear TODAS as figurinhas da página "capa-back" (Porto Inicial)
 async function desbloquearPacoteFigurinhas() {
-    // Figurinhas da primeira página (Porto Inicial / capa-back)
     const figurinhasDaPaginaInicial = [
         { pagina: 'capa-back', slot: 0, figurinha_id: 'fig_capa-back_0' },
         { pagina: 'capa-back', slot: 1, figurinha_id: 'fig_capa-back_1' },
@@ -542,7 +538,7 @@ async function desbloquearPacoteFigurinhas() {
     
     for (const fig of figurinhasDaPaginaInicial) {
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/desbloquear`, {
+            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -559,16 +555,17 @@ async function desbloquearPacoteFigurinhas() {
                 console.log(`✅ Figurinha ${fig.slot} desbloqueada!`);
             } else if (result.ja_desbloqueada) {
                 console.log(`📌 Figurinha ${fig.slot} já estava desbloqueada`);
-                desbloqueadas++; // Conta como já tinha
             }
         } catch (error) {
             console.error('Erro ao desbloquear figurinha:', error);
         }
     }
     
+    // LIMPAR CACHE DO ÁLBUM NO LOCALSTORAGE PARA FORCAR RECARREGAR
+    localStorage.removeItem(`album_cache_${matriculaAtual}`);
+    
     return { total: desbloqueadas, pagina: 'Porto Inicial' };
 }
-
     function init() {
         createMagic();
         buildMap();
@@ -788,7 +785,7 @@ async function desbloquearUniversoPorIlha(nomeIlha) {
     
     try {
         // Buscar universos já desbloqueados
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+        const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
         const dados = await response.json();
         const universosAtuais = dados.universos_desbloqueados || [];
         
@@ -799,7 +796,7 @@ async function desbloquearUniversoPorIlha(nomeIlha) {
         universosAtuais.push(nomeUniverso);
         
         // Salvar no backend
-        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+        await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ universos_desbloqueados: universosAtuais })
@@ -964,7 +961,7 @@ if (ehPrimeiraVez) {
         matriculaAtual = usuario.matricula || '123456';
         
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+            const response = await fetch(`http://localhost:5001/api/progresso/${matriculaAtual}`);
             const dados = await response.json();
             
             const coinDisplay = document.querySelector('.level-display span');
