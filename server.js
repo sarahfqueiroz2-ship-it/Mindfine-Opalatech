@@ -1225,6 +1225,51 @@ app.get('/api/admin/deletar-usuario', async (req, res) => {
     }
 });
 
+// ========== ROTAS PARA ADMIN (CRIAR USUÁRIOS PELO NAVEGADOR) ==========
+
+app.get('/api/criar-usuario-manual', async (req, res) => {
+    const { matricula, nome, email, senha } = req.query;
+    
+    if (!matricula || !nome) {
+        return res.json({ erro: 'Faltou matricula ou nome. Exemplo: /api/criar-usuario-manual?matricula=123&nome=João' });
+    }
+    
+    try {
+        // Verificar se usuário já existe
+        const existe = await pool.query('SELECT * FROM usuarios WHERE matricula = $1', [matricula]);
+        
+        if (existe.rows.length > 0) {
+            // Atualizar se já existe
+            await pool.query(
+                `UPDATE usuarios SET nome = $1, email = $2 WHERE matricula = $3`,
+                [nome, email || `${matricula}@email.com`, matricula]
+            );
+            res.json({ sucesso: true, mensagem: `Usuário ${nome} ATUALIZADO!` });
+        } else {
+            // Criar novo
+            await pool.query(
+                `INSERT INTO usuarios (matricula, nome, email, senha, tipo, nivel, xp, moedas, skin_atual, fundo_atual) 
+                 VALUES ($1, $2, $3, $4, 'estudante', 1, 0, 0, 'pandas/skin.png', 'fundos/fundo-a.png')`,
+                [matricula, nome, email || `${matricula}@email.com`, senha || '123']
+            );
+            res.json({ sucesso: true, mensagem: `Usuário ${nome} CRIADO com sucesso!` });
+        }
+    } catch (err) {
+        console.error('Erro:', err);
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// Rota para ver todos os usuários
+app.get('/api/admin/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios ORDER BY matricula');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
 // ========== INICIAR SERVIDOR ==========
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
