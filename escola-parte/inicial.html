@@ -788,6 +788,9 @@ async function carregarDados() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     matriculaAtual = usuario.matricula || '123456';
     
+ console.log('🔍 [inicial.html] Usuário logado:', { matricula: matriculaAtual, usuarioCompleto: usuario });
+    
+
     try {
         const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
         const dados = await response.json();

@@ -702,6 +702,9 @@ function salvarEstadoAntesDeSair() {
     return true;
 }
 
+// Depois de carregar o usuário
+console.log('🔍 [chat.html] Usuário logado:', { matricula: matriculaAtual, usuarioCompleto: usuario });
+
 // Expor a função globalmente
 window.salvarEstadoAntesDeSair = salvarEstadoAntesDeSair;
 </script>
