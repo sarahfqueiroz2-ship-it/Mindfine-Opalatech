@@ -428,26 +428,39 @@ async function startChat() {
         }
     }
 
-    async function carregarConversa(chatId) {
-        const conversa = conversas.find(c => c.id === chatId);
-        if (conversa && conversa.matricula_aluno !== matriculaAtual) {
-            mostrarNotificacao('Esta conversa não pertence a você!', 'info');
-            return;
-        }
-        
-        currentChatId = chatId;
-        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, chatId);
-        console.log('🔄 Carregando conversa:', chatId);
-        
-        if (conversa) {
-            document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
-        }
-        
-        await atualizarMensagens();
-        renderizarHistorico();
+   async function carregarConversa(chatId) {
+    const conversa = conversas.find(c => c.id === chatId);
+    if (conversa && conversa.matricula_aluno !== matriculaAtual) {
+        mostrarNotificacao('Esta conversa não pertence a você!', 'info');
+        return;
     }
+    
+    currentChatId = chatId;
+    localStorage.setItem(`ultimo_chat_${matriculaAtual}`, chatId);
+    console.log('🔄 Carregando conversa:', chatId);
+    
+    if (conversa) {
+        document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
+    }
+    
+    // Verificar se já existe mensagem inicial
+    const mensagens = await carregarMensagens(chatId);
+    
+    if (!mensagens || mensagens.length === 0) {
+        // Se não tem mensagem, salvar a inicial no backend
+        const time = formatarHora(new Date().toISOString());
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg received';
+        msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+        document.getElementById('msg-container').appendChild(msgDiv);
+        await enviarMensagem(chatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
+    }
+    
+    await atualizarMensagens(true);
+    renderizarHistorico();
+}
 
-   async function atualizarMensagens(forcar = false) {
+async function atualizarMensagens(forcar = false) {
     if (!currentChatId) return;
     
     try {
@@ -473,6 +486,9 @@ async function startChat() {
             msgDiv.className = 'msg received';
             msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
             container.appendChild(msgDiv);
+            
+            // SALVAR A MENSAGEM INICIAL NO BACKEND
+            await enviarMensagem(currentChatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
         } else {
             for (const msg of mensagens) {
                 const isSent = msg.remetente === 'aluno';
@@ -486,7 +502,7 @@ async function startChat() {
     } catch (error) {
         console.error('Erro:', error);
     }
-}
+}   
 
    
 async function send() {
