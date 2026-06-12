@@ -538,7 +538,7 @@ async function desbloquearPacoteFigurinhas() {
     
     for (const fig of figurinhasDaPaginaInicial) {
         try {
-            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/desbloquear`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
