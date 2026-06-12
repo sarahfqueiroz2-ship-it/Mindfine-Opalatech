@@ -230,10 +230,6 @@
     </div>
 </div>
 
-
-
-
-
 <script>
     // ========== CARREGAR USUÁRIO ==========
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
@@ -249,7 +245,7 @@
     let isAnonymous = false;
     let currentChatId = null;
     let conversas = [];
-    let atualizandoMensagens = false;
+    let ultimoConteudoMensagens = ''; // Para evitar recarregamento desnecessário
 
     console.log('✅ ALUNO logado com matrícula:', matriculaAtual);
 
@@ -353,14 +349,26 @@
         document.getElementById('modalStepAnon').classList.remove('hidden');
     }
 
-    function startChat() {
-        if (!finalUserName) return;
+    async function startChat() {
+        console.log('Iniciando chat anônimo');
+        if (!finalUserName) {
+            console.error('Nome anônimo não gerado!');
+            return;
+        }
         
         currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
-        criarConversa(currentChatId, finalUserName, true).then(() => {
-            carregarConversas();
-            fecharModal();
-        });
+        await criarConversa(currentChatId, finalUserName, true);
+        
+        // RECARREGAR CONVERSAS E ABRIR A NOVA
+        await carregarConversas();
+        
+        // Forçar a abertura da conversa criada
+        const novaConversa = conversas.find(c => c.id === currentChatId);
+        if (novaConversa) {
+            await carregarConversa(currentChatId);
+        }
+        
+        fecharModal();
     }
 
     function backToStep1() {
@@ -369,12 +377,22 @@
     }
 
     async function criarNovoChat() {
+        console.log('Criando novo chat identificado');
         isAnonymous = false;
         finalUserName = matriculaAtual;
         currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
         
         await criarConversa(currentChatId, finalUserName, false);
+        
+        // RECARREGAR CONVERSAS E ABRIR A NOVA
         await carregarConversas();
+        
+        // Forçar a abertura da conversa criada
+        const novaConversa = conversas.find(c => c.id === currentChatId);
+        if (novaConversa) {
+            await carregarConversa(currentChatId);
+        }
+        
         fecharModal();
     }
 
@@ -427,15 +445,22 @@
         renderizarHistorico();
     }
 
-    async function atualizarMensagens() {
-        if (!currentChatId || atualizandoMensagens) return;
-        
-        atualizandoMensagens = true;
+    async function atualizarMensagens(forcar = false) {
+        if (!currentChatId) return;
         
         try {
             const mensagens = await carregarMensagens(currentChatId);
             const container = document.getElementById('msg-container');
             if (!container) return;
+            
+            // Criar um hash do conteúdo atual para comparar
+            const novoConteudo = JSON.stringify(mensagens);
+            
+            if (!forcar && novoConteudo === ultimoConteudoMensagens) {
+                return; // Não mudou nada, não atualizar
+            }
+            
+            ultimoConteudoMensagens = novoConteudo;
             
             container.innerHTML = '';
             
@@ -445,12 +470,6 @@
                 msgDiv.className = 'msg received';
                 msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
                 container.appendChild(msgDiv);
-                
-                // Só salvar no backend se não tiver mensagem
-                const verificar = await carregarMensagens(currentChatId);
-                if (verificar.length === 0) {
-                    await enviarMensagem(currentChatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
-                }
             } else {
                 for (const msg of mensagens) {
                     const isSent = msg.remetente === 'aluno';
@@ -463,8 +482,6 @@
             container.scrollTop = container.scrollHeight;
         } catch (error) {
             console.error('Erro:', error);
-        } finally {
-            atualizandoMensagens = false;
         }
     }
 
@@ -491,7 +508,10 @@
         // Enviar para o backend
         await enviarMensagem(currentChatId, 'aluno', texto);
         
-        // Atualizar última mensagem
+        // Atualizar cache e última mensagem
+        ultimoConteudoMensagens = '';
+        await atualizarMensagens(true);
+        
         const conversa = conversas.find(c => c.id === currentChatId);
         if (conversa) {
             conversa.ultima_mensagem = texto;
@@ -526,15 +546,15 @@
         setTimeout(() => notif.remove(), 2500);
     }
 
-    // ========== BUSCA AUTOMÁTICA ==========
+    // ========== BUSCA AUTOMÁTICA (SÓ QUANDO HOUVER MUDANÇA) ==========
     let intervaloBusca = null;
 
     function iniciarBuscaAutomatica() {
         if (intervaloBusca) clearInterval(intervaloBusca);
         
-        intervaloBusca = setInterval(() => {
+        intervaloBusca = setInterval(async () => {
             if (currentChatId) {
-                atualizarMensagens();
+                await atualizarMensagens(false); // false = só atualiza se houver mudança
             }
         }, 3000);
     }
@@ -544,6 +564,7 @@
         localStorage.removeItem(`ultimo_chat_${matriculaAtual}`);
         currentChatId = null;
         conversas = [];
+        ultimoConteudoMensagens = '';
         if (intervaloBusca) {
             clearInterval(intervaloBusca);
             intervaloBusca = null;
@@ -617,3 +638,4 @@
 
 </body>
 </html>
+
