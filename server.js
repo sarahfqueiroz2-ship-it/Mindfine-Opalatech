@@ -34,6 +34,8 @@ async function criarTabelas() {
                 matricula TEXT PRIMARY KEY,
                 nome TEXT,
                 email TEXT,
+                senha TEXT,
+                tipo TEXT DEFAULT 'estudante',
                 nivel INTEGER DEFAULT 1,
                 xp INTEGER DEFAULT 0,
                 moedas INTEGER DEFAULT 0,
@@ -210,12 +212,53 @@ app.post('/api/login', async (req, res) => {
     
     console.log(`Login tentativa: ${identificador} - ${tipo_usuario}`);
     
-    res.json({
-        sucesso: true,
-        nome: "Usuário Teste",
-        email: identificador,
-        matricula: identificador
-    });
+    try {
+        // Buscar usuário no banco
+        let query = 'SELECT * FROM usuarios WHERE matricula = $1 OR email = $1';
+        let result = await pool.query(query, [identificador]);
+        
+        if (result.rows.length === 0) {
+            // Usuário não encontrado
+            return res.status(401).json({ 
+                sucesso: false, 
+                mensagem: 'Usuário não encontrado!' 
+            });
+        }
+        
+        const usuario = result.rows[0];
+        
+        // Verificar tipo de usuário
+        if (usuario.tipo !== tipo_usuario) {
+            return res.status(401).json({ 
+                sucesso: false, 
+                mensagem: `Acesso negado. Você não é um ${tipo_usuario}.` 
+            });
+        }
+        
+        // Verificar senha (em produção, use bcrypt)
+        if (usuario.senha && usuario.senha !== senha) {
+            return res.status(401).json({ 
+                sucesso: false, 
+                mensagem: 'Senha incorreta!' 
+            });
+        }
+        
+        // Login bem-sucedido
+        res.json({
+            sucesso: true,
+            nome: usuario.nome,
+            email: usuario.email,
+            matricula: usuario.matricula,
+            tipo: usuario.tipo
+        });
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        res.status(500).json({ 
+            sucesso: false, 
+            mensagem: 'Erro interno do servidor' 
+        });
+    }
 });
 
 // ========== ROTAS DO PROGRESSO ==========
@@ -1082,6 +1125,54 @@ app.delete('/api/intervencoes/:id', async (req, res) => {
         await pool.query('DELETE FROM intervencoes WHERE id = $1', [id]);
         res.json({ sucesso: true });
     } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ========== ROTA PARA CRIAR USUÁRIOS (ADMIN) ==========
+app.post('/api/criar-usuario', async (req, res) => {
+    const { matricula, nome, email, senha, tipo } = req.body;
+    
+    try {
+        const result = await pool.query('SELECT * FROM usuarios WHERE matricula = $1', [matricula]);
+        
+        if (result.rows.length > 0) {
+            return res.status(400).json({ 
+                sucesso: false, 
+                mensagem: 'Usuário já existe!' 
+            });
+        }
+        
+        await pool.query(
+            `INSERT INTO usuarios (matricula, nome, email, senha, tipo, nivel, xp, moedas, skin_atual, fundo_atual)
+             VALUES ($1, $2, $3, $4, $5, 1, 0, 0, 'pandas/skin.png', 'fundos/fundo-a.png')`,
+            [matricula, nome, email, senha || '123456', tipo || 'estudante']
+        );
+        
+        res.json({ 
+            sucesso: true, 
+            mensagem: 'Usuário criado com sucesso!' 
+        });
+    } catch (error) {
+        console.error('Erro:', error);
+        res.status(500).json({ sucesso: false, mensagem: 'Erro ao criar usuário' });
+    }
+});
+
+// ========== ROTA PARA BUSCAR DADOS DO ALUNO ==========
+app.get('/api/aluno/:matricula', async (req, res) => {
+    const { matricula } = req.params;
+    
+    try {
+        const result = await pool.query('SELECT matricula, nome, email, tipo FROM usuarios WHERE matricula = $1', [matricula]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ erro: 'Aluno não encontrado' });
+        }
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ erro: err.message });
     }
 });

@@ -632,7 +632,7 @@
 <!-- MODAIS -->
 <div class="modal-overlay hidden" id="checkinModal">
     <div class="modal-content">
-        <h2 style="text-align:center; color: var(--azul-escuro); margin-bottom:5px;">Olá, Maria!</h2>
+<h2 style="text-align:center; color: var(--azul-escuro); margin-bottom:5px;" id="saudacaoAluno">Olá, Aluno!</h2>
         <p style="text-align:center; font-size: 0.9rem; color: #667; margin-top:0;">Como você está se sentindo agora?</p>
         <div class="emoji-container">
             <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji">😊</span><span class="emoji-label">Alegria</span></div>
@@ -760,6 +760,7 @@
     let currentXP = 0;
     let currentLevel = 1;
     let matriculaAtual = '';
+    let nomeAluno = '';
 
     const universes = [
     { name: "Santuário", img: "fundos/fundo-a.png", skins: ["pandas/skin.png"], unlocked: true, ilhaCorrespondente: "Porto Inicial" },
@@ -790,6 +791,25 @@ async function carregarDados() {
     
  console.log('🔍 [inicial.html] Usuário logado:', { matricula: matriculaAtual, usuarioCompleto: usuario });
     
+    // Buscar nome do aluno
+    try {
+        const alunoResponse = await fetch(`https://mindfine-backend.onrender.com/api/aluno/${matriculaAtual}`);
+        if (alunoResponse.ok) {
+            const alunoData = await alunoResponse.json();
+            nomeAluno = alunoData.nome || 'Aluno';
+            // Atualizar a saudação no modal
+            const saudacaoElement = document.getElementById('saudacaoAluno');
+            if (saudacaoElement) {
+                saudacaoElement.innerHTML = `Olá, ${nomeAluno}!`;
+            }
+        } else {
+            nomeAluno = 'Aluno';
+        }
+    } catch (erroAluno) {
+        console.error('Erro ao buscar nome:', erroAluno);
+        nomeAluno = 'Aluno';
+    }
+
 
     try {
         const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);

@@ -395,35 +395,28 @@ console.log('NOME DO USUÁRIO:', finalUserName);
             btnLogin.textContent = 'Entrando...';
             
             try {
-                const resposta = await fetch('https://mindfine-backend.onrender.com/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        tipo_usuario: tipoUsuarioSelecionado,
-                        identificador: identificador,
-                        senha: senha
-                    })
-                });
-                
-                const dados = await resposta.json();
-                
-           if (dados.sucesso) {
+             // No login.html, a parte do fetch já está correta, mas vamos garantir:
+const resposta = await fetch('https://mindfine-backend.onrender.com/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        tipo_usuario: tipoUsuarioSelecionado,
+        identificador: identificador,
+        senha: senha
+    })
+});
+
+const dados = await resposta.json();
+
+if (dados.sucesso) {
     mostrarMensagem('Login realizado com sucesso!', 'sucesso');
     
-    // Definir o nome do usuário (usa a matrícula se não tiver nome)
-    const nomeUsuario = identificador;
-    
-    // Salvar dados do usuário
     localStorage.setItem('usuario', JSON.stringify({
-        nome: nomeUsuario,
-        email: `${identificador}@mindfine.com`,
-        matricula: identificador,
-        tipo: tipoUsuarioSelecionado
+        nome: dados.nome,
+        email: dados.email,
+        matricula: dados.matricula,
+        tipo: dados.tipo
     }));
-    
-    console.log('✅ Usuário salvo:', { nome: nomeUsuario, matricula: identificador, tipo: tipoUsuarioSelecionado });
     
     // Redirecionar
     let paginaDestino = 'inicial.html';
@@ -434,8 +427,8 @@ console.log('NOME DO USUÁRIO:', finalUserName);
         window.location.href = paginaDestino;
     }, 1000);
 } else {
-                    mostrarMensagem(dados.mensagem || 'Credenciais inválidas', 'erro');
-                }
+    mostrarMensagem(dados.mensagem || 'Credenciais inválidas', 'erro');
+}
             } catch (erro) {
                 console.error('Erro:', erro);
                 mostrarMensagem('Erro ao conectar com o servidor. Verifique se está rodando!', 'erro');
