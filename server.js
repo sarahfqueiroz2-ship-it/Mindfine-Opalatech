@@ -1269,6 +1269,20 @@ app.get('/api/admin/usuarios', async (req, res) => {
         res.status(500).json({ erro: err.message });
     }
 });
+app.get('/api/criar-aluno', async (req, res) => {
+    const { matricula, nome, senha } = req.query;
+    
+    try {
+        await pool.query(
+            `INSERT INTO usuarios (matricula, nome, senha, email, tipo) 
+             VALUES ($1, $2, $3, $4, 'estudante')`,
+            [matricula, nome, senha || '123', `${matricula}@email.com`]
+        );
+        res.send(`✅ Aluno ${nome} criado com sucesso!`);
+    } catch (err) {
+        res.send(`❌ Erro: ${err.message}`);
+    }
+});
 
 // ========== INICIAR SERVIDOR ==========
 app.listen(PORT, '0.0.0.0', () => {
