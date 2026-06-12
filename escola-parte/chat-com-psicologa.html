@@ -424,6 +424,7 @@ function formatarHora(dataISO) {
     }
 }
 
+
 async function carregarConversa(chatId) {
     // Verificar se o chat pertence ao aluno atual
     const conversa = conversas.find(c => c.id === chatId);
@@ -441,31 +442,42 @@ async function carregarConversa(chatId) {
         document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
     }
     
-    const mensagens = await carregarMensagens(chatId);
-    const container = document.getElementById('msg-container');
-    if (!container) return;
+    // Recarregar mensagens do backend
+    await recarregarMensagens();
     
-    container.innerHTML = '';
-    
-    if (!mensagens || mensagens.length === 0) {
-        const time = formatarHora(new Date().toISOString());
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg received';
-        msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
-        container.appendChild(msgDiv);
-
-           await enviarMensagem(chatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
-    } else {
-        for (const msg of mensagens) {
-            const isSent = msg.remetente === 'aluno';
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
-            msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
-            container.appendChild(msgDiv);
-        }
-    }
-    container.scrollTop = container.scrollHeight;
     renderizarHistorico();
+}
+
+async function recarregarMensagens() {
+    if (!currentChatId) return;
+    
+    try {
+        const mensagens = await carregarMensagens(currentChatId);
+        const container = document.getElementById('msg-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (!mensagens || mensagens.length === 0) {
+            const time = formatarHora(new Date().toISOString());
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg received';
+            msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+            container.appendChild(msgDiv);
+            await enviarMensagem(currentChatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
+        } else {
+            for (const msg of mensagens) {
+                const isSent = msg.remetente === 'aluno';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
+                msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
+                container.appendChild(msgDiv);
+            }
+        }
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        console.error('Erro ao recarregar mensagens:', error);
+    }
 }
 
 
@@ -564,46 +576,17 @@ function iniciarBuscaAutomatica() {
             const container = document.getElementById('msg-container');
             if (!container) return;
             
-            // Verificar se tem novas mensagens comparando o conteúdo
-            const mensagensAtuais = Array.from(container.children).filter(c => c.classList && c.classList.contains('msg')).length;
+            const mensagensAtuais = container.children.length;
             
             if (mensagens && mensagens.length > mensagensAtuais) {
                 console.log(`📨 ${mensagens.length - mensagensAtuais} novas mensagens!`);
-                
-                // Adicionar apenas as mensagens novas, sem recarregar tudo
-                const mensagensExistentes = new Set();
-                for (const child of container.children) {
-                    const text = child.textContent;
-                    if (text) mensagensExistentes.add(text);
-                }
-                
-                for (const msg of mensagens) {
-                    // Verificar se a mensagem já existe na tela
-                    const msgKey = `${msg.texto}_${msg.data_hora}`;
-                    let jaExiste = false;
-                    for (const child of container.children) {
-                        if (child.textContent.includes(msg.texto) && child.innerHTML.includes(formatarHora(msg.data_hora))) {
-                            jaExiste = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!jaExiste && msg.remetente !== 'aluno') {
-                        const msgDiv = document.createElement('div');
-                        msgDiv.className = `msg received`;
-                        msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
-                        container.appendChild(msgDiv);
-                        
-                        // Mostrar notificação de nova mensagem
-                        mostrarNotificacao('Nova mensagem da psicóloga! 💙', 'info');
-                    }
-                }
-                container.scrollTop = container.scrollHeight;
+                // Recarregar todas as mensagens
+                await recarregarMensagens();
             }
         } catch (error) {
             console.error('Erro na busca:', error);
         }
-    }, 2000);
+    }, 3000);
 }
 
 // ========== LIMPAR DADOS AO TROCAR DE USUÁRIO ==========
@@ -638,12 +621,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Garantir que o modal NÃO seja fechado automaticamente
-    // Removemos a linha que estava fechando o modal
     
+
     // Inicializar
     carregarConversas();
     iniciarBuscaAutomatica();
+
+setInterval(() => {
+        if (currentChatId) {
+            recarregarMensagens();
+        }
+    }, 5000);
 });
 
 document.addEventListener('click', (e) => {
