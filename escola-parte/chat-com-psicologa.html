@@ -233,468 +233,386 @@
 
 
 
+
 <script>
-  
-    // ========== CARREGAR USUÁRIO - ESTUDANTE ==========
-const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    // ========== CARREGAR USUÁRIO ==========
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
 
-console.log('🔍 Dados do usuário no chat:', usuario);
+    console.log('🔍 Dados do usuário no chat:', usuario);
 
-if (!usuario || !usuario.matricula) {
-    window.location.href = 'login.html';
-}
-
-let matriculaAtual = usuario.matricula;
-let finalUserName = '';
-let isAnonymous = false;
-let currentChatId = null;
-let conversas = [];
-
-console.log('✅ ALUNO logado com matrícula:', matriculaAtual);
-
-// ========== FUNÇÕES DO BACKEND ==========
-
-async function carregarConversas() {
-    try {
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/chats?aluno=${matriculaAtual}`);
-        conversas = await response.json();
-        renderizarHistorico();
-        
-        const ultimoChatId = localStorage.getItem(`ultimo_chat_${matriculaAtual}`);
-        if (ultimoChatId && conversas.find(c => c.id === ultimoChatId)) {
-            await carregarConversa(ultimoChatId);
-        } else if (conversas.length > 0) {
-            await carregarConversa(conversas[0].id);
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        conversas = [];
+    if (!usuario || !usuario.matricula) {
+        window.location.href = 'login.html';
     }
-}
 
-async function carregarMensagens(chatId) {
-    try {
-        const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${chatId}/mensagens`);
-        return await response.json();
-    } catch (error) {
-        return [];
-    }
-}
+    let matriculaAtual = usuario.matricula;
+    let finalUserName = '';
+    let isAnonymous = false;
+    let currentChatId = null;
+    let conversas = [];
+    let atualizandoMensagens = false;
 
-async function enviarMensagem(chatId, remetente, texto) {
-    try {
-        await fetch(`https://mindfine-backend.onrender.com/api/chats/${chatId}/mensagens`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ remetente, texto })
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-    }
-}
+    console.log('✅ ALUNO logado com matrícula:', matriculaAtual);
 
-async function criarConversa(id, nome, anonimo) {
-    try {
-        await fetch(`https://mindfine-backend.onrender.com/api/chats`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: id,
-                matricula_aluno: matriculaAtual,
-                nome_aluno: nome,
-                anonimo: anonimo ? 1 : 0
-            })
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-    }
-}
+    // ========== FUNÇÕES DO BACKEND ==========
 
-// ========== FUNÇÕES DO MODAL ==========
-
-function abrirModalNovoChat() {
-    console.log('Abrindo modal');
-    // Resetar os valores
-    isAnonymous = false;
-    finalUserName = '';
-    
-    const modal = document.getElementById('identityModal');
-    const step1 = document.getElementById('modalStep1');
-    const stepAnon = document.getElementById('modalStepAnon');
-    
-    if (modal && step1 && stepAnon) {
-        modal.classList.remove('hidden');
-        step1.classList.remove('hidden');
-        stepAnon.classList.add('hidden');
-    } else {
-        console.error('Elementos do modal não encontrados!');
-    }
-}
-
-function fecharModal() {
-    document.getElementById('identityModal').classList.add('hidden');
-}
-
-function closeIdentityModal() {
-    document.getElementById('identityModal').classList.add('hidden');
-}
-
-function selectIdentity(type) {
-    console.log('Botão clicado:', type);
-    if(type === 'id') {
-        criarNovoChat();
-    }
-}
-
-function generateAndShowAnon() {
-    console.log('Gerando nome anônimo');
-    isAnonymous = true;
-    finalUserName = 'Anon_' + Math.floor(Math.random() * 10000);
-    const displayElement = document.getElementById('generatedNameDisplay');
-    if (displayElement) {
-        displayElement.innerText = finalUserName;
-    }
-    document.getElementById('modalStep1').classList.add('hidden');
-    document.getElementById('modalStepAnon').classList.remove('hidden');
-}
-
-function startChat() {
-    console.log('Iniciando chat anônimo');
-    if (!finalUserName) {
-        console.error('Nome anônimo não gerado!');
-        return;
-    }
-    
-    currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
-    criarConversa(currentChatId, finalUserName, true).then(() => {
-        carregarConversas();
-        carregarConversa(currentChatId);
-        fecharModal();
-        
-       
-    });
-}
-
-function backToStep1() {
-    document.getElementById('modalStep1').classList.remove('hidden');
-    document.getElementById('modalStepAnon').classList.add('hidden');
-}
-
-async function criarNovoChat() {
-    console.log('Criando novo chat identificado');
-    isAnonymous = false;
-    finalUserName = matriculaAtual;
-    currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
-    
-    await criarConversa(currentChatId, finalUserName, false);
-    await carregarConversas();
-    await carregarConversa(currentChatId);
-    fecharModal();
-    
-
-}
-
-// ========== UI ==========
-
-function renderizarHistorico() {
-    const historyList = document.querySelector('.history-list');
-    if (!historyList) return;
-    
-    if (!conversas || conversas.length === 0) {
-        historyList.innerHTML = `<div class="history-item"><h4>Nenhuma conversa</h4><p>Clique em "Nova Conversa" para começar</p></div>`;
-        return;
-    }
-    
-    historyList.innerHTML = conversas.map(conv => `
-        <div class="history-item ${currentChatId === conv.id ? 'active' : ''}" onclick="carregarConversa('${conv.id}')">
-            <h4>${conv.nome_aluno || 'Aluno'} ${conv.anonimo ? '(Anônimo)' : ''}</h4>
-            <p>${conv.ultima_mensagem || 'Clique para conversar'}</p>
-            <small>${formatarHora(conv.ultima_data)}</small>
-        </div>
-    `).join('');
-}
-
-function formatarHora(dataISO) {
-    if (!dataISO) return '';
-    try {
-        const data = new Date(dataISO);
-        return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}`;
-    } catch(e) {
-        return '';
-    }
-}
-
-
-async function carregarConversa(chatId) {
-    // Verificar se o chat pertence ao aluno atual
-    const conversa = conversas.find(c => c.id === chatId);
-    if (conversa && conversa.matricula_aluno !== matriculaAtual) {
-        console.error('❌ Esta conversa não pertence a este aluno!');
-        mostrarNotificacao('Esta conversa não pertence a você!', 'info');
-        return;
-    }
-    
-    currentChatId = chatId;
-    localStorage.setItem(`ultimo_chat_${matriculaAtual}`, chatId);
-    console.log('🔄 Carregando conversa:', chatId);
-    
-    if (conversa) {
-        document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
-    }
-    
-    // Recarregar mensagens do backend
-    await recarregarMensagens();
-    
-    renderizarHistorico();
-}
-
-async function recarregarMensagens() {
-    if (!currentChatId) return;
-    
-    try {
-        const mensagens = await carregarMensagens(currentChatId);
-        const container = document.getElementById('msg-container');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        if (!mensagens || mensagens.length === 0) {
-            const time = formatarHora(new Date().toISOString());
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'msg received';
-            msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
-            container.appendChild(msgDiv);
-            await enviarMensagem(currentChatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
-        } else {
-            for (const msg of mensagens) {
-                const isSent = msg.remetente === 'aluno';
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
-                msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
-                container.appendChild(msgDiv);
+    async function carregarConversas() {
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats?aluno=${matriculaAtual}`);
+            conversas = await response.json();
+            renderizarHistorico();
+            
+            const ultimoChatId = localStorage.getItem(`ultimo_chat_${matriculaAtual}`);
+            if (ultimoChatId && conversas.find(c => c.id === ultimoChatId)) {
+                await carregarConversa(ultimoChatId);
+            } else if (conversas.length > 0) {
+                await carregarConversa(conversas[0].id);
             }
+        } catch (error) {
+            console.error('Erro:', error);
+            conversas = [];
         }
-        container.scrollTop = container.scrollHeight;
-    } catch (error) {
-        console.error('Erro ao recarregar mensagens:', error);
     }
-}
 
-
-async function send() {
-    const input = document.getElementById('msg-input');
-    if (!input) return;
-    
-    const texto = input.value.trim();
-    if (!texto || !currentChatId) {
-        if (!currentChatId) {
-            mostrarNotificacao('Inicie uma nova conversa primeiro!', 'info');
+    async function carregarMensagens(chatId) {
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${chatId}/mensagens`);
+            return await response.json();
+        } catch (error) {
+            return [];
         }
-        return;
     }
-    
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'msg sent';
-    msgDiv.innerHTML = `${texto}<span class="msg-time">${formatarHora(new Date().toISOString())}</span>`;
-    document.getElementById('msg-container').appendChild(msgDiv);
-    input.value = '';
-    document.getElementById('msg-container').scrollTop = document.getElementById('msg-container').scrollHeight;
-    
-    await enviarMensagem(currentChatId, 'aluno', texto);
-    
-    // Atualizar última mensagem na conversa
-    const conversa = conversas.find(c => c.id === currentChatId);
-    if (conversa) {
-        conversa.ultima_mensagem = texto;
-        conversa.ultima_data = new Date().toISOString();
+
+    async function enviarMensagem(chatId, remetente, texto) {
+        try {
+            await fetch(`https://mindfine-backend.onrender.com/api/chats/${chatId}/mensagens`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remetente, texto })
+            });
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    }
+
+    async function criarConversa(id, nome, anonimo) {
+        try {
+            await fetch(`https://mindfine-backend.onrender.com/api/chats`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: id,
+                    matricula_aluno: matriculaAtual,
+                    nome_aluno: nome,
+                    anonimo: anonimo ? 1 : 0
+                })
+            });
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    }
+
+    // ========== FUNÇÕES DO MODAL ==========
+
+    function abrirModalNovoChat() {
+        isAnonymous = false;
+        finalUserName = '';
+        
+        const modal = document.getElementById('identityModal');
+        const step1 = document.getElementById('modalStep1');
+        const stepAnon = document.getElementById('modalStepAnon');
+        
+        if (modal && step1 && stepAnon) {
+            modal.classList.remove('hidden');
+            step1.classList.remove('hidden');
+            stepAnon.classList.add('hidden');
+        }
+    }
+
+    function fecharModal() {
+        document.getElementById('identityModal').classList.add('hidden');
+    }
+
+    function closeIdentityModal() {
+        document.getElementById('identityModal').classList.add('hidden');
+    }
+
+    function selectIdentity(type) {
+        if(type === 'id') {
+            criarNovoChat();
+        }
+    }
+
+    function generateAndShowAnon() {
+        isAnonymous = true;
+        finalUserName = 'Anon_' + Math.floor(Math.random() * 10000);
+        const displayElement = document.getElementById('generatedNameDisplay');
+        if (displayElement) {
+            displayElement.innerText = finalUserName;
+        }
+        document.getElementById('modalStep1').classList.add('hidden');
+        document.getElementById('modalStepAnon').classList.remove('hidden');
+    }
+
+    function startChat() {
+        if (!finalUserName) return;
+        
+        currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
+        criarConversa(currentChatId, finalUserName, true).then(() => {
+            carregarConversas();
+            fecharModal();
+        });
+    }
+
+    function backToStep1() {
+        document.getElementById('modalStep1').classList.remove('hidden');
+        document.getElementById('modalStepAnon').classList.add('hidden');
+    }
+
+    async function criarNovoChat() {
+        isAnonymous = false;
+        finalUserName = matriculaAtual;
+        currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
+        
+        await criarConversa(currentChatId, finalUserName, false);
+        await carregarConversas();
+        fecharModal();
+    }
+
+    // ========== UI ==========
+
+    function renderizarHistorico() {
+        const historyList = document.querySelector('.history-list');
+        if (!historyList) return;
+        
+        if (!conversas || conversas.length === 0) {
+            historyList.innerHTML = `<div class="history-item"><h4>Nenhuma conversa</h4><p>Clique em "Nova Conversa" para começar</p></div>`;
+            return;
+        }
+        
+        historyList.innerHTML = conversas.map(conv => `
+            <div class="history-item ${currentChatId === conv.id ? 'active' : ''}" onclick="carregarConversa('${conv.id}')">
+                <h4>${conv.nome_aluno || 'Aluno'} ${conv.anonimo ? '(Anônimo)' : ''}</h4>
+                <p>${conv.ultima_mensagem || 'Clique para conversar'}</p>
+                <small>${formatarHora(conv.ultima_data)}</small>
+            </div>
+        `).join('');
+    }
+
+    function formatarHora(dataISO) {
+        if (!dataISO) return '';
+        try {
+            const data = new Date(dataISO);
+            return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}`;
+        } catch(e) {
+            return '';
+        }
+    }
+
+    async function carregarConversa(chatId) {
+        const conversa = conversas.find(c => c.id === chatId);
+        if (conversa && conversa.matricula_aluno !== matriculaAtual) {
+            mostrarNotificacao('Esta conversa não pertence a você!', 'info');
+            return;
+        }
+        
+        currentChatId = chatId;
+        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, chatId);
+        console.log('🔄 Carregando conversa:', chatId);
+        
+        if (conversa) {
+            document.getElementById('display-user-name').innerHTML = `Chat com Apoio (${conversa.nome_aluno || 'Aluno'})`;
+        }
+        
+        await atualizarMensagens();
         renderizarHistorico();
     }
-}
 
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('active');
-}
-
-function voltarSalvando() {
-    if (currentChatId) {
-        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
-    }
-    window.location.href = 'inicial.html';
-}
-
-// Mostrar notificação estilizada
-function mostrarNotificacao(mensagem, tipo = 'info') {
-    // Criar elemento de notificação temporário
-    const notif = document.createElement('div');
-    notif.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, ${tipo === 'info' ? '#32B5F1' : '#10b981'}, ${tipo === 'info' ? '#0277bd' : '#059669'});
-        color: white;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-weight: 600;
-        z-index: 10000;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        animation: fadeInOut 2.5s ease forwards;
-    `;
-    notif.innerHTML = `<i class="fas ${tipo === 'info' ? 'fa-info-circle' : 'fa-check-circle'}"></i> ${mensagem}`;
-    document.body.appendChild(notif);
-    
-    setTimeout(() => {
-        notif.remove();
-    }, 2500);
-}
-
-// Adicionar animação CSS
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-        15% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        85% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-    }
-`;
-document.head.appendChild(style);
-
-// ========== BUSCA AUTOMÁTICA DE MENSAGENS (VERSÃO CORRIGIDA) ==========
-let intervaloBusca = null;
-let ultimaMensagemCount = 0;
-
-function iniciarBuscaAutomatica() {
-    if (intervaloBusca) clearInterval(intervaloBusca);
-    
-    intervaloBusca = setInterval(async () => {
-        if (!currentChatId) return;
+    async function atualizarMensagens() {
+        if (!currentChatId || atualizandoMensagens) return;
+        
+        atualizandoMensagens = true;
         
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${currentChatId}/mensagens`);
-            const mensagens = await response.json();
+            const mensagens = await carregarMensagens(currentChatId);
             const container = document.getElementById('msg-container');
             if (!container) return;
             
-            const mensagensAtuais = container.children.length;
+            container.innerHTML = '';
             
-            if (mensagens && mensagens.length > mensagensAtuais) {
-                console.log(`📨 ${mensagens.length - mensagensAtuais} novas mensagens!`);
-                // Recarregar todas as mensagens
-                await recarregarMensagens();
+            if (!mensagens || mensagens.length === 0) {
+                const time = formatarHora(new Date().toISOString());
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'msg received';
+                msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+                container.appendChild(msgDiv);
+                
+                // Só salvar no backend se não tiver mensagem
+                const verificar = await carregarMensagens(currentChatId);
+                if (verificar.length === 0) {
+                    await enviarMensagem(currentChatId, 'profissional', 'Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙');
+                }
+            } else {
+                for (const msg of mensagens) {
+                    const isSent = msg.remetente === 'aluno';
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
+                    msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
+                    container.appendChild(msgDiv);
+                }
             }
+            container.scrollTop = container.scrollHeight;
         } catch (error) {
-            console.error('Erro na busca:', error);
+            console.error('Erro:', error);
+        } finally {
+            atualizandoMensagens = false;
         }
-    }, 3000);
-}
-
-// ========== LIMPAR DADOS AO TROCAR DE USUÁRIO ==========
-function limparDadosUsuario() {
-    // Limpar conversas do chat anterior
-    localStorage.removeItem(`ultimo_chat_${matriculaAtual}`);
-    currentChatId = null;
-    conversas = [];
-    
-    if (intervaloBusca) {
-        clearInterval(intervaloBusca);
-        intervaloBusca = null;
     }
-}
 
-// Verificar se o usuário mudou (comparar com login anterior)
-const usuarioSalvo = JSON.parse(localStorage.getItem('usuario') || '{}');
-const usuarioAntigo = localStorage.getItem('ultimo_usuario_logado');
-
-if (usuarioAntigo && usuarioAntigo !== usuario.matricula) {
-    console.log('🔄 Usuário diferente detectado! Limpando cache...');
-    limparDadosUsuario();
-}
-localStorage.setItem('ultimo_usuario_logado', usuario.matricula);
-
-// ========== EVENTOS ==========
-document.addEventListener('DOMContentLoaded', () => {
-    const msgInput = document.getElementById('msg-input');
-    if (msgInput) {
-        msgInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') send();
-        });
+    async function send() {
+        const input = document.getElementById('msg-input');
+        if (!input) return;
+        
+        const texto = input.value.trim();
+        if (!texto || !currentChatId) {
+            if (!currentChatId) {
+                mostrarNotificacao('Inicie uma nova conversa primeiro!', 'info');
+            }
+            return;
+        }
+        
+        // Adicionar mensagem na tela imediatamente
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg sent';
+        msgDiv.innerHTML = `${texto}<span class="msg-time">${formatarHora(new Date().toISOString())}</span>`;
+        document.getElementById('msg-container').appendChild(msgDiv);
+        input.value = '';
+        document.getElementById('msg-container').scrollTop = document.getElementById('msg-container').scrollHeight;
+        
+        // Enviar para o backend
+        await enviarMensagem(currentChatId, 'aluno', texto);
+        
+        // Atualizar última mensagem
+        const conversa = conversas.find(c => c.id === currentChatId);
+        if (conversa) {
+            conversa.ultima_mensagem = texto;
+            conversa.ultima_data = new Date().toISOString();
+            renderizarHistorico();
+        }
     }
-    
-    
 
-    // Inicializar
-    carregarConversas();
-    iniciarBuscaAutomatica();
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+    }
 
-setInterval(() => {
+    function voltarSalvando() {
         if (currentChatId) {
-            recarregarMensagens();
+            localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
         }
-    }, 5000);
-});
-
-document.addEventListener('click', (e) => {
-    const sidebar = document.getElementById('sidebar');
-    const menuBtn = document.querySelector('.menu-btn');
-    if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && !menuBtn?.contains(e.target)) {
-        sidebar.classList.remove('active');
+        window.location.href = 'inicial.html';
     }
-});
 
-window.addEventListener('beforeunload', () => {
-    if (currentChatId) {
-        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+    function mostrarNotificacao(mensagem, tipo = 'info') {
+        const notif = document.createElement('div');
+        notif.style.cssText = `
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            color: white; padding: 12px 24px; border-radius: 50px;
+            font-weight: 600; z-index: 10000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: fadeInOut 2.5s ease forwards;
+        `;
+        notif.innerHTML = `<i class="fas fa-info-circle"></i> ${mensagem}`;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 2500);
     }
-});
 
-// ========== EXPOR FUNÇÕES GLOBAIS ==========
-window.abrirModalNovoChat = abrirModalNovoChat;
-window.fecharModal = fecharModal;
-window.closeIdentityModal = closeIdentityModal;
-window.selectIdentity = selectIdentity;
-window.generateAndShowAnon = generateAndShowAnon;
-window.startChat = startChat;
-window.backToStep1 = backToStep1;
-window.toggleSidebar = toggleSidebar;
-window.carregarConversa = carregarConversa;
-window.send = send;
-window.voltarSalvando = voltarSalvando;
-    
+    // ========== BUSCA AUTOMÁTICA ==========
+    let intervaloBusca = null;
 
-
-
-// ========== PARTÍCULAS (BOLHAS) ==========
-function createBubble() {
-    const container = document.getElementById('particles-container');
-    if (!container) return;
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    const size = Math.random() * 20 + 5;
-    b.style.width = size + 'px';
-    b.style.height = size + 'px';
-    b.style.left = Math.random() * 100 + '%';
-    b.style.animationDuration = (Math.random() * 5 + 8) + 's';
-    container.appendChild(b);
-    setTimeout(() => b.remove(), 10000);
-}
-
-setInterval(createBubble, 1500);
-
-// Função para salvar estado antes de sair (para o botão voltar)
-function salvarEstadoAntesDeSair() {
-    if (currentChatId) {
-        localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+    function iniciarBuscaAutomatica() {
+        if (intervaloBusca) clearInterval(intervaloBusca);
+        
+        intervaloBusca = setInterval(() => {
+            if (currentChatId) {
+                atualizarMensagens();
+            }
+        }, 3000);
     }
-    // Não redireciona aqui, o href da tag <a> já faz isso
-    return true;
-}
 
-// Depois de carregar o usuário
-console.log('🔍 [chat.html] Usuário logado:', { matricula: matriculaAtual, usuarioCompleto: usuario });
+    // ========== LIMPAR DADOS ==========
+    function limparDadosUsuario() {
+        localStorage.removeItem(`ultimo_chat_${matriculaAtual}`);
+        currentChatId = null;
+        conversas = [];
+        if (intervaloBusca) {
+            clearInterval(intervaloBusca);
+            intervaloBusca = null;
+        }
+    }
 
-// Expor a função globalmente
-window.salvarEstadoAntesDeSair = salvarEstadoAntesDeSair;
+    const usuarioAntigo = localStorage.getItem('ultimo_usuario_logado');
+    if (usuarioAntigo && usuarioAntigo !== usuario.matricula) {
+        console.log('🔄 Usuário diferente detectado! Limpando cache...');
+        limparDadosUsuario();
+    }
+    localStorage.setItem('ultimo_usuario_logado', usuario.matricula);
+
+    // ========== EVENTOS ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        const msgInput = document.getElementById('msg-input');
+        if (msgInput) {
+            msgInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') send();
+            });
+        }
+        
+        carregarConversas();
+        iniciarBuscaAutomatica();
+    });
+
+    document.addEventListener('click', (e) => {
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.querySelector('.menu-btn');
+        if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && !menuBtn?.contains(e.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        if (currentChatId) {
+            localStorage.setItem(`ultimo_chat_${matriculaAtual}`, currentChatId);
+        }
+    });
+
+    // ========== EXPOR FUNÇÕES GLOBAIS ==========
+    window.abrirModalNovoChat = abrirModalNovoChat;
+    window.fecharModal = fecharModal;
+    window.closeIdentityModal = closeIdentityModal;
+    window.selectIdentity = selectIdentity;
+    window.generateAndShowAnon = generateAndShowAnon;
+    window.startChat = startChat;
+    window.backToStep1 = backToStep1;
+    window.toggleSidebar = toggleSidebar;
+    window.carregarConversa = carregarConversa;
+    window.send = send;
+    window.voltarSalvando = voltarSalvando;
+    window.salvarEstadoAntesDeSair = voltarSalvando;
+
+    // ========== PARTÍCULAS ==========
+    function createBubble() {
+        const container = document.getElementById('particles-container');
+        if (!container) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const size = Math.random() * 20 + 5;
+        b.style.width = size + 'px';
+        b.style.height = size + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        container.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
 </script>
 
 </body>
