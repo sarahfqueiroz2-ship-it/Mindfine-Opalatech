@@ -349,52 +349,54 @@
         document.getElementById('modalStepAnon').classList.remove('hidden');
     }
 
-    async function startChat() {
-        console.log('Iniciando chat anônimo');
-        if (!finalUserName) {
-            console.error('Nome anônimo não gerado!');
-            return;
-        }
-        
-        currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
-        await criarConversa(currentChatId, finalUserName, true);
-        
-        // RECARREGAR CONVERSAS E ABRIR A NOVA
-        await carregarConversas();
-        
-        // Forçar a abertura da conversa criada
-        const novaConversa = conversas.find(c => c.id === currentChatId);
-        if (novaConversa) {
-            await carregarConversa(currentChatId);
-        }
-        
-        fecharModal();
+async function startChat() {
+    console.log('Iniciando chat anônimo');
+    if (!finalUserName) {
+        console.error('Nome anônimo não gerado!');
+        return;
     }
+    
+    const novoId = 'chat_' + Date.now() + '_' + matriculaAtual;
+    currentChatId = novoId;
+    
+    await criarConversa(novoId, finalUserName, true);
+    
+    // Recarregar conversas
+    await carregarConversas();
+    
+    // Encontrar e carregar a conversa criada
+    const novaConversa = conversas.find(c => c.id === novoId);
+    if (novaConversa) {
+        await carregarConversa(novoId);
+    }
+    
+    fecharModal();
+}
+
 
     function backToStep1() {
         document.getElementById('modalStep1').classList.remove('hidden');
         document.getElementById('modalStepAnon').classList.add('hidden');
     }
 
-    async function criarNovoChat() {
-        console.log('Criando novo chat identificado');
-        isAnonymous = false;
-        finalUserName = matriculaAtual;
-        currentChatId = 'chat_' + Date.now() + '_' + matriculaAtual;
-        
-        await criarConversa(currentChatId, finalUserName, false);
-        
-        // RECARREGAR CONVERSAS E ABRIR A NOVA
-        await carregarConversas();
-        
-        // Forçar a abertura da conversa criada
-        const novaConversa = conversas.find(c => c.id === currentChatId);
-        if (novaConversa) {
-            await carregarConversa(currentChatId);
-        }
-        
-        fecharModal();
+   async function criarNovoChat() {
+    console.log('Criando novo chat identificado');
+    const novoId = 'chat_' + Date.now() + '_' + matriculaAtual;
+    currentChatId = novoId;
+    
+    await criarConversa(novoId, matriculaAtual, false);
+    
+    // Recarregar conversas
+    await carregarConversas();
+    
+    // Encontrar e carregar a conversa criada
+    const novaConversa = conversas.find(c => c.id === novoId);
+    if (novaConversa) {
+        await carregarConversa(novoId);
     }
+    
+    fecharModal();
+}
 
     // ========== UI ==========
 
@@ -445,80 +447,77 @@
         renderizarHistorico();
     }
 
-    async function atualizarMensagens(forcar = false) {
-        if (!currentChatId) return;
+   async function atualizarMensagens(forcar = false) {
+    if (!currentChatId) return;
+    
+    try {
+        const mensagens = await carregarMensagens(currentChatId);
+        const container = document.getElementById('msg-container');
+        if (!container) return;
         
-        try {
-            const mensagens = await carregarMensagens(currentChatId);
-            const container = document.getElementById('msg-container');
-            if (!container) return;
-            
-            // Criar um hash do conteúdo atual para comparar
-            const novoConteudo = JSON.stringify(mensagens);
-            
-            if (!forcar && novoConteudo === ultimoConteudoMensagens) {
-                return; // Não mudou nada, não atualizar
-            }
-            
-            ultimoConteudoMensagens = novoConteudo;
-            
-            container.innerHTML = '';
-            
-            if (!mensagens || mensagens.length === 0) {
-                const time = formatarHora(new Date().toISOString());
+        // Criar um hash do conteúdo atual para comparar
+        const novoConteudo = JSON.stringify(mensagens.map(m => ({ texto: m.texto, remetente: m.remetente })));
+        
+        if (!forcar && novoConteudo === ultimoConteudoMensagens) {
+            return; // Não mudou nada, não atualizar
+        }
+        
+        ultimoConteudoMensagens = novoConteudo;
+        
+        container.innerHTML = '';
+        
+        if (!mensagens || mensagens.length === 0) {
+            // Só adicionar mensagem inicial se NÃO EXISTIR nenhuma mensagem
+            const time = formatarHora(new Date().toISOString());
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg received';
+            msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+            container.appendChild(msgDiv);
+        } else {
+            for (const msg of mensagens) {
+                const isSent = msg.remetente === 'aluno';
                 const msgDiv = document.createElement('div');
-                msgDiv.className = 'msg received';
-                msgDiv.innerHTML = `Olá! Sou a Dra. Ana Paula. Como posso te ajudar? 💙 <span class="msg-time">${time}</span>`;
+                msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
+                msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
                 container.appendChild(msgDiv);
-            } else {
-                for (const msg of mensagens) {
-                    const isSent = msg.remetente === 'aluno';
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
-                    msgDiv.innerHTML = `${msg.texto}<span class="msg-time">${formatarHora(msg.data_hora)}</span>`;
-                    container.appendChild(msgDiv);
-                }
             }
-            container.scrollTop = container.scrollHeight;
-        } catch (error) {
-            console.error('Erro:', error);
         }
+        container.scrollTop = container.scrollHeight;
+    } catch (error) {
+        console.error('Erro:', error);
     }
+}
 
-    async function send() {
-        const input = document.getElementById('msg-input');
-        if (!input) return;
-        
-        const texto = input.value.trim();
-        if (!texto || !currentChatId) {
-            if (!currentChatId) {
-                mostrarNotificacao('Inicie uma nova conversa primeiro!', 'info');
-            }
-            return;
+   
+async function send() {
+    const input = document.getElementById('msg-input');
+    if (!input) return;
+    
+    const texto = input.value.trim();
+    if (!texto || !currentChatId) {
+        if (!currentChatId) {
+            mostrarNotificacao('Inicie uma nova conversa primeiro!', 'info');
         }
-        
-        // Adicionar mensagem na tela imediatamente
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg sent';
-        msgDiv.innerHTML = `${texto}<span class="msg-time">${formatarHora(new Date().toISOString())}</span>`;
-        document.getElementById('msg-container').appendChild(msgDiv);
-        input.value = '';
-        document.getElementById('msg-container').scrollTop = document.getElementById('msg-container').scrollHeight;
-        
-        // Enviar para o backend
-        await enviarMensagem(currentChatId, 'aluno', texto);
-        
-        // Atualizar cache e última mensagem
-        ultimoConteudoMensagens = '';
-        await atualizarMensagens(true);
-        
-        const conversa = conversas.find(c => c.id === currentChatId);
-        if (conversa) {
-            conversa.ultima_mensagem = texto;
-            conversa.ultima_data = new Date().toISOString();
-            renderizarHistorico();
-        }
+        return;
     }
+    
+    // Enviar para o backend PRIMEIRO
+    await enviarMensagem(currentChatId, 'aluno', texto);
+    
+    // Depois recarregar as mensagens (isso vai manter a mensagem da psicóloga)
+    await atualizarMensagens(true);
+    
+    // Limpar input
+    input.value = '';
+    
+    // Atualizar última mensagem na conversa
+    const conversa = conversas.find(c => c.id === currentChatId);
+    if (conversa) {
+        conversa.ultima_mensagem = texto;
+        conversa.ultima_data = new Date().toISOString();
+        renderizarHistorico();
+    }
+}
 
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('active');
