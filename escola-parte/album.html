@@ -281,31 +281,78 @@
     let matriculaAtual = '';
 
     // ========== CARREGAR DADOS DO BACKEND ==========
-    async function carregarDadosAlbum() {
+  async function carregarDadosAlbum() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     matriculaAtual = usuario.matricula || '123456';
     
     try {
-        // Carregar páginas desbloqueadas (SEM CACHE)
-        const respPaginas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`, {
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache' }
-        });
+        // FORÇAR SEM CACHE
+        const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
+        
+        // Carregar páginas desbloqueadas
+        const respPaginas = await fetch(`http://localhost:5001/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`, { headers });
         const dadosPaginas = await respPaginas.json();
         paginasDesbloqueadas = dadosPaginas.paginas_desbloqueadas || 1;
         
-        // Carregar figurinhas desbloqueadas (SEM CACHE)
-        const respFigurinhas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/${matriculaAtual}`, {
-            cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache' }
-        });
+        // Carregar figurinhas desbloqueadas
+        const respFigurinhas = await fetch(`http://localhost:5001/api/figurinhas/${matriculaAtual}`, { headers });
         figurinhasDesbloqueadas = await respFigurinhas.json();
         
         console.log('✅ Álbum carregado:', { paginasDesbloqueadas, figurinhasDesbloqueadas });
         
+        // RECONSTRUIR O LIVRO COM OS DADOS ATUALIZADOS
+        await rebuildBook();
+        
     } catch (error) {
         console.error('❌ Erro ao carregar álbum:', error);
     }
+}
+
+// Função para reconstruir o livro
+async function rebuildBook() {
+    // Limpar o livro existente
+    while (book.firstChild) {
+        book.removeChild(book.firstChild);
+    }
+    allPages = [];
+    
+    // Recriar todas as páginas
+    const cover = document.createElement('div');
+    cover.className = 'page';
+    cover.innerHTML = `
+        <div class="page-face front cover-front">
+            <img src="figurinhas/capa.png" class="cover-img">
+        </div>
+        <div class="page-face back">
+            ${generatePageHTML('capa-back', 0, true)}
+            <div class="page-number">0</div>
+        </div>
+    `;
+    cover.addEventListener('click', () => togglePage(0));
+    book.appendChild(cover);
+    allPages.push(cover);
+
+    const totalContentPages = 10;
+    for (let i = 1; i <= totalContentPages; i++) {
+        const isLocked = !isPaginaDesbloqueada(i);
+        const page = document.createElement('div');
+        page.className = `page ${isLocked ? 'locked' : ''}`;
+        page.innerHTML = `
+            <div class="page-face front">
+                ${generatePageHTML(`page${i}-front`, i, false)}
+                <div class="page-number">${(i * 2) - 1}</div>
+            </div>
+            <div class="page-face back">
+                ${generatePageHTML(`page${i}-back`, i, true)}
+                <div class="page-number">${(i * 2)}</div>
+            </div>
+        `;
+        page.addEventListener('click', () => togglePage(i));
+        book.appendChild(page);
+        allPages.push(page);
+    }
+    updateZIndices();
+    updateCounter();
 }
 
     

@@ -538,7 +538,7 @@ async function desbloquearPacoteFigurinhas() {
     
     for (const fig of figurinhasDaPaginaInicial) {
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/desbloquear`, {
+            const response = await fetch(`http://localhost:5001/api/figurinhas/desbloquear`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -553,19 +553,21 @@ async function desbloquearPacoteFigurinhas() {
             if (result.sucesso) {
                 desbloqueadas++;
                 console.log(`✅ Figurinha ${fig.slot} desbloqueada!`);
-            } else if (result.ja_desbloqueada) {
-                console.log(`📌 Figurinha ${fig.slot} já estava desbloqueada`);
             }
         } catch (error) {
             console.error('Erro ao desbloquear figurinha:', error);
         }
     }
     
-    // LIMPAR CACHE DO ÁLBUM NO LOCALSTORAGE PARA FORCAR RECARREGAR
+    // Limpar cache do álbum no localStorage
     localStorage.removeItem(`album_cache_${matriculaAtual}`);
+    
+    // Mostrar resultado
+    showNotif('📦 Figurinhas!', `Você ganhou ${desbloqueadas} figurinhas da Ilha Inicial!`, 'success');
     
     return { total: desbloqueadas, pagina: 'Porto Inicial' };
 }
+
     function init() {
         createMagic();
         buildMap();
