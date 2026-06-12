@@ -1177,6 +1177,54 @@ app.get('/api/aluno/:matricula', async (req, res) => {
     }
 });
 
+// ROTA PARA VER TODOS OS USUÁRIOS (no navegador)
+app.get('/api/admin/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios ORDER BY matricula');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ROTA PARA ADICIONAR/EDITAR USUÁRIO
+app.get('/api/admin/salvar-usuario', async (req, res) => {
+    const { matricula, nome, email, senha } = req.query;
+    
+    if (!matricula || !nome) {
+        return res.json({ erro: 'Faltou matricula ou nome. Exemplo: /api/admin/salvar-usuario?matricula=123&nome=João' });
+    }
+    
+    try {
+        await pool.query(
+            `INSERT INTO usuarios (matricula, nome, email, senha, tipo, nivel, xp, moedas, skin_atual, fundo_atual) 
+             VALUES ($1, $2, $3, $4, 'estudante', 1, 0, 0, 'pandas/skin.png', 'fundos/fundo-a.png')
+             ON CONFLICT (matricula) DO UPDATE SET nome = EXCLUDED.nome, email = EXCLUDED.email`,
+            [matricula, nome, email || `${matricula}@escola.com`, senha || '123456']
+        );
+        
+        res.json({ sucesso: true, mensagem: `Usuário ${nome} (${matricula}) salvo!` });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
+// ROTA PARA DELETAR USUÁRIO
+app.get('/api/admin/deletar-usuario', async (req, res) => {
+    const { matricula } = req.query;
+    
+    if (!matricula) {
+        return res.json({ erro: 'Faltou matricula. Exemplo: /api/admin/deletar-usuario?matricula=123' });
+    }
+    
+    try {
+        await pool.query('DELETE FROM usuarios WHERE matricula = $1', [matricula]);
+        res.json({ sucesso: true, mensagem: `Usuário ${matricula} deletado!` });
+    } catch (err) {
+        res.status(500).json({ erro: err.message });
+    }
+});
+
 // ========== INICIAR SERVIDOR ==========
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
