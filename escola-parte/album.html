@@ -281,27 +281,26 @@
     let matriculaAtual = '';
 
     // ========== CARREGAR DADOS DO BACKEND ==========
- async function carregarDadosAlbum() {
+async function carregarDadosAlbum() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     matriculaAtual = usuario.matricula || '123456';
     
-    try {
-        const headers = { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' };
-        
-        // USAR URL DO RENDER
-        const respPaginas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`, { headers });
+    try {        
+        // Carregar páginas desbloqueadas (SEM HEADERS)
+        const respPaginas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`);
         const dadosPaginas = await respPaginas.json();
         paginasDesbloqueadas = dadosPaginas.paginas_desbloqueadas || 1;
         
-        const respFigurinhas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/${matriculaAtual}`, { headers });
+        // Carregar figurinhas desbloqueadas (SEM HEADERS)
+        const respFigurinhas = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/${matriculaAtual}`);
         figurinhasDesbloqueadas = await respFigurinhas.json();
         
-        console.log('✅ Álbum carregado:', figurinhasDesbloqueadas);
+        console.log('✅ Álbum carregado:', { paginasDesbloqueadas, figurinhasDesbloqueadas });
         
         await rebuildBook();
         
     } catch (error) {
-        console.error('❌ Erro:', error);
+        console.error('❌ Erro ao carregar álbum:', error);
     }
 }
 
