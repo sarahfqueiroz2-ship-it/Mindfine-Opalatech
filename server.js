@@ -1269,16 +1269,23 @@ app.get('/api/admin/usuarios', async (req, res) => {
         res.status(500).json({ erro: err.message });
     }
 });
+
 app.get('/api/criar-aluno', async (req, res) => {
     const { matricula, nome, senha } = req.query;
     
     try {
+        // 1. Primeiro, adiciona a coluna senha se não existir
+        await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS senha TEXT DEFAULT '123456'`);
+        
+        // 2. Depois, insere o aluno
         await pool.query(
-            `INSERT INTO usuarios (matricula, nome, senha, email, tipo) 
-             VALUES ($1, $2, $3, $4, 'estudante')`,
-            [matricula, nome, senha || '123', `${matricula}@email.com`]
+            `INSERT INTO usuarios (matricula, nome, senha, email, tipo, nivel, xp, moedas) 
+             VALUES ($1, $2, $3, $4, 'estudante', 1, 0, 0)
+             ON CONFLICT (matricula) DO UPDATE SET nome = $2, senha = $3`,
+            [matricula, nome, senha || '123456', `${matricula}@email.com`]
         );
-        res.send(`✅ Aluno ${nome} criado com sucesso!`);
+        
+        res.send(`✅ Aluno ${nome} criado/atualizado com sucesso!`);
     } catch (err) {
         res.send(`❌ Erro: ${err.message}`);
     }
