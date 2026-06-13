@@ -817,7 +817,6 @@ app.get('/api/escola/estatisticas', async (req, res) => {
 });
 
 // ========== ROTAS DE RELATÓRIOS ==========
-
 app.get('/api/relatorio/emocoes', async (req, res) => {
     const { curso, ano, periodo } = req.query;
     const dias = periodo === 'semana' ? 7 : periodo === 'mes' ? 30 : periodo === 'trimestre' ? 90 : 365;
@@ -826,7 +825,7 @@ app.get('/api/relatorio/emocoes', async (req, res) => {
         SELECT e.emocao, COUNT(*) as total 
         FROM emocoes e
         JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= CURRENT_DATE - INTERVAL '${dias} days'
+        WHERE TO_DATE(e.data, 'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '${dias} days'
     `;
     let params = [];
     let idx = 1;
@@ -880,7 +879,7 @@ app.get('/api/relatorio/emocoes', async (req, res) => {
         
         res.json(emocoes);
     } catch (err) {
-        console.error('Erro:', err);
+        console.error('Erro em /api/relatorio/emocoes:', err);
         res.status(500).json({ erro: err.message });
     }
 });
@@ -1033,7 +1032,6 @@ app.get('/api/relatorio/historico', async (req, res) => {
         res.status(500).json({ erro: err.message });
     }
 });
-
 // ========== ROTAS DE ALERTAS ==========
 
 app.get('/api/alertas', async (req, res) => {
