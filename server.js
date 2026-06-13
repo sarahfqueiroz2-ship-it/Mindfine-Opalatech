@@ -901,8 +901,9 @@ app.get('/api/relatorio/cursos', async (req, res) => {
                 END as curso,
                 COUNT(DISTINCT matricula) as alunos,
                 ROUND(AVG(nivel), 1) as nivel_medio,
-                SUM(CASE WHEN nivel < 5 THEN 1 ELSE 0 END) as alertas
+                COUNT(DISTINCT CASE WHEN nivel <= 2 THEN matricula END) as alertas
             FROM usuarios
+            WHERE tipo = 'estudante'
             GROUP BY curso
         `);
         
@@ -914,12 +915,12 @@ app.get('/api/relatorio/cursos', async (req, res) => {
                 turmas: 3,
                 alunos: parseInt(row.alunos),
                 score: parseFloat(row.nivel_medio).toFixed(1),
-                alertas: parseInt(row.alertas)
+                alertas: parseInt(row.alertas) || 0
             }));
         
         res.json(resultado);
     } catch (err) {
-        console.error('Erro:', err);
+        console.error('Erro em /api/relatorio/cursos:', err);
         res.status(500).json({ erro: err.message });
     }
 });
@@ -1292,6 +1293,52 @@ app.get('/api/criar-aluno', async (req, res) => {
         res.send(`✅ Aluno ${nome} criado/atualizado com sucesso!`);
     } catch (err) {
         res.send(`❌ Erro: ${err.message}`);
+    }
+});
+
+// ========== ROTA DE KPIS GERAIS ==========
+app.get('/api/relatorio/kpis', async (req, res) => {
+    const { curso, ano } = req.query;
+    
+    try {
+        let query = `
+            SELECT 
+                COUNT(DISTINCT u.matricula) as total_alunos,
+                COALESCE(AVG(u.nivel), 0) as nivel_medio,
+                COALESCE(SUM(u.moedas), 0) as total_moedas,
+                COUNT(DISTINCT e.id) as total_emocoes
+            FROM usuarios u
+            LEFT JOIN emocoes e ON u.matricula = e.matricula
+            WHERE u.tipo = 'estudante'
+        `;
+        let params = [];
+        let idx = 1;
+        
+        if (curso && curso !== 'todos' && curso !== 'all') {
+            const cursoMap = { 'inf': 'INF', 'adm': 'ADM', 'ma': 'AMB' };
+            const cursoCode = cursoMap[curso] || curso.toUpperCase();
+            query += ` AND u.matricula LIKE $${idx}`;
+            params.push(`%${cursoCode}%`);
+            idx++;
+        }
+        if (ano && ano !== 'todos' && ano !== 'all') {
+            query += ` AND SUBSTRING(u.matricula, 5, 1) = $${idx}`;
+            params.push(ano);
+            idx++;
+        }
+        
+        const result = await pool.query(query, params);
+        const data = result.rows[0];
+        
+        res.json({
+            total_alunos: parseInt(data.total_alunos) || 0,
+            nivel_medio: parseFloat(data.nivel_medio) || 0,
+            total_moedas: parseInt(data.total_moedas) || 0,
+            total_emocoes: parseInt(data.total_emocoes) || 0
+        });
+    } catch (err) {
+        console.error('Erro em /api/relatorio/kpis:', err);
+        res.status(500).json({ erro: err.message });
     }
 });
 
