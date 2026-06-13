@@ -940,7 +940,7 @@
         
         const novoAlerta = {
             id: Date.now().toString(),
-            titulo, turma, sev: severidade,
+            titulo, turma, severidade: severidade,
             descricao: desc || 'Alerta criado manualmente',
             resolvido: false,
             data_criacao: new Date().toISOString()
