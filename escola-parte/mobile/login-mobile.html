@@ -3,172 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Mindfine - Login Mobile</title>
+    <title>Mindfine - Login</title>
     <style>
+        :root {
+            --azul-primario: #29b6f6;
+            --azul-claro: #4fc3f7;
+            --azul-escuro: #0d47a1;
+            --azul-neon: #00d4ff;
+            --bg-page: #f0faff;
+            --glass: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(41, 182, 246, 0.35);
+            --texto-escuro: #0a192f;
+            --texto-suave: #546e7a;
+            --sombra: 0 10px 25px rgba(41, 182, 246, 0.25);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
-
+        
         body {
-            font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #29b6f6 0%, #0d47a1 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            background-color: #f0faff;
         }
 
-        .login-card {
-            background: white;
-            border-radius: 32px;
-            padding: 32px 24px;
+        .mobile-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .top-side {
+            background-image: url('../fundos/fundo-a.png');
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bubbles {
+            position: absolute;
+            bottom: -20px;
             width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            height: 100%;
+            pointer-events: none;
         }
 
-        .logo {
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            backdrop-filter: blur(3px);
+            animation: rise 10s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            15% { opacity: 0.4; }
+            100% { transform: translateY(-1200px) scale(1.3); opacity: 0; }
+        }
+
+        .mascot-container {
+            width: 180px;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.1));
+            margin-bottom: 16px;
+        }
+
+        .brand-text {
             text-align: center;
-            margin-bottom: 32px;
+            z-index: 2;
         }
 
-        .logo-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 16px;
-            background: linear-gradient(135deg, #29b6f6, #0d47a1);
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-icon img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-        }
-
-        .logo h1 {
+        .brand-text h2 {
             font-size: 28px;
-            color: #29b6f6;
-            margin-bottom: 4px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px var(--azul-neon), 0 0 20px var(--azul-neon);
         }
 
-        .logo p {
-            font-size: 13px;
-            color: #666;
+        .brand-text p {
+            font-size: 14px;
+            opacity: 0.95;
+            letter-spacing: 0.8px;
+            font-weight: 400;
+            text-shadow: 0 0 5px var(--azul-neon);
+        }
+
+        .bottom-side {
+            background-color: #ffffff;
+            padding: 30px 24px;
+            border-radius: 30px 30px 0 0;
+            margin-top: -20px;
+            z-index: 3;
+            flex: 1;
+        }
+
+        .login-container {
+            width: 100%;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #29b6f6;
+            text-align: center;
+            margin-bottom: 24px;
         }
 
         .role-selector {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 28px;
             background: #f1f3f4;
             padding: 6px;
-            border-radius: 16px;
+            border-radius: 15px;
         }
 
         .role-btn {
             flex: 1;
             padding: 12px 8px;
             border: none;
-            border-radius: 12px;
-            background: transparent;
-            font-weight: 600;
-            font-size: 14px;
+            border-radius: 11px;
             cursor: pointer;
-            transition: 0.2s;
+            font-weight: 600;
+            color: #546e7a;
+            background: transparent;
+            transition: 0.3s;
+            font-size: 14px;
         }
 
         .role-btn.active {
-            background: #29b6f6;
-            color: white;
-            box-shadow: 0 2px 8px rgba(41,182,246,0.3);
+            background: white;
+            color: #29b6f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .input-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
-        .input-group label {
+        .input-label {
             display: block;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: #37474f;
             margin-bottom: 8px;
         }
 
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper input {
+        .input-field {
             width: 100%;
-            padding: 14px 48px 14px 16px;
-            border: 2px solid #e0e0e0;
+            padding: 14px 16px;
+            border: 2px solid #edf2f4;
             border-radius: 14px;
             font-size: 16px;
-            background: white;
-            transition: 0.2s;
+            background: #fafafa;
+            transition: 0.3s;
         }
 
-        .input-wrapper input:focus {
+        .input-field:focus {
             outline: none;
-            border-color: #29b6f6;
+            border-color: #4fc3f7;
+            background: white;
         }
 
         .password-toggle {
             position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 16px;
+            top: 42px;
             background: none;
             border: none;
             cursor: pointer;
-            padding: 8px;
-        }
-
-        .password-toggle svg {
-            width: 22px;
-            height: 22px;
             color: #90a4ae;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
         }
 
         .login-btn {
+            display: block;
             width: 100%;
             padding: 16px;
-            background: #29b6f6;
+            background-color: #29b6f6;
             border: none;
             border-radius: 14px;
             color: white;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
-            margin-top: 8px;
+            transition: 0.3s;
+            margin-top: 12px;
         }
 
         .login-btn:active {
             transform: scale(0.98);
-            background: #0288d1;
+            background-color: #0288d1;
         }
 
         .login-btn:disabled {
-            background: #ccc;
+            background-color: #ccc;
             cursor: not-allowed;
         }
 
         .mensagem {
             padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            margin-bottom: 16px;
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             display: none;
         }
@@ -176,24 +231,20 @@
         .mensagem.erro {
             background: #ffebee;
             color: #c62828;
+            border: 1px solid #ef5350;
         }
 
         .mensagem.sucesso {
             background: #e8f5e9;
             color: #2e7d32;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 20px;
+            border: 1px solid #66bb6a;
         }
 
         .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #e0e0e0;
-            border-top-color: #29b6f6;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto;
@@ -202,115 +253,110 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .footer p {
-            font-size: 11px;
-            color: #999;
-        }
     </style>
 </head>
 <body>
-
-    <div class="login-card">
-        <div class="logo">
-            <div class="logo-icon">
-                <img src="../pandas/skin.png" alt="Mindfine">
+    <div class="mobile-container">
+        <div class="top-side">
+            <div class="bubbles" id="bubbleContainer"></div>
+            <img src="../pandas/skin.png" alt="Mascote" class="mascot-container" id="pandaImg">
+            <div class="brand-text">
+                <h2>Mindfine</h2>
+                <p>Cuidar da mente é construir o futuro!</p>
             </div>
-            <h1>Mindfine</h1>
-            <p>Cuidar da mente é construir o futuro!</p>
         </div>
 
-        <div id="mensagem" class="mensagem"></div>
+        <div class="bottom-side">
+            <div class="login-container">
+                <h1 class="app-name">Bem-vindo(a)!</h1>
 
-        <div class="role-selector">
-            <button class="role-btn active" data-role="estudante"> Estudante</button>
-            <button class="role-btn" data-role="gestao"> Gestão</button>
-            <button class="role-btn" data-role="psicologia"> Psicologia</button>
-        </div>
+                <div id="mensagem" class="mensagem"></div>
 
-        <form id="loginForm">
-            <div class="input-group">
-                <label id="userLabel">Matrícula / Email</label>
-                <div class="input-wrapper">
-                    <input type="text" id="identificador" placeholder="Digite sua matrícula ou email" required>
+                <div class="role-selector">
+                    <button class="role-btn active" onclick="setRole('estudante', this)">Estudante</button>
+                    <button class="role-btn" onclick="setRole('gestao', this)">Gestão</button>
+                    <button class="role-btn" onclick="setRole('psicologia', this)">Psicologia</button>
                 </div>
+
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label class="input-label" id="userLabel">Matrícula / Email</label>
+                        <input type="text" id="identificador" class="input-field" placeholder="Digite seu acesso" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Senha</label>
+                        <input type="password" id="passwordField" class="input-field" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" id="btnLogin">Entrar na conta</button>
+                </form>
             </div>
-
-            <div class="input-group">
-                <label>Senha</label>
-                <div class="input-wrapper">
-                    <input type="password" id="senha" placeholder="Digite sua senha" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" class="login-btn" id="btnLogin">Entrar</button>
-        </form>
-
-        <div class="footer">
-            <p>Mindfine © 2024 - Bem-estar escolar</p>
         </div>
     </div>
 
     <script>
-        let tipoSelecionado = 'estudante';
+        let tipoUsuarioSelecionado = 'estudante';
 
-        // Gerenciar papel selecionado
-        document.querySelectorAll('.role-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                tipoSelecionado = btn.dataset.role;
-                
-                const label = document.getElementById('userLabel');
-                if (tipoSelecionado === 'estudante') label.textContent = 'Matrícula / Email';
-                else if (tipoSelecionado === 'gestao') label.textContent = 'ID de Gestor';
-                else label.textContent = 'CRP ou Email Profissional';
-            });
-        });
+        const bubbleContainer = document.getElementById('bubbleContainer');
+        for (let i = 0; i < 15; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 25 + 8 + 'px';
+            bubble.style.width = size;
+            bubble.style.height = size;
+            bubble.style.left = Math.random() * 100 + '%';
+            bubble.style.animationDelay = Math.random() * 10 + 's';
+            bubble.style.animationDuration = Math.random() * 6 + 9 + 's';
+            bubbleContainer.appendChild(bubble);
+        }
 
-        // Toggle senha
         function togglePassword() {
-            const senhaInput = document.getElementById('senha');
-            const type = senhaInput.type === 'password' ? 'text' : 'password';
-            senhaInput.type = type;
+            const passwordField = document.getElementById('passwordField');
+            const pandaImg = document.getElementById('pandaImg');
+            
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                pandaImg.src = "../pandas/panda-curioso.png";
+            } else {
+                passwordField.type = "password";
+                pandaImg.src = "../pandas/skin.png";
+            }
+        }
+
+        function setRole(role, element) {
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            tipoUsuarioSelecionado = role;
+            
+            const label = document.getElementById('userLabel');
+            if(role === 'estudante') label.innerText = "Matrícula / Email";
+            else if(role === 'gestao') label.innerText = "ID de Gestor";
+            else label.innerText = "CRP ou Email Profissional";
         }
 
         function mostrarMensagem(texto, tipo) {
-            const msgDiv = document.getElementById('mensagem');
-            msgDiv.textContent = texto;
-            msgDiv.className = `mensagem ${tipo}`;
-            msgDiv.style.display = 'block';
+            const mensagem = document.getElementById('mensagem');
+            mensagem.textContent = texto;
+            mensagem.className = `mensagem ${tipo}`;
+            mensagem.style.display = 'block';
             setTimeout(() => {
-                msgDiv.style.display = 'none';
-            }, 4000);
+                mensagem.style.display = 'none';
+            }, 5000);
         }
 
-        // Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const btnLogin = document.getElementById('btnLogin');
-            const identificador = document.getElementById('identificador').value.trim();
-            const senha = document.getElementById('senha').value;
-            
-            if (!identificador || !senha) {
-                mostrarMensagem('Preencha todos os campos!', 'erro');
-                return;
-            }
+            const identificador = document.getElementById('identificador').value;
+            const senha = document.getElementById('passwordField').value;
             
             btnLogin.disabled = true;
             btnLogin.innerHTML = '<div class="spinner"></div>';
@@ -320,15 +366,17 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tipo_usuario: tipoSelecionado,
+                        tipo_usuario: tipoUsuarioSelecionado,
                         identificador: identificador,
                         senha: senha
                     })
                 });
-                
+
                 const dados = await resposta.json();
-                
+
                 if (dados.sucesso) {
+                    mostrarMensagem('Login realizado com sucesso!', 'sucesso');
+                    
                     localStorage.setItem('usuario', JSON.stringify({
                         nome: dados.nome,
                         email: dados.email,
@@ -336,11 +384,9 @@
                         tipo: dados.tipo
                     }));
                     
-                    mostrarMensagem('Login realizado com sucesso!', 'sucesso');
-                    
                     let paginaDestino = '../inicial.html';
-                    if (tipoSelecionado === 'gestao') paginaDestino = '../inicio-escola.html';
-                    else if (tipoSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa.html';
+                    if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola.html';
+                    else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa.html';
                     
                     setTimeout(() => {
                         window.location.href = paginaDestino;
@@ -350,10 +396,10 @@
                 }
             } catch (erro) {
                 console.error('Erro:', erro);
-                mostrarMensagem('Erro de conexão com o servidor!', 'erro');
+                mostrarMensagem('Erro ao conectar com o servidor!', 'erro');
             } finally {
                 btnLogin.disabled = false;
-                btnLogin.innerHTML = 'Entrar';
+                btnLogin.innerHTML = 'Entrar na conta';
             }
         });
     </script>
