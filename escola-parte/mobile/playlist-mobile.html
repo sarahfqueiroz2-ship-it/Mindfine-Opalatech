@@ -429,10 +429,10 @@
 </div>
 
 <div class="bottom-nav">
-    <a href="inicial-mobile.html"><i class="fas fa-home"></i><span>Início</span></a>
-    <a href="diario-mobile.html"><i class="fas fa-book"></i><span>Diário</span></a>
+    <a href="inicial-mobile.html"><i class="fas fa-home"></i><span>InÃ­cio</span></a>
+    <a href="diario-mobile.html"><i class="fas fa-book"></i><span>DiÃ¡rio</span></a>
     <a href="chat-com-psicologa-mobile.html"><i class="fas fa-comments"></i><span>Apoio</span></a>
-    <a href="pagina-de-respiracao-mobile.html"><i class="fas fa-wind"></i><span>Respiração</span></a>
+    <a href="pagina-de-respiracao-mobile.html"><i class="fas fa-wind"></i><span>RespiraÃ§Ã£o</span></a>
     <a href="playlist-mobile.html" class="active"><i class="fas fa-music"></i><span>Playlist</span></a>
 </div>
 
@@ -443,7 +443,7 @@
         <div class="disk-container" id="disk">
             <img src="" class="disk-img" id="player-img">
         </div>
-        <div class="player-title" id="player-title">Selecione uma música</div>
+        <div class="player-title" id="player-title">Selecione uma mÃºsica</div>
         <div class="player-artist" id="player-artist">Mindfine</div>
         <div class="player-controls">
             <button class="btn-ctrl" onclick="prevTrack()"><i class="fas fa-backward-step"></i></button>
@@ -454,9 +454,20 @@
     </div>
 </div>
 
-<div class="toast" id="toast">✅ Mensagem</div>
+<div class="toast" id="toast">â Mensagem</div>
 
 <script>
+
+    // DEBUG: Verificar se está redirecionando
+console.log('Iniciando playlist...');
+const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+console.log('Usuário:', usuario);
+if (!usuario || !usuario.matricula) {
+    console.log('Usuário não encontrado, redirecionando...');
+    // window.location.href = 'login-mobile.html';  // Comente para testar
+} else {
+    console.log('Usuário OK, matrícula:', usuario.matricula);
+}
     let matriculaAtual = '';
     let favoritos = [];
     let currentTrackIndex = 0;
@@ -465,7 +476,7 @@
         const musicas = [
         { id: 0, title: "Chuva Suave", cat: "natureza", img: "https://picsum.photos/200/150?random=1", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", artista: "Natureza" },
         { id: 1, title: "Chuva Musical", cat: "natureza", img: "https://picsum.photos/200/150?random=2", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", artista: "Natureza" },
-        { id: 2, title: "Canto dos p�ssaros", cat: "natureza", img: "https://picsum.photos/200/150?random=3", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", artista: "Natureza" },
+        { id: 2, title: "Canto dos pássaros", cat: "natureza", img: "https://picsum.photos/200/150?random=3", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", artista: "Natureza" },
         { id: 3, title: "Vento suave", cat: "natureza", img: "https://picsum.photos/200/150?random=4", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", artista: "Natureza" },
         { id: 4, title: "Noite de Estudo", cat: "lofi", img: "https://picsum.photos/200/150?random=5", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", artista: "Lo-Fi" },
         { id: 5, title: "Vibe Relax", cat: "lofi", img: "https://picsum.photos/200/150?random=6", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", artista: "Lo-Fi" },
@@ -479,12 +490,12 @@
     // Toast
     function showToast(msg, isError = false) {
         const toast = document.getElementById('toast');
-        toast.textContent = (isError ? '❌ ' : '✅ ') + msg;
+        toast.textContent = (isError ? 'â ' : 'â ') + msg;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Partículas
+    // PartÃ­culas
     function createBubble() {
         const c = document.getElementById('particles-container');
         if (!c) return;
@@ -592,7 +603,7 @@
         document.getElementById('lista-foco').innerHTML = musicas.filter(m => m.cat === 'foco').map(m => createCard(m)).join('');
         
         const favMusic = musicas.filter(m => favoritos.includes(m.id));
-        document.getElementById('lista-favoritas').innerHTML = favMusic.length ? favMusic.map(m => createCard(m)).join('') : '<div class="empty-msg">Nenhuma música favorita ainda</div>';
+        document.getElementById('lista-favoritas').innerHTML = favMusic.length ? favMusic.map(m => createCard(m)).join('') : '<div class="empty-msg">Nenhuma mÃºsica favorita ainda</div>';
     }
 
     function switchTab(tabId, btn) {
