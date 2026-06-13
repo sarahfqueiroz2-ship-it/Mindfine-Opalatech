@@ -214,7 +214,7 @@ app.post('/api/login', async (req, res) => {
     
     try {
         // Buscar usuário no banco
-        let query = 'SELECT * FROM usuarios WHERE matricula = $1 OR email = $1';
+        let query = 'SELECT * FROM usuarios WHERE LOWER(matricula) = LOWER($1) OR LOWER(email) = LOWER($1)';
         let result = await pool.query(query, [identificador]);
         
         if (result.rows.length === 0) {
