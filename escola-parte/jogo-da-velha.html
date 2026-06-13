@@ -201,7 +201,44 @@
             .diary-title h2 { font-size: 0.8rem; }
         }
 
-    </style>
+    
+/* ========== RESPONSIVO PARA CELULAR ========== */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        width: 260px;
+    }
+    .sidebar.open { left: 0; }
+    .menu-toggle { display: flex !important; position: fixed; top: 15px; left: 15px; z-index: 1001; background: white; border: none; border-radius: 12px; width: 44px; height: 44px; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; }
+    .main-content { margin-left: 0 !important; padding: 70px 16px 20px !important; }
+    .page-header { flex-direction: column; text-align: center; padding: 20px; }
+    .header-left h1 { font-size: 22px; }
+    .kpi-strip, .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
+    .kpi-card, .stat-card { padding: 15px !important; }
+    .kpi-value, .stat-value { font-size: 22px !important; }
+    .classes-grid, .main-grid { grid-template-columns: 1fr !important; }
+    .toolbar, .filters-bar { flex-direction: column; align-items: stretch; }
+    .search-box { width: 100%; }
+    .filter-pill, .filter-chip { width: 100%; text-align: center; }
+    .alert-card-inner { flex-direction: column; }
+    .alert-left { flex-direction: row; justify-content: space-between; width: 100%; }
+    .alert-time-col { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .kanban-board { grid-template-columns: 1fr !important; gap: 20px; }
+    .modal { width: 95%; margin: 20px auto; padding: 20px; }
+    .heatmap-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .curso-table { font-size: 12px; }
+    .curso-table th, .curso-table td { padding: 8px 4px; }
+}
+@media (max-width: 480px) {
+    .kpi-strip, .stats-grid { grid-template-columns: 1fr !important; }
+    .page-header { padding: 15px; }
+    .page-title { font-size: 18px; }
+    .kpi-value, .stat-value { font-size: 18px !important; }
+}
+</style>
 </head>
 <body>
 
