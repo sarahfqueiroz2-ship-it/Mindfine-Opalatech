@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Mindfine - Início Mobile</title>
+    <title>Mindfine - Início</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,7 +11,6 @@
             --azul-bright: #32B5F1;
             --azul-escuro: #0277bd;
             --neon-border: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
-            --glass: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -27,9 +26,9 @@
             min-height: 100vh;
             font-family: 'Montserrat', sans-serif;
             background: #000;
+            overflow-x: hidden;
         }
 
-        /* Fundo */
         .background-layer {
             position: fixed;
             width: 115%;
@@ -42,70 +41,82 @@
             top: -7.5%;
         }
 
-        /* Header Mobile */
-        .mobile-header {
-            position: relative;
-            z-index: 100;
-            padding: 16px;
+        .smoke-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(to top, rgba(255,255,255,0.4), transparent);
+            z-index: 2;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 100;
             background: rgba(0,0,0,0.3);
         }
 
-        .logo {
+        .sidebar-logo-text {
             font-size: 20px;
             font-weight: 800;
             color: white;
-            text-shadow: 0 0 10px rgba(50,181,241,0.8);
+            text-shadow: 0 0 10px rgba(50, 181, 241, 0.8);
         }
 
-        .stats-pill {
-            background: white;
+        .emergency-btn {
+            background: #ff4d4d;
+            color: white;
+            border: 2px solid white;
             padding: 6px 12px;
-            border-radius: 30px;
-            display: flex;
-            gap: 12px;
+            border-radius: 50px;
             font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .emergency-btn i {
             font-size: 12px;
-            color: var(--azul-bright);
         }
 
-        .stats-pill img {
-            width: 16px;
-            vertical-align: middle;
-        }
-
-        /* Conteúdo principal */
-        .main-content {
-            position: relative;
-            z-index: 10;
-            padding: 20px 16px 80px;
-            min-height: 100vh;
+        .header-stats {
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 4px;
         }
 
-        /* Panda central */
-        .panda-area {
+        .pill-stats {
+            background: white;
+            padding: 4px 12px;
+            border-radius: 50px;
             display: flex;
-            justify-content: center;
-            margin: 20px 0;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 11px;
+            color: var(--azul-bright);
         }
 
-        #panda-image {
-            width: 220px;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-            transition: transform 0.3s;
+        .pill-stats img {
+            width: 14px;
         }
 
-        /* Barra de XP */
         .xp-container {
-            width: 80%;
-            max-width: 280px;
-            margin: 10px auto;
-            height: 8px;
+            width: 100px;
+            height: 5px;
             background: rgba(255,255,255,0.3);
             border-radius: 10px;
             border: 1px solid white;
@@ -116,193 +127,121 @@
             width: 60%;
             height: 100%;
             background: var(--azul-bright);
-            box-shadow: 0 0 10px white;
-            transition: width 0.5s ease;
         }
 
-        /* Botões de ação rápidos (grid) */
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        /* Botões laterais */
+        .quick-access {
+            position: fixed;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            margin: 24px 0;
-            width: 100%;
+            z-index: 100;
         }
 
-        .action-btn {
+        .side-btn {
             background: white;
-            border: none;
-            border-radius: 20px;
-            padding: 12px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            font-weight: 700;
-            font-size: 11px;
-            color: var(--azul-escuro);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-
-        .action-btn:active {
-            transform: scale(0.96);
-        }
-
-        .action-btn i {
-            font-size: 20px;
             color: var(--azul-bright);
-        }
-
-        /* Navegação inferior */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 16px;
-            border-radius: 30px 30px 0 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 200;
-        }
-
-        .bottom-nav a {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #64748b;
-            font-size: 10px;
-            font-weight: 600;
-            gap: 4px;
-        }
-
-        .bottom-nav a i {
-            font-size: 20px;
-        }
-
-        .bottom-nav a.active {
-            color: var(--azul-bright);
-        }
-
-        /* Modal de emoção (sem emoji, só texto) */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
+            border: 2px solid white;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            visibility: hidden;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        .modal-overlay.open {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 28px;
-            padding: 28px 20px;
-            width: 90%;
-            max-width: 340px;
-            text-align: center;
-        }
-
-        .modal-content h3 {
-            color: var(--azul-escuro);
-            margin-bottom: 8px;
-        }
-
-        .emotion-options {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin: 20px 0;
-        }
-
-        .emotion-btn {
-            background: #f0faff;
-            border: 2px solid transparent;
-            border-radius: 20px;
-            padding: 12px 6px;
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--azul-escuro);
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 18px;
         }
 
-        .emotion-btn.selected {
-            border-color: var(--azul-bright);
-            background: white;
-            color: var(--azul-bright);
-        }
-
-        .btn-modal {
-            background: var(--azul-bright);
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 14px;
+        /* Panda central */
+        .game-world {
+            position: relative;
             width: 100%;
-            font-weight: 700;
-            font-size: 16px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .panda-glow {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(50, 181, 241, 0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        #panda-container {
+            position: relative;
+            width: 200px;
             cursor: pointer;
         }
 
-        .btn-modal:disabled {
-            background: #ccc;
+        #panda-image {
+            width: 100%;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
         }
 
-        /* Sidebar (menu lateral) */
+        /* Navegação inferior */
+        .nav-pill {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            gap: 24px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: var(--azul-bright);
+            font-weight: 800;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .nav-item i {
+            font-size: 16px;
+        }
+
+        /* Sidebars */
         .sidebar {
             position: fixed;
             top: 0;
             left: -280px;
             width: 280px;
             height: 100vh;
-            background: rgba(255,255,255,0.98);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(15px);
-            z-index: 300;
-            padding: 70px 20px 20px;
+            z-index: 200;
+            padding: 80px 20px 20px;
             transition: left 0.3s ease;
-            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
             overflow-y: auto;
         }
 
-        .sidebar.open {
+        .sidebar.active {
             left: 0;
         }
 
-        .menu-toggle {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 301;
-            background: var(--azul-bright);
-            border: none;
-            border-radius: 12px;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        .sidebar-right {
+            left: auto;
+            right: -280px;
+        }
+
+        .sidebar-right.active {
+            right: 0;
+            left: auto;
         }
 
         .menu-item {
@@ -311,12 +250,12 @@
             gap: 12px;
             background: white;
             padding: 14px 16px;
-            border-radius: 16px;
+            border-radius: 15px;
             margin-bottom: 12px;
             text-decoration: none;
             color: var(--azul-escuro);
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px solid #eee;
             cursor: pointer;
         }
@@ -326,33 +265,153 @@
             color: var(--azul-bright);
         }
 
-        .close-sidebar {
-            text-align: right;
-            margin-bottom: 20px;
-            font-size: 24px;
+        .back-btn {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: var(--azul-bright);
+            font-weight: 800;
+            font-size: 12px;
             cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        #universe-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .universe-card {
+            height: 80px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .universe-card.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .universe-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .universe-label {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 4px;
+            font-weight: 800;
+            font-size: 9px;
+            text-align: center;
+        }
+
+        /* Modais */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .modal-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            width: 90%;
+            max-width: 340px;
+            text-align: center;
+        }
+
+        .emoji-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .emoji-option {
+            background: #f0faff;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .emoji-option.selected {
+            border-color: var(--azul-bright);
+            background: white;
+        }
+
+        .emoji-label {
+            font-size: 12px;
+            font-weight: 700;
             color: var(--azul-escuro);
         }
 
+        .btn-modal {
+            width: 100%;
+            padding: 14px;
+            border-radius: 40px;
+            border: none;
+            background: var(--azul-bright);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-modal:disabled {
+            background: #ccc;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--azul-bright);
+        }
+
         /* Toast */
-        #toast {
+        #notifModal {
             position: fixed;
             bottom: 80px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
+            transform: translateX(-50%);
             background: #333;
             color: white;
             padding: 12px 20px;
             border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            z-index: 1100;
-            transition: 0.3s;
+            font-size: 12px;
+            z-index: 400;
             opacity: 0;
+            transition: 0.3s;
+            pointer-events: none;
         }
 
-        #toast.show {
-            transform: translateX(-50%) translateY(0);
+        #notifModal.visible {
             opacity: 1;
         }
     </style>
@@ -360,232 +419,222 @@
 <body>
 
 <div class="background-layer" id="bg"></div>
+<div class="smoke-overlay"></div>
 
-<!-- Botão menu -->
-<button class="menu-toggle" id="menuToggle">
-    <i class="fas fa-bars"></i>
-</button>
+<header>
+    <div class="sidebar-logo-text">Mindfine</div>
+    <div class="header-stats">
+        <div class="pill-stats">
+            <span>NV. <span id="level-display">1</span></span>
+            <span><img src="../itens/mindcoin.png"> <span id="coin-count">0</span></span>
+        </div>
+        <div class="xp-container"><div class="xp-bar" id="xp-bar-fill"></div></div>
+    </div>
+    <button class="emergency-btn" onclick="openHelpModal()">
+        <i class="fas fa-life-ring"></i> Ajuda
+    </button>
+</header>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="close-sidebar" onclick="closeSidebar()">✕</div>
-    <div class="menu-item" onclick="window.location.href='ilhas-mobile.html'">
-        <i class="fas fa-map-marked-alt"></i> Explorar Ilhas
-    </div>
-    <div class="menu-item" onclick="window.location.href='album-mobile.html'">
-        <i class="fas fa-images"></i> Meu Álbum
-    </div>
-    <div class="menu-item" onclick="window.location.href='sala-de-jogos-mobile.html'">
-        <i class="fas fa-gamepad"></i> Sala de Jogos
-    </div>
-    <div class="menu-item" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Sair
-    </div>
+<div class="quick-access">
+    <button class="side-btn" onclick="toggleSidebar('left')"><i class="fas fa-compass"></i></button>
+    <button class="side-btn" onclick="toggleSidebar('right')"><i class="fas fa-tshirt"></i></button>
 </div>
 
-<!-- Header mobile -->
-<div class="mobile-header">
-    <div class="logo">Mindfine</div>
-    <div class="stats-pill">
-        <span><img src="../itens/mindcoin.png" alt="coin"> <span id="coin-count">0</span></span>
-        <span>⭐ NV. <span id="level-display">1</span></span>
+<div class="game-world">
+    <div class="sidebar sidebar-left" id="sidebar-left">
+        <div class="menu-item" onclick="window.location.href='ilhas.html'">
+            <i class="fas fa-map-marked-alt"></i> Ir para Ilhas
+        </div>
+        <div class="menu-item" onclick="window.location.href='album.html'">
+            <i class="fas fa-images"></i> Ir para Álbuns
+        </div>
+        <div class="menu-item" onclick="window.location.href='sala-de-jogos.html'">
+            <i class="fas fa-gamepad"></i> Sala de Jogos
+        </div>
     </div>
-</div>
 
-<!-- Conteúdo principal -->
-<div class="main-content">
-    <div class="panda-area">
+    <div class="sidebar sidebar-right" id="sidebar-right">
+        <h3 style="color:var(--azul-escuro); font-size: 14px; text-align: center; margin-bottom: 20px;">Universos</h3>
+        <div id="back-universes" class="back-btn" onclick="showUniverses()">
+            <i class="fas fa-chevron-left"></i> Voltar
+        </div>
+        <div id="universe-list"></div>
+        <div id="skins-of-universe" style="display: none;"></div>
+    </div>
+
+    <div id="panda-container">
+        <div class="panda-glow"></div>
         <img src="../pandas/skin.png" id="panda-image">
     </div>
-    
-    <div class="xp-container">
-        <div class="xp-bar" id="xp-bar-fill"></div>
-    </div>
 
-    <div class="action-grid">
-        <button class="action-btn" onclick="openEmotionModal()">
-            <i class="fas fa-smile"></i> Humor
-        </button>
-        <button class="action-btn" onclick="window.location.href='diario-mobile.html'">
-            <i class="fas fa-book"></i> Diário
-        </button>
-        <button class="action-btn" onclick="window.location.href='chat-com-psicologa-mobile.html'">
-            <i class="fas fa-comments"></i> Apoio
-        </button>
-        <button class="action-btn" onclick="window.location.href='pagina-de-respiracao-mobile.html'">
-            <i class="fas fa-wind"></i> Respirar
-        </button>
-    </div>
+    <nav class="nav-pill">
+        <a href="inicial.html" class="nav-item"><i class="fas fa-home"></i><span>Início</span></a>
+        <a href="diario.html" class="nav-item"><i class="fas fa-book"></i><span>Diário</span></a>
+        <a href="chat-com-psicologa.html" class="nav-item"><i class="fas fa-comments"></i><span>Apoio</span></a>
+        <a href="pagina-de-respiracao.html" class="nav-item"><i class="fas fa-wind"></i><span>Respiração</span></a>
+        <a href="playlist.html" class="nav-item"><i class="fas fa-music"></i><span>Playlist</span></a>
+    </nav>
 </div>
 
-<!-- Navegação inferior -->
-<div class="bottom-nav">
-    <a href="inicial-mobile.html" class="active">
-        <i class="fas fa-home"></i> Início
-    </a>
-    <a href="diario-mobile.html">
-        <i class="fas fa-book"></i> Diário
-    </a>
-    <a href="chat-com-psicologa-mobile.html">
-        <i class="fas fa-comments"></i> Apoio
-    </a>
-    <a href="pagina-de-respiracao-mobile.html">
-        <i class="fas fa-wind"></i> Respirar
-    </a>
-    <a href="playlist-mobile.html">
-        <i class="fas fa-music"></i> Playlist
-    </a>
-</div>
-
-<!-- Modal de emoção (sem emojis) -->
-<div class="modal-overlay" id="emotionModal">
+<!-- Modal de humor -->
+<div class="modal-overlay" id="checkinModal">
     <div class="modal-content">
-        <h3>Como você está se sentindo?</h3>
-        <div class="emotion-options">
-            <button class="emotion-btn" data-emocao="Alegria" data-emoji="😊">Alegria</button>
-            <button class="emotion-btn" data-emocao="Tristeza" data-emoji="😢">Tristeza</button>
-            <button class="emotion-btn" data-emocao="Relaxado" data-emoji="😌">Relaxado</button>
-            <button class="emotion-btn" data-emocao="Ansioso" data-emoji="😰">Ansioso</button>
-            <button class="emotion-btn" data-emocao="Raiva" data-emoji="😠">Raiva</button>
-            <button class="emotion-btn" data-emocao="Animado" data-emoji="😁">Animado</button>
+        <span class="close-modal" onclick="closeModal('checkinModal')">&times;</span>
+        <h3 style="color: var(--azul-escuro); margin-bottom: 5px;" id="saudacaoAluno">Olá, Aluno!</h3>
+        <p style="font-size: 13px; color: #666;">Como você está se sentindo agora?</p>
+        <div class="emoji-container">
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Alegria</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Tristeza</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Relaxado</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Ansioso</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Raiva</span></div>
+            <div class="emoji-option" onclick="selectFeeling(this)"><span class="emoji-label">Animado</span></div>
         </div>
-        <button class="btn-modal" id="confirmEmotionBtn" disabled>Continuar</button>
+        <button class="btn-modal" id="btnConfirmarHumor" disabled onclick="confirmFeeling()">Continuar</button>
     </div>
 </div>
 
-<!-- Toast -->
-<div id="toast">✅ Mensagem</div>
+<!-- Modal de ajuda -->
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('helpModal')">&times;</span>
+        <h3 style="color: #ff4d4d;">Apoio Emocional</h3>
+        <div style="background: #fff0f0; padding: 15px; border-radius: 15px; margin: 15px 0;">
+            <p style="font-weight: 800; color: #d32f2f;">Centro de Valorização da Vida (CVV)</p>
+            <p style="font-size: 12px;">Atendimento gratuito 24h</p>
+            <a href="tel:188" style="display: block; background: #d32f2f; color: white; padding: 10px; border-radius: 40px; text-decoration: none; margin-top: 10px;">Ligar 188</a>
+        </div>
+        <a href="chat-com-psicologa.html" class="btn-modal" style="background: var(--azul-bright); text-decoration: none; display: block;">Ir para Chat Escolar</a>
+    </div>
+</div>
+
+<div id="notifModal"></div>
 
 <script>
-    let currentCoins = 0;
-    let currentXP = 0;
-    let currentLevel = 1;
     let matriculaAtual = '';
-    let selectedEmotion = null;
+    let currentCoins = 0, currentXP = 0, currentLevel = 1;
+    let selectedFeeling = null;
 
-    // Abrir/fechar sidebar
-    function closeSidebar() {
-        document.getElementById('sidebar').classList.remove('open');
-    }
-    document.getElementById('menuToggle').onclick = () => {
-        document.getElementById('sidebar').classList.toggle('open');
-    };
+    const universes = [
+        { name: "Santuário", img: "../fundos/fundo-a.png", skins: ["../pandas/skin.png"], unlocked: true },
+        { name: "Ilha do Pirata", img: "../fundos/fundo-piratas.jpeg", skins: ["../pandas/pirata1.png"], unlocked: false },
+        { name: "Ilha do Bruxo", img: "../fundos/fundo-bruxo.jpeg", skins: ["../pandas/bruxo1.png"], unlocked: false }
+    ];
 
-    // Toast
-    function showToast(msg, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = isError ? '❌ ' + msg : '✅ ' + msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    // Carregar dados do usuário
     async function carregarDados() {
         const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
         matriculaAtual = usuario.matricula;
-        
-        if (!matriculaAtual) {
-            window.location.href = 'login-mobile.html';
-            return;
-        }
+        if (!matriculaAtual) { window.location.href = 'login.html'; return; }
 
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
-            const dados = await response.json();
-            
+            const res = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+            const dados = await res.json();
             currentCoins = dados.moedas || 0;
             currentXP = dados.xp || 0;
             currentLevel = dados.nivel || 1;
-            
             document.getElementById('coin-count').innerText = currentCoins;
             document.getElementById('level-display').innerText = currentLevel;
             document.getElementById('xp-bar-fill').style.width = currentXP + '%';
-            
-            if (dados.skin_atual) {
-                document.getElementById('panda-image').src = dados.skin_atual;
-            }
-            if (dados.fundo_atual) {
-                document.getElementById('bg').style.backgroundImage = `url('${dados.fundo_atual}')`;
-            }
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
+            if (dados.skin_atual) document.getElementById('panda-image').src = dados.skin_atual;
+            if (dados.fundo_atual) document.getElementById('bg').style.backgroundImage = `url('${dados.fundo_atual}')`;
+        } catch(e) { console.error(e); }
+        initUniverses();
+    }
+
+    function initUniverses() {
+        const list = document.getElementById('universe-list');
+        if(!list) return;
+        list.innerHTML = '';
+        universes.forEach(uni => {
+            const card = document.createElement('div');
+            card.className = 'universe-card' + (uni.unlocked ? '' : ' locked');
+            if(uni.unlocked) card.onclick = () => openUniverse(uni);
+            card.innerHTML = `<img src="${uni.img}"><div class="universe-label">${uni.name}</div>${!uni.unlocked ? '<i class="fas fa-lock lock-icon"></i>' : ''}`;
+            list.appendChild(card);
+        });
+    }
+
+    function openUniverse(universe) {
+        document.getElementById('bg').style.backgroundImage = `url('${universe.img}')`;
+        document.getElementById('universe-list').style.display = 'none';
+        document.getElementById('back-universes').style.display = 'flex';
+        document.getElementById('skins-of-universe').style.display = 'block';
+        const container = document.getElementById('skins-of-universe');
+        container.innerHTML = '';
+        universe.skins.forEach(skin => {
+            const item = document.createElement('div');
+            item.className = 'menu-item';
+            item.onclick = () => changeSkin(skin);
+            item.innerHTML = `<img src="${skin}" style="width:40px;"><span>Trocar Skin</span>`;
+            container.appendChild(item);
+        });
+    }
+
+    function showUniverses() {
+        document.getElementById('universe-list').style.display = 'grid';
+        document.getElementById('back-universes').style.display = 'none';
+        document.getElementById('skins-of-universe').style.display = 'none';
+        document.getElementById('bg').style.backgroundImage = "url('../fundos/fundo-a.png')";
+    }
+
+    async function changeSkin(skin) {
+        document.getElementById('panda-image').src = skin;
+        await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skin_atual: skin })
+        });
+        toggleSidebar('right');
+        showUniverses();
+    }
+
+    function toggleSidebar(side) {
+        const left = document.getElementById('sidebar-left');
+        const right = document.getElementById('sidebar-right');
+        if(side === 'left') {
+            left.classList.toggle('active');
+            right.classList.remove('active');
+        } else {
+            right.classList.toggle('active');
+            left.classList.remove('active');
+            if(!right.classList.contains('active')) showUniverses();
         }
     }
 
-    // Selecionar emoção
-    document.querySelectorAll('.emotion-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedEmotion = {
-                nome: btn.dataset.emocao,
-                emoji: btn.dataset.emoji
-            };
-            document.getElementById('confirmEmotionBtn').disabled = false;
-        };
-    });
-
-    // Abrir modal de emoção
-    async function openEmotionModal() {
-        // Verificar se já registrou hoje
-        try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/check-emocao/${matriculaAtual}`);
-            const data = await response.json();
-            if (data.ja_registrou) {
-                showToast('Você já registrou sua emoção hoje!', false);
-                return;
-            }
-        } catch(e) {}
-        
-        document.getElementById('emotionModal').classList.add('open');
+    function selectFeeling(el) {
+        document.querySelectorAll('.emoji-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedFeeling = el.querySelector('.emoji-label').innerText;
+        document.getElementById('btnConfirmarHumor').disabled = false;
     }
 
-    // Confirmar e salvar emoção
-    document.getElementById('confirmEmotionBtn').onclick = async () => {
-        if (!selectedEmotion) return;
-        
+    async function confirmFeeling() {
+        const emocaoMap = { 'Alegria':'😊', 'Tristeza':'😢', 'Relaxado':'😌', 'Ansioso':'😰', 'Raiva':'😠', 'Animado':'😁' };
         try {
-            const response = await fetch(`https://mindfine-backend.onrender.com/api/emocao/${matriculaAtual}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    emocao: selectedEmotion.nome,
-                    emoji: selectedEmotion.emoji
-                })
+            const res = await fetch(`https://mindfine-backend.onrender.com/api/emocao/${matriculaAtual}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emocao: selectedFeeling, emoji: emocaoMap[selectedFeeling] })
             });
-            
-            if (response.ok) {
-                const data = await response.json();
+            if(res.ok) {
+                const data = await res.json();
                 currentCoins = data.total_moedas;
                 document.getElementById('coin-count').innerText = currentCoins;
-                showToast('Emoção registrada! +25 moedas e +25 XP', false);
-                document.getElementById('emotionModal').classList.remove('open');
-                selectedEmotion = null;
-                document.getElementById('confirmEmotionBtn').disabled = true;
-                document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('selected'));
-            } else {
-                showToast('Erro ao registrar emoção', true);
-            }
-        } catch(error) {
-            showToast('Erro de conexão', true);
-        }
-    };
-
-    // Fechar modal ao clicar fora
-    document.getElementById('emotionModal').onclick = (e) => {
-        if (e.target === document.getElementById('emotionModal')) {
-            document.getElementById('emotionModal').classList.remove('open');
-        }
-    };
-
-    // Logout
-    function logout() {
-        localStorage.removeItem('usuario');
-        window.location.href = 'login-mobile.html';
+                showNotif('Emoção registrada! +25 moedas');
+                closeModal('checkinModal');
+            } else showNotif('Erro ao registrar', true);
+        } catch(e) { showNotif('Erro de conexão', true); }
     }
 
-    // Inicializar
+    function openHelpModal() { document.getElementById('helpModal').classList.add('visible'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+    function showNotif(msg, isErr=false) {
+        const el = document.getElementById('notifModal');
+        el.innerHTML = msg;
+        el.classList.add('visible');
+        setTimeout(() => el.classList.remove('visible'), 3000);
+    }
+
     carregarDados();
+    setInterval(() => fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`).then(r=>r.json()).then(d=>{document.getElementById('coin-count').innerText=d.moedas}), 30000);
 </script>
 </body>
 </html>
