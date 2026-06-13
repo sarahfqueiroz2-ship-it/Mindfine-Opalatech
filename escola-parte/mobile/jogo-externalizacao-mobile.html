@@ -213,6 +213,11 @@
 </div>
 
 <script>
+
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+if (!usuario || !usuario.matricula) {
+    window.location.href = 'login-mobile.html';
+}
     // Toast
     function showToast(msg) {
         const toast = document.getElementById('toast');
