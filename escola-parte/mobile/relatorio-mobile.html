@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Relatórios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #32B5F1;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            padding: 70px 16px 20px;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .close-sidebar {
+            font-size: 22px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 6px;
+        }
+
+        .nav-item.active {
+            background: #e3f2fd;
+            color: #0277bd;
+        }
+
+        .nav-item i {
+            width: 20px;
+            color: #32B5F1;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .logout-item {
+            color: #f87171 !important;
+            margin-top: 10px;
+        }
+
+        /* Conteúdo principal */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            padding: 70px 16px 30px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0277bd;
+            margin-bottom: 4px;
+        }
+
+        .page-title span {
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        /* Botões */
+        .btn-primary, .btn-ghost {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: white;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+
+        /* Filtros */
+        .filters-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .filter-group {
+            margin-bottom: 12px;
+        }
+
+        .filter-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            background: #f8fafc;
+        }
+
+        /* KPI Strip */
+        .kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .kpi-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .kpi-icon.blue { background: rgba(50,181,241,0.12); color: #32B5F1; }
+        .kpi-icon.green { background: rgba(52,211,153,0.12); color: #34d399; }
+        .kpi-icon.yellow { background: rgba(251,191,36,0.12); color: #fbbf24; }
+        .kpi-icon.red { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0277bd;
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .kpi-delta {
+            font-size: 10px;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        .kpi-delta.up { color: #10b981; }
+        .kpi-delta.down { color: #ef4444; }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0277bd;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Barras emocionais */
+        .emotion-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .emotion-emoji { font-size: 18px; width: 30px; }
+        .emotion-label { font-size: 12px; font-weight: 800; width: 65px; }
+        .bar-track { flex: 1; height: 10px; background: #f0f4f8; border-radius: 5px; overflow: hidden; }
+        .bar-fill-anim { height: 100%; border-radius: 5px; transition: width 0.8s ease; }
+        .bar-fill-anim.happy { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .bar-fill-anim.calm { background: linear-gradient(90deg, #34d399, #10b981); }
+        .bar-fill-anim.sad { background: linear-gradient(90deg, #38bdf8, #0ea5e9); }
+        .bar-fill-anim.anxious { background: linear-gradient(90deg, #a855f7, #9333ea); }
+        .bar-pct { font-size: 12px; font-weight: 800; color: #0277bd; width: 35px; text-align: right; }
+
+        /* Ranking */
+        .rank-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .rank-num {
+            font-size: 16px;
+            font-weight: 800;
+            width: 28px;
+        }
+
+        .rank-num.gold { color: #f59e0b; }
+        .rank-num.silver { color: #94a3b8; }
+        .rank-num.bronze { color: #b45309; }
+
+        .rank-accent {
+            width: 4px;
+            height: 30px;
+            border-radius: 2px;
+        }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-size: 13px; font-weight: 800; }
+        .rank-sub { font-size: 10px; color: #64748b; }
+        .rank-score { font-size: 16px; font-weight: 800; }
+
+        /* Histórico mensal */
+        .monthly-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .monthly-month { font-size: 12px; font-weight: 800; width: 50px; }
+        .monthly-bar-track { flex: 1; height: 8px; background: #f0f4f8; border-radius: 4px; overflow: hidden; }
+        .monthly-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #32B5F1, #0277bd); }
+        .monthly-val { font-size: 12px; font-weight: 800; width: 30px; text-align: right; }
+        .monthly-badge { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px; }
+        .monthly-badge.up { background: rgba(52,211,153,0.12); color: #10b981; }
+        .monthly-badge.down { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .monthly-badge.same { background: rgba(100,116,139,0.1); color: #64748b; }
+
+        /* Tabela cursos */
+        .curso-table { width: 100%; border-collapse: collapse; }
+        .curso-table th { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; padding-bottom: 10px; text-align: left; }
+        .curso-table td { padding: 10px 0; font-size: 12px; font-weight: 600; border-bottom: 1px solid #f0f4f8; }
+        .score-high { color: #10b981; }
+        .score-mid { color: #f59e0b; }
+        .score-low { color: #ef4444; }
+
+        /* Partículas */
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-110vh); opacity: 0; }
+        }
+
+        /* Tendência semanal */
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 100px;
+            margin: 16px 0;
+        }
+
+        .trend-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-bar-v {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            background: linear-gradient(180deg, #32B5F1, #0277bd);
+            transition: height 0.8s ease;
+            height: 0;
+        }
+
+        .trend-bar-v.dim { background: #dbe9f5; }
+        .trend-val { font-size: 9px; font-weight: 800; color: #0277bd; }
+        .trend-day-lbl { font-size: 9px; font-weight: 800; color: #64748b; }
+
+        /* Ranking bar */
+        .rank-bar-wrap { width: 70px; }
+        .rank-bar-track { height: 5px; background: #f0f4f8; border-radius: 3px; overflow: hidden; }
+        .rank-bar-fill { height: 100%; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<!-- Header Mobile -->
+<div class="mobile-header">
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="logo">Mindfine</div>
+    <div style="width: 30px;"></div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">Mindfine</div>
+        <div class="close-sidebar" onclick="closeSidebar()">✕</div>
+    </div>
+    <a href="inicio-escola-mobile.html" class="nav-item">
+        <i class="fas fa-tachometer-alt"></i> Painel Geral
+    </a>
+    <a href="turma-mobile.html" class="nav-item">
+        <i class="fas fa-users"></i> Turmas
+    </a>
+    <a href="relatorio-mobile.html" class="nav-item active">
+        <i class="fas fa-chart-line"></i> Relatórios
+    </a>
+    <a href="alertas-mobile.html" class="nav-item">
+        <i class="fas fa-bell"></i> Alertas
+        <span class="nav-badge" id="sidebarBadge">0</span>
+    </a>
+    <a href="intervencao-mobile.html" class="nav-item">
+        <i class="fas fa-bullseye"></i> Intervenções
+    </a>
+    <div class="user-card">
+        <div class="user-avatar">EP</div>
+        <div>
+            <div style="font-size: 13px; font-weight: 600; color: #0097dd;">Escola Painel</div>
+            <div style="font-size: 11px; color: #64748b;">Administrador</div>
+        </div>
+    </div>
+    <a href="login-mobile.html" class="nav-item logout-item">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+</div>
+
+<!-- Conteúdo principal -->
+<main class="main-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Relatórios de <span>Bem-Estar</span></h1>
+            <p class="page-subtitle">Análise consolidada</p>
+        </div>
+        <div class="header-right">
+            <button class="btn-ghost" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="btn-primary" onclick="exportarExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-bar">
+        <div class="filter-group">
+            <label class="filter-label">Período</label>
+            <select class="filter-select" id="fPeriodo">
+                <option value="semana">Esta Semana</option>
+                <option value="mes" selected>Este Mês</option>
+                <option value="trimestre">Trimestre</option>
+                <option value="ano">Ano Letivo</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Curso</label>
+            <select class="filter-select" id="fCurso">
+                <option value="todos">Todos os Cursos</option>
+                <option value="adm">Administração</option>
+                <option value="inf">Informática</option>
+                <option value="ma">Meio Ambiente</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Ano Escolar</label>
+            <select class="filter-select" id="fAno">
+                <option value="todos">Todos os Anos</option>
+                <option value="1">1º Ano</option>
+                <option value="2">2º Ano</option>
+                <option value="3">3º Ano</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip">
+        <div class="kpi-card">
+            <div class="kpi-icon blue"><i class="fas fa-chart-line"></i></div>
+            <div><div class="kpi-value" id="kpiWellbeing">7.4</div><div class="kpi-label">Bem-estar Médio</div><div class="kpi-delta up">▲ +0.3</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon green"><i class="fas fa-smile"></i></div>
+            <div><div class="kpi-value" id="kpiFelizes">43%</div><div class="kpi-label">Alunos Felizes</div><div class="kpi-delta up">▲ +5%</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon yellow"><i class="fas fa-exclamation-triangle"></i></div>
+            <div><div class="kpi-value" id="kpiAlertas">15</div><div class="kpi-label">Alertas Ativos</div><div class="kpi-delta down">▼ +3</div></div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon red"><i class="fas fa-percent"></i></div>
+            <div><div class="kpi-value" id="kpiParticipacao">89%</div><div class="kpi-label">Participação</div><div class="kpi-delta up">▲ +4%</div></div>
+        </div>
+    </div>
+
+    <!-- Distribuição Emocional -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-heart"></i> Distribuição Emocional</div>
+        <div id="emocoesContainer"></div>
+    </div>
+
+    <!-- Ranking de Turmas -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-trophy"></i> Ranking de Turmas</div>
+        <div id="rankingContainer"></div>
+    </div>
+
+    <!-- Histórico Mensal -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-calendar-alt"></i> Histórico Mensal</div>
+        <div id="monthlyContainer"></div>
+    </div>
+
+    <!-- Bem-Estar por Curso -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-graduation-cap"></i> Bem-Estar por Curso</div>
+        <table class="curso-table">
+            <thead><tr><th>Curso</th><th>Turmas</th><th>Alunos</th><th>Score</th><th>Alertas</th></tr></thead>
+            <tbody id="cursosTableBody"><tr><td colspan="5">Carregando...</td></tr></tbody>
+        </table>
+    </div>
+
+    <!-- Recomendações -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-lightbulb"></i> Recomendações</div>
+        <div id="recsContainer"></div>
+    </div>
+</main>
+
+<script>
+    // Sidebar
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
+    document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    document.addEventListener('click', (e) => {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('menuToggle');
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    });
+
+    // Partículas
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = s + 'px'; b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
+
+    // Carregar dados
+    async function carregarDados() {
+        const periodo = document.getElementById('fPeriodo').value;
+        const curso = document.getElementById('fCurso').value;
+        const ano = document.getElementById('fAno').value;
+
+        try {
+            // Emoções
+            const resEmocoes = await fetch(`https://mindfine-backend.onrender.com/api/relatorio/emocoes?periodo=${periodo}&curso=${curso}&ano=${ano}`);
+            const emocoes = await resEmocoes.json();
+            
+            const emocoesHtml = `
+                <div class="emotion-row"><span class="emotion-emoji">😊</span><span class="emotion-label">Alegria</span><div class="bar-track"><div class="bar-fill-anim happy" style="width:${emocoes.alegria||0}%"></div></div><span class="bar-pct">${emocoes.alegria||0}%</span></div>
+                <div class="emotion-row"><span class="emotion-emoji">😁</span><span class="emotion-label">Animado</span><div class="bar-track"><div class="bar-fill-anim happy" style="width:${emocoes.animado||0}%"></div></div><span class="bar-pct">${emocoes.animado||0}%</span></div>
+                <div class="emotion-row"><span class="emotion-emoji">😌</span><span class="emotion-label">Calmo</span><div class="bar-track"><div class="bar-fill-anim calm" style="width:${emocoes.relaxado||0}%"></div></div><span class="bar-pct">${emocoes.relaxado||0}%</span></div>
+                <div class="emotion-row"><span class="emotion-emoji">😢</span><span class="emotion-label">Triste</span><div class="bar-track"><div class="bar-fill-anim sad" style="width:${emocoes.tristeza||0}%"></div></div><span class="bar-pct">${emocoes.tristeza||0}%</span></div>
+                <div class="emotion-row"><span class="emotion-emoji">😰</span><span class="emotion-label">Ansioso</span><div class="bar-track"><div class="bar-fill-anim anxious" style="width:${emocoes.ansioso||0}%"></div></div><span class="bar-pct">${emocoes.ansioso||0}%</span></div>
+                <div class="emotion-row"><span class="emotion-emoji">😠</span><span class="emotion-label">Raiva</span><div class="bar-track"><div class="bar-fill-anim anxious" style="width:${emocoes.raiva||0}%; background:linear-gradient(90deg,#ef4444,#dc2626);"></div></div><span class="bar-pct">${emocoes.raiva||0}%</span></div>
+            `;
+            document.getElementById('emocoesContainer').innerHTML = emocoesHtml;
+            document.getElementById('kpiFelizes').textContent = (emocoes.alegria || 0) + '%';
+            
+            // Ranking
+            const resTurmas = await fetch('https://mindfine-backend.onrender.com/api/escola/turmas');
+            const turmas = await resTurmas.json();
+            const ranking = turmas.sort((a,b) => b.nivelMedio - a.nivelMedio);
+            const rankingHtml = ranking.map((t, i) => {
+                const medal = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                const cor = t.nome.includes('Informática') ? '#32B5F1' : t.nome.includes('Administração') ? '#10b981' : '#ef4444';
+                return `<div class="rank-row"><span class="rank-num ${medal}">${i+1}</span><div class="rank-accent" style="background:${cor}"></div><div class="rank-info"><div class="rank-name">${t.nome}</div><div class="rank-sub">${t.alunos.length} alunos</div></div><div class="rank-score">${t.nivelMedio}</div></div>`;
+            }).join('');
+            document.getElementById('rankingContainer').innerHTML = rankingHtml || '<div>Nenhuma turma</div>';
+            
+            // Histórico
+            const resHist = await fetch(`https://mindfine-backend.onrender.com/api/relatorio/historico?curso=${curso}&ano=${ano}`);
+            const historico = await resHist.json();
+            const histHtml = (historico || []).map(h => `<div class="monthly-row"><span class="monthly-month">${h.mes}</span><div class="monthly-bar-track"><div class="monthly-bar-fill" style="width:${(h.val/10)*100}%"></div></div><span class="monthly-val">${h.val}</span><span class="monthly-badge ${h.badge}">${h.badge === 'up' ? '▲' : h.badge === 'down' ? '▼' : '→'}</span></div>`).join('');
+            document.getElementById('monthlyContainer').innerHTML = histHtml || '<div>Sem dados</div>';
+            
+            // Cursos
+            const resCursos = await fetch(`https://mindfine-backend.onrender.com/api/relatorio/cursos?curso=${curso}&ano=${ano}`);
+            let cursos = await resCursos.json();
+            if (!Array.isArray(cursos)) cursos = [];
+            const cursosHtml = cursos.map(c => `<tr><td>${c.curso}</td><td>${c.turmas}</td><td>${c.alunos}</td><td class="${c.score >= 7.5 ? 'score-high' : c.score >= 6 ? 'score-mid' : 'score-low'}">${c.score}</td><td>${c.alertas}</td></tr>`).join('');
+            document.getElementById('cursosTableBody').innerHTML = cursosHtml || '<tr><td colspan="5">Nenhum curso</td></tr>';
+            
+            // Alertas
+            const resAlertas = await fetch('https://mindfine-backend.onrender.com/api/alertas');
+            const alertas = await resAlertas.json();
+            const ativos = alertas.filter(a => a.resolvido !== 1).length;
+            document.getElementById('kpiAlertas').textContent = ativos;
+            document.getElementById('sidebarBadge').textContent = ativos;
+            
+            // Bem-estar médio
+            let totalNivel = 0;
+            turmas.forEach(t => totalNivel += t.nivelMedio * t.alunos.length);
+            const mediaGeral = turmas.length ? (totalNivel / turmas.reduce((s,t)=>s+t.alunos.length,0)).toFixed(1) : 7.0;
+            document.getElementById('kpiWellbeing').textContent = mediaGeral;
+            
+            // Recomendações
+            const recs = [];
+            if (emocoes.tristeza > 30) recs.push("Alto índice de tristeza detectado. Considere atividades de acolhimento.");
+            if (emocoes.ansioso > 25) recs.push("Alunos ansiosos acima da média. Exercícios de respiração podem ajudar.");
+            if (recs.length === 0) recs.push("Tudo dentro da normalidade! Continue incentivando o bem-estar.");
+            document.getElementById('recsContainer').innerHTML = recs.map(r => `<div style="padding:8px 0; border-bottom:1px solid #f0f4f8;"><i class="fas fa-check-circle" style="color:#10b981; margin-right:8px;"></i> ${r}</div>`).join('');
+            
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    }
+
+    function exportarCSV() { alert('Exportação CSV em desenvolvimento'); }
+    function exportarExcel() { alert('Exportação Excel em desenvolvimento'); }
+
+    document.getElementById('fPeriodo').addEventListener('change', carregarDados);
+    document.getElementById('fCurso').addEventListener('change', carregarDados);
+    document.getElementById('fAno').addEventListener('change', carregarDados);
+
+    carregarDados();
+    setInterval(() => {
+        fetch('https://mindfine-backend.onrender.com/api/alertas').then(r=>r.json()).then(a => {
+            const ativos = a.filter(a=>a.resolvido!==1).length;
+            document.getElementById('kpiAlertas').textContent = ativos;
+            document.getElementById('sidebarBadge').textContent = ativos;
+        }).catch(e=>console.error);
+    }, 30000);
+</script>
+</body>
+</html>
