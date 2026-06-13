@@ -1182,10 +1182,10 @@ app.get('/api/aluno/:matricula', async (req, res) => {
     }
 });
 
-// ROTA PARA VER TODOS OS USUÁRIOS (no navegador)
+// ROTA PARA VER TODOS OS USUÁRIOS (com tipo)
 app.get('/api/admin/usuarios', async (req, res) => {
     try {
-        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios ORDER BY matricula');
+        const result = await pool.query('SELECT matricula, nome, email, tipo, nivel, xp, moedas FROM usuarios ORDER BY matricula');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ erro: err.message });
