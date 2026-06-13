@@ -60,20 +60,7 @@
             flex-wrap: wrap;
         }
 
-        @media (max-width: 768px) {
-            .header {
-                padding: 10px 15px;
-                gap: 10px;
-            }
-            .btn-circle {
-                width: 40px;
-                height: 40px;
-            }
-            .xp-bar-container {
-                max-width: 300px;
-                min-width: 150px;
-            }
-        }
+        
 
         @media (max-width: 576px) {
             .xp-bar-container {
@@ -266,35 +253,7 @@
     }
 }
 
-@media (max-width: 768px) {
-    #ocean-map {
-        transform: scale(0.7);
-        transform-origin: top center;
-        min-height: 4600px;
-        margin: 100px auto 60px;
-    }
-    .island-wrapper {
-        width: 320px;
-    }
-    .pin-head {
-        width: 55px;
-        height: 55px;
-        border-width: 3px;
-    }
-    .wood-sign {
-        font-size: 0.75rem;
-        padding: 8px 20px;
-        margin-top: -25px;
-    }
-    .lock-bubble {
-        font-size: 0.7rem;
-        padding: 6px 12px;
-        white-space: nowrap;
-    }
-    .xp-bar-container {
-        max-width: 250px;
-    }
-}
+
 
 @media (max-width: 576px) {
     #ocean-map {
@@ -377,35 +336,7 @@
     }
 }
 
-@media (max-width: 768px) {
-    .island-wrapper {
-        width: 280px !important;
-    }
-    .pin-head {
-        width: 50px !important;
-        height: 50px !important;
-        border-width: 3px !important;
-    }
-    .wood-sign {
-        font-size: 0.7rem !important;
-        padding: 6px 15px !important;
-        margin-top: -20px !important;
-    }
-    .lock-bubble {
-        font-size: 0.65rem !important;
-        padding: 5px 10px !important;
-        top: -55px !important;
-    }
-    .location-pin {
-        top: -30px !important;
-    }
-    .xp-bar-container {
-        max-width: 200px;
-    }
-    .xp-info span {
-        font-size: 0.6rem;
-    }
-}
+
 
 @media (max-width: 480px) {
     .island-wrapper {
@@ -426,41 +357,425 @@
     }
 }
     
-/* ========== RESPONSIVO PARA CELULAR ========== */
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: -260px;
-        transition: left 0.3s ease;
-        z-index: 1000;
-        width: 260px;
-    }
-    .sidebar.open { left: 0; }
-    .menu-toggle { display: flex !important; position: fixed; top: 15px; left: 15px; z-index: 1001; background: white; border: none; border-radius: 12px; width: 44px; height: 44px; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer; }
-    .main-content { margin-left: 0 !important; padding: 70px 16px 20px !important; }
-    .page-header { flex-direction: column; text-align: center; padding: 20px; }
-    .header-left h1 { font-size: 22px; }
-    .kpi-strip, .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
-    .kpi-card, .stat-card { padding: 15px !important; }
-    .kpi-value, .stat-value { font-size: 22px !important; }
-    .classes-grid, .main-grid { grid-template-columns: 1fr !important; }
-    .toolbar, .filters-bar { flex-direction: column; align-items: stretch; }
-    .search-box { width: 100%; }
-    .filter-pill, .filter-chip { width: 100%; text-align: center; }
-    .alert-card-inner { flex-direction: column; }
-    .alert-left { flex-direction: row; justify-content: space-between; width: 100%; }
-    .alert-time-col { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .kanban-board { grid-template-columns: 1fr !important; gap: 20px; }
-    .modal { width: 95%; margin: 20px auto; padding: 20px; }
-    .heatmap-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    .curso-table { font-size: 12px; }
-    .curso-table th, .curso-table td { padding: 8px 4px; }
-}
+
+
 @media (max-width: 480px) {
     .kpi-strip, .stats-grid { grid-template-columns: 1fr !important; }
     .page-header { padding: 15px; }
     .page-title { font-size: 18px; }
     .kpi-value, .stat-value { font-size: 18px !important; }
+}
+
+/* ========== LAYOUT RESPONSIVO COMPLETO PARA MOBILE ========== */
+
+/* Reset para mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Viewport já deve estar configurado */
+/* <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"> */
+
+@media (max-width: 768px) {
+    
+    /* ---------- GERAL ---------- */
+    body {
+        overflow-x: hidden;
+        font-size: 14px;
+    }
+    
+    /* ---------- SIDEBAR ---------- */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        width: 75%;
+        max-width: 280px;
+        height: 100vh;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        box-shadow: 2px 0 20px rgba(0,0,0,0.2);
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    /* Botão hambúrguer */
+    .menu-toggle {
+        display: flex !important;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 1001;
+        background: #32B5F1;
+        border: none;
+        border-radius: 12px;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        cursor: pointer;
+        color: white;
+    }
+    
+    .menu-toggle i {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2;
+    }
+    
+    /* ---------- CONTEÚDO PRINCIPAL ---------- */
+    .main-content {
+        margin-left: 0 !important;
+        padding: 70px 16px 30px !important;
+        width: 100% !important;
+        overflow-x: hidden;
+    }
+    
+    /* ---------- HEADER ---------- */
+    .page-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px 16px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .header-left h1 {
+        font-size: 22px !important;
+        word-break: break-word;
+    }
+    
+    .header-left p {
+        font-size: 12px !important;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    /* ---------- BOTÕES ---------- */
+    .btn-primary, .btn-ghost {
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        min-height: 44px;
+        width: auto;
+    }
+    
+    /* ---------- KPIs / CARDS ---------- */
+    .kpi-strip, .stats-grid, .summary-strip {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .kpi-card, .stat-card, .summary-chip {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+    
+    .kpi-value, .stat-value, .chip-value {
+        font-size: 24px !important;
+    }
+    
+    .kpi-label, .stat-label, .chip-label {
+        font-size: 10px !important;
+    }
+    
+    /* ---------- INPUTS E FORMULÁRIOS ---------- */
+    input, 
+    select, 
+    textarea,
+    .input-field,
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px !important;
+        padding: 14px !important;
+        min-height: 48px !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+    
+    /* ---------- LOGIN ---------- */
+    .split-screen {
+        flex-direction: column !important;
+    }
+    
+    .left-side {
+        min-height: 200px !important;
+        padding: 20px !important;
+    }
+    
+    .right-side {
+        padding: 30px 20px !important;
+    }
+    
+    .login-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .login-container .app-name {
+        font-size: 28px !important;
+    }
+    
+    .login-btn {
+        min-height: 52px !important;
+        font-size: 16px !important;
+        border-radius: 14px !important;
+    }
+    
+    /* ---------- TURMAS ---------- */
+    .classes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .class-card {
+        border-radius: 16px !important;
+    }
+    
+    .class-card .card-body {
+        padding: 16px !important;
+    }
+    
+    /* ---------- ALERTAS ---------- */
+    .alert-card-inner {
+        flex-direction: column !important;
+        padding: 16px !important;
+    }
+    
+    .alert-left {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        margin-bottom: 12px;
+    }
+    
+    .alert-time-col {
+        width: 100% !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+    }
+    
+    .alert-meta {
+        flex-wrap: wrap;
+    }
+    
+    .alert-actions {
+        flex-direction: row;
+    }
+    
+    /* ---------- INTERVENÇÕES (KANBAN) ---------- */
+    .kanban-board {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    
+    .kanban-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .kanban-header .search-box {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+    
+    .kanban-header .filter-pill {
+        text-align: center;
+        flex: 1;
+    }
+    
+    /* ---------- TOOLBAR/FILTROS ---------- */
+    .toolbar, .filters-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 16px !important;
+        gap: 12px !important;
+    }
+    
+    .search-box {
+        width: 100% !important;
+        padding: 10px 14px !important;
+    }
+    
+    .search-box input {
+        font-size: 16px !important;
+    }
+    
+    .filter-pill, .filter-chip, .view-btn {
+        justify-content: center;
+        text-align: center;
+        flex: 1;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    /* ---------- MODAL ---------- */
+    .modal-overlay {
+        align-items: flex-end !important;
+    }
+    
+    .modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        padding: 20px !important;
+    }
+    
+    /* ---------- HEATMAP ---------- */
+    .heatmap-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    
+    .heatmap-cell {
+        padding: 12px 8px !important;
+    }
+    
+    .heatmap-cell .hc-score {
+        font-size: 20px !important;
+    }
+    
+    /* ---------- TABELAS ---------- */
+    .curso-table,
+    .curso-table tbody,
+    .curso-table tr,
+    .curso-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    .curso-table thead {
+        display: none;
+    }
+    
+    .curso-table tr {
+        margin-bottom: 12px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+    
+    .curso-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0 !important;
+        border: none !important;
+    }
+    
+    .curso-table td:before {
+        content: attr(data-label);
+        font-weight: 800;
+        font-size: 11px;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+    
+    /* ---------- CHART / GRÁFICOS ---------- */
+    .emotion-row {
+        flex-wrap: wrap;
+    }
+    
+    .bar-container {
+        min-width: 100px;
+    }
+    
+    /* ---------- PAINEL LATERAL ---------- */
+    .side-panel {
+        margin-top: 20px;
+    }
+    
+    .card {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+    
+    .card-title {
+        font-size: 14px !important;
+    }
+    
+    /* ---------- RESPONSÁVEIS ---------- */
+    .resp-row {
+        flex-wrap: wrap;
+    }
+    
+    .resp-count {
+        margin-left: auto;
+    }
+    
+    /* ---------- TIMELINE ---------- */
+    .timeline {
+        padding-left: 8px;
+    }
+    
+    .tl-content {
+        flex: 1;
+    }
+    
+    /* ---------- RODAPÉ ---------- */
+    .sidebar-footer {
+        padding-bottom: 20px;
+    }
+}
+
+/* Para telas muito pequenas (menos de 400px) */
+@media (max-width: 480px) {
+    .kpi-strip, .stats-grid, .summary-strip {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .page-title {
+        font-size: 20px !important;
+    }
+    
+    .heatmap-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .btn-primary, .btn-ghost {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .alert-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .alert-actions button {
+        width: 100%;
+        margin: 4px 0;
+    }
+}
+
+/* Garantir que inputs não façam zoom no iOS */
+@supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
 }
 </style>
 </head>
