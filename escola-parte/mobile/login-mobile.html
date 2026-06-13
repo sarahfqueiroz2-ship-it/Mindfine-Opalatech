@@ -374,23 +374,24 @@
 
                 const dados = await resposta.json();
 
-                if (dados.sucesso) {
-                    mostrarMensagem('Login realizado com sucesso!', 'sucesso');
-                    
-                    localStorage.setItem('usuario', JSON.stringify({
-                        nome: dados.nome,
-                        email: dados.email,
-                        matricula: dados.matricula,
-                        tipo: dados.tipo
-                    }));
-                    
-                    let paginaDestino = '../inicial-mobile.html';
-                    if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola-mobile.html';
-                    else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa-mobile.html';
-                    
-                    setTimeout(() => {
-                        window.location.href = paginaDestino;
-                    }, 1500);
+               if (dados.sucesso) {
+    mostrarMensagem('Login realizado com sucesso!', 'sucesso');
+    
+    localStorage.setItem('usuario', JSON.stringify({
+        nome: dados.nome,
+        email: dados.email,
+        matricula: dados.matricula,
+        tipo: dados.tipo
+    }));
+    
+    let paginaDestino = '../inicial-mobile.html';
+    if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola-mobile.html';
+    else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa-mobile.html';
+    
+    setTimeout(() => {
+        window.location.href = paginaDestino;
+    }, 1500);
+}
                 } else {
                     mostrarMensagem(dados.mensagem || 'Credenciais inválidas', 'erro');
                 }
