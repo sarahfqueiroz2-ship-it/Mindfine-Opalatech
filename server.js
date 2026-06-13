@@ -739,9 +739,11 @@ function getTurmaFromMatricula(matricula) {
     return `${ano}° ${curso}`;
 }
 
+
 app.get('/api/escola/alunos', async (req, res) => {
     try {
-        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios');
+        // FILTRA APENAS ESTUDANTES!
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios WHERE tipo = \'estudante\'');
         const alunos = result.rows.map(aluno => ({
             ...aluno,
             turma: getTurmaFromMatricula(aluno.matricula)
@@ -754,7 +756,8 @@ app.get('/api/escola/alunos', async (req, res) => {
 
 app.get('/api/escola/turmas', async (req, res) => {
     try {
-        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios');
+        // FILTRA APENAS ESTUDANTES!
+        const result = await pool.query('SELECT matricula, nome, email, nivel, xp, moedas FROM usuarios WHERE tipo = \'estudante\'');
         const turmas = {};
         
         result.rows.forEach(aluno => {
@@ -782,13 +785,15 @@ app.get('/api/escola/turmas', async (req, res) => {
         
         res.json(Object.values(turmas));
     } catch (err) {
+        console.error('Erro ao carregar turmas:', err);
         res.status(500).json({ erro: err.message });
     }
 });
 
 app.get('/api/escola/estatisticas', async (req, res) => {
     try {
-        const result = await pool.query('SELECT matricula, nivel, xp, moedas FROM usuarios');
+        // FILTRA APENAS ESTUDANTES!
+        const result = await pool.query('SELECT matricula, nivel, xp, moedas FROM usuarios WHERE tipo = \'estudante\'');
         const rows = result.rows;
         
         const totalAlunos = rows.length;
