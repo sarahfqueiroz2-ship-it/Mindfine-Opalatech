@@ -302,107 +302,107 @@
     </div>
 
     <script>
-        let tipoUsuarioSelecionado = 'estudante';
+       let tipoUsuarioSelecionado = 'estudante';
 
-        const bubbleContainer = document.getElementById('bubbleContainer');
-        for (let i = 0; i < 15; i++) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            const size = Math.random() * 25 + 8 + 'px';
-            bubble.style.width = size;
-            bubble.style.height = size;
-            bubble.style.left = Math.random() * 100 + '%';
-            bubble.style.animationDelay = Math.random() * 10 + 's';
-            bubble.style.animationDuration = Math.random() * 6 + 9 + 's';
-            bubbleContainer.appendChild(bubble);
-        }
-
-        function togglePassword() {
-            const passwordField = document.getElementById('passwordField');
-            const pandaImg = document.getElementById('pandaImg');
-            
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                pandaImg.src = "../pandas/panda-curioso.png";
-            } else {
-                passwordField.type = "password";
-                pandaImg.src = "../pandas/skin.png";
-            }
-        }
-
-        function setRole(role, element) {
-            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
-            tipoUsuarioSelecionado = role;
-            
-            const label = document.getElementById('userLabel');
-            if(role === 'estudante') label.innerText = "Matrícula";
-            else if(role === 'gestao') label.innerText = "ID de Gestor";
-            else label.innerText = "CRP ou Email Profissional";
-        }
-
-        function mostrarMensagem(texto, tipo) {
-            const mensagem = document.getElementById('mensagem');
-            mensagem.textContent = texto;
-            mensagem.className = `mensagem ${tipo}`;
-            mensagem.style.display = 'block';
-            setTimeout(() => {
-                mensagem.style.display = 'none';
-            }, 5000);
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const btnLogin = document.getElementById('btnLogin');
-            const identificador = document.getElementById('identificador').value;
-            const senha = document.getElementById('passwordField').value;
-            
-            btnLogin.disabled = true;
-            btnLogin.innerHTML = '<div class="spinner"></div>';
-            
-            try {
-                const resposta = await fetch('https://mindfine-backend.onrender.com/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tipo_usuario: tipoUsuarioSelecionado,
-                        identificador: identificador,
-                        senha: senha
-                    })
-                });
-
-                const dados = await resposta.json();
-
-               if (dados.sucesso) {
-    mostrarMensagem('Login realizado com sucesso!', 'sucesso');
-    
-    localStorage.setItem('usuario', JSON.stringify({
-        nome: dados.nome,
-        email: dados.email,
-        matricula: dados.matricula,
-        tipo: dados.tipo
-    }));
-    
-    let paginaDestino = '../inicial-mobile.html';
-    if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola-mobile.html';
-    else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa-mobile.html';
-    
-    setTimeout(() => {
-        window.location.href = paginaDestino;
-    }, 1500);
+const bubbleContainer = document.getElementById('bubbleContainer');
+for (let i = 0; i < 15; i++) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const size = Math.random() * 25 + 8 + 'px';
+    bubble.style.width = size;
+    bubble.style.height = size;
+    bubble.style.left = Math.random() * 100 + '%';
+    bubble.style.animationDelay = Math.random() * 10 + 's';
+    bubble.style.animationDuration = Math.random() * 6 + 9 + 's';
+    bubbleContainer.appendChild(bubble);
 }
-                } else {
-                    mostrarMensagem(dados.mensagem || 'Credenciais inválidas', 'erro');
-                }
-            } catch (erro) {
-                console.error('Erro:', erro);
-                mostrarMensagem('Erro ao conectar com o servidor!', 'erro');
-            } finally {
-                btnLogin.disabled = false;
-                btnLogin.innerHTML = 'Entrar na conta';
-            }
+
+function togglePassword() {
+    const passwordField = document.getElementById('passwordField');
+    const pandaImg = document.getElementById('pandaImg');
+    
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+        pandaImg.src = "../pandas/panda-curioso.png";
+    } else {
+        passwordField.type = "password";
+        pandaImg.src = "../pandas/skin.png";
+    }
+}
+
+function setRole(role, element) {
+    document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    tipoUsuarioSelecionado = role;
+    
+    const label = document.getElementById('userLabel');
+    if(role === 'estudante') label.innerText = "Matrícula";
+    else if(role === 'gestao') label.innerText = "ID de Gestor";
+    else label.innerText = "CRP ou Email Profissional";
+}
+
+function mostrarMensagem(texto, tipo) {
+    const mensagem = document.getElementById('mensagem');
+    mensagem.textContent = texto;
+    mensagem.className = `mensagem ${tipo}`;
+    mensagem.style.display = 'block';
+    setTimeout(() => {
+        mensagem.style.display = 'none';
+    }, 5000);
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const btnLogin = document.getElementById('btnLogin');
+    const identificador = document.getElementById('identificador').value;
+    const senha = document.getElementById('passwordField').value;
+    
+    btnLogin.disabled = true;
+    btnLogin.innerHTML = '<div class="spinner"></div>';
+    
+    try {
+        const resposta = await fetch('https://mindfine-backend.onrender.com/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo_usuario: tipoUsuarioSelecionado,
+                identificador: identificador,
+                senha: senha
+            })
         });
+
+        const dados = await resposta.json();
+
+        if (dados.sucesso) {
+            mostrarMensagem('Login realizado com sucesso!', 'sucesso');
+            
+            localStorage.setItem('usuario', JSON.stringify({
+                nome: dados.nome,
+                email: dados.email,
+                matricula: dados.matricula,
+                tipo: dados.tipo
+            }));
+            
+            let paginaDestino = '../inicial-mobile.html';
+            if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola-mobile.html';
+            else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa-mobile.html';
+            
+            setTimeout(() => {
+                window.location.href = paginaDestino;
+            }, 1500);
+        } else {
+            mostrarMensagem(dados.mensagem || 'Credenciais inválidas', 'erro');
+            btnLogin.disabled = false;
+            btnLogin.innerHTML = 'Entrar na conta';
+        }
+    } catch (erro) {
+        console.error('Erro:', erro);
+        mostrarMensagem('Erro ao conectar com o servidor!', 'erro');
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = 'Entrar na conta';
+    }
+});
     </script>
 </body>
 </html>
