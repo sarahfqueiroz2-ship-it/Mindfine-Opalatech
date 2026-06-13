@@ -384,9 +384,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 tipo: dados.tipo
             }));
             
-            let paginaDestino = '../inicial-mobile.html';
-            if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../inicio-escola-mobile.html';
-            else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../inicial-psicologa-mobile.html';
+            let paginaDestino = '../mobile/inicial-mobile.html';
+            if (tipoUsuarioSelecionado === 'gestao') paginaDestino = '../mobile/inicio-escola-mobile.html';
+            else if (tipoUsuarioSelecionado === 'psicologia') paginaDestino = '../mobile/inicial-psicologa-mobile.html';
             
             setTimeout(() => {
                 window.location.href = paginaDestino;
