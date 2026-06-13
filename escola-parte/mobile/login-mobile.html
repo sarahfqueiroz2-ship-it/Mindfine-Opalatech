@@ -280,7 +280,7 @@
 
                 <form id="loginForm">
                     <div class="input-group">
-                        <label class="input-label" id="userLabel">Matrícula / Email</label>
+                        <label class="input-label" id="userLabel">Matrícula</label>
                         <input type="text" id="identificador" class="input-field" placeholder="Digite seu acesso" required>
                     </div>
                     
@@ -336,7 +336,7 @@
             tipoUsuarioSelecionado = role;
             
             const label = document.getElementById('userLabel');
-            if(role === 'estudante') label.innerText = "Matrícula / Email";
+            if(role === 'estudante') label.innerText = "Matrícula";
             else if(role === 'gestao') label.innerText = "ID de Gestor";
             else label.innerText = "CRP ou Email Profissional";
         }
