@@ -524,7 +524,7 @@
     async function carregarDados() {
         const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
         matriculaAtual = usuario.matricula;
-        if (!matriculaAtual) { window.location.href = 'login.html'; return; }
+        if (!matriculaAtual) { window.location.href = 'login-mobile.html'; return; }
 
         try {
             const res = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
