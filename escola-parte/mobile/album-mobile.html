@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Álbum de Figurinhas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 115%;
+            height: 115%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -7.5%;
+            top: -7.5%;
+        }
+
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-110vh); opacity: 0; }
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn {
+            color: #32B5F1;
+            font-size: 18px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Conteúdo principal */
+        .album-container {
+            position: relative;
+            z-index: 10;
+            padding: 70px 12px 20px;
+            min-height: 100vh;
+        }
+
+        /* Páginas em grid (mobile: uma página por vez) */
+        .pages-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .page-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .page-header-card {
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            padding: 12px 16px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title-card {
+            font-weight: 800;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .page-lock-status {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sticker-grid-card {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .sticker-slot-card {
+            aspect-ratio: 1 / 1;
+            background: #f4fbff;
+            border: 2px dashed #32B5F1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .sticker-slot-card.unlocked {
+            border: 2px solid #32B5F1;
+            background: white;
+        }
+
+        .sticker-slot-card.rare {
+            border-color: #ff9800;
+            box-shadow: 0 0 10px rgba(255,152,0,0.3);
+        }
+
+        .sticker-img-card {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+            filter: grayscale(1) brightness(0.5);
+        }
+
+        .sticker-slot-card.unlocked .sticker-img-card {
+            filter: grayscale(0) brightness(1);
+        }
+
+        .lock-icon-card {
+            font-size: 24px;
+            color: #999;
+        }
+
+        .rare-badge-card {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ff9800;
+            color: white;
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: 800;
+        }
+
+        .locked-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .locked-overlay i {
+            font-size: 20px;
+            color: white;
+        }
+
+        .locked-overlay span {
+            font-size: 10px;
+            color: #32B5F1;
+            font-weight: 700;
+        }
+
+        .page-footer-card {
+            padding: 12px 16px;
+            border-top: 1px solid #f0f4f8;
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        /* Counter */
+        .page-counter {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 100;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 13px;
+            z-index: 400;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<div class="mobile-header">
+    <a href="inicial-mobile.html" class="back-btn">
+        <i class="fas fa-chevron-left"></i> <span>Voltar</span>
+    </a>
+    <div class="logo">Álbum</div>
+    <div style="width: 50px;"></div>
+</div>
+
+<div class="album-container">
+    <div class="pages-grid" id="pagesGrid"></div>
+</div>
+
+<div class="page-counter" id="pageCounter">Carregando...</div>
+
+<div class="toast" id="toast">✅ Mensagem</div>
+
+<script>
+    const albumData = {
+        "capa-back": {
+            title: "Ilha Inicial",
+            stickers: ["../figurinhas/ft.png", "../figurinhas/ft2.png", "../figurinhas/ft3.png", "../figurinhas/ft4.png"],
+            requiredLevel: 1
+        },
+        "page1-front": {
+            title: "Ilha Pirata",
+            stickers: ["../figurinhas/ft8.png", "../figurinhas/ft6.png", "../figurinhas/ft7.png", "../figurinhas/figurinha-rara-pirata.jpeg"],
+            requiredLevel: 3
+        },
+        "page1-back": {
+            title: "Ilha Bruxo",
+            stickers: ["../figurinhas/ft12.png", "../figurinhas/ft13.png", "../figurinhas/ft14.png", "../figurinhas/figurinha-rara-bruxo.jpeg"],
+            requiredLevel: 5
+        },
+        "page2-front": {
+            title: "Novos Horizontes",
+            stickers: ["../figurinhas/p2a_1.jpg", "../figurinhas/p2a_2.jpg", "../figurinhas/p2a_3.jpg", "../figurinhas/p2a_4.jpg"],
+            requiredLevel: 7
+        },
+        "page2-back": {
+            title: "Tempo e Memória",
+            stickers: ["../figurinhas/p2b_1.jpg", "../figurinhas/p2b_2.jpg", "../figurinhas/p2b_3.jpg", "../figurinhas/p2b_4.jpg"],
+            requiredLevel: 10
+        }
+    };
+
+    let paginasDesbloqueadas = 1;
+    let figurinhasDesbloqueadas = {};
+    let matriculaAtual = '';
+    let currentLevel = 1;
+
+    // Toast
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = (isError ? '❌ ' : '✅ ') + msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Partículas
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = s + 'px';
+        b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
+
+    // Carregar dados
+    async function carregarAlbum() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula;
+        if (!matriculaAtual) {
+            window.location.href = 'login-mobile.html';
+            return;
+        }
+
+        try {
+            // Buscar nível do aluno
+            const progressoRes = await fetch(`https://mindfine-backend.onrender.com/api/progresso/${matriculaAtual}`);
+            const progresso = await progressoRes.json();
+            currentLevel = progresso.nivel || 1;
+
+            // Buscar páginas desbloqueadas
+            const paginasRes = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas/${matriculaAtual}`);
+            const paginasData = await paginasRes.json();
+            paginasDesbloqueadas = paginasData.paginas_desbloqueadas || 1;
+
+            // Buscar figurinhas desbloqueadas
+            const figRes = await fetch(`https://mindfine-backend.onrender.com/api/figurinhas/${matriculaAtual}`);
+            figurinhasDesbloqueadas = await figRes.json();
+
+            renderAlbum();
+        } catch (error) {
+            console.error('Erro ao carregar álbum:', error);
+            renderAlbum();
+        }
+    }
+
+    function isPaginaDesbloqueada(pageIndex) {
+        return pageIndex <= paginasDesbloqueadas;
+    }
+
+    function isFigurinhaDesbloqueada(paginaKey, slot) {
+        return figurinhasDesbloqueadas[paginaKey] && figurinhasDesbloqueadas[paginaKey][slot];
+    }
+
+    async function desbloquearPagina(pageIndex) {
+        if (pageIndex <= paginasDesbloqueadas) return true;
+        try {
+            await fetch('https://mindfine-backend.onrender.com/api/figurinhas/paginas-desbloqueadas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matricula: matriculaAtual, paginas: pageIndex })
+            });
+            paginasDesbloqueadas = pageIndex;
+            renderAlbum();
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    }
+
+    function tentarDesbloquearFigurinha(paginaKey, slot) {
+        const pageIndex = paginaKey === 'capa-back' ? 0 : parseInt(paginaKey.match(/page(\d+)/)?.[1] || 0);
+        
+        if (!isPaginaDesbloqueada(pageIndex)) {
+            const levelNeeded = albumData[paginaKey]?.requiredLevel || (pageIndex * 2 + 1);
+            showToast(`Nível ${levelNeeded} necessário para desbloquear esta página`, true);
+            return;
+        }
+
+        if (isFigurinhaDesbloqueada(paginaKey, slot)) {
+            showToast("Figurinha já desbloqueada!");
+            return;
+        }
+
+        showToast("Complete missões nas ilhas para desbloquear esta figurinha", false);
+    }
+
+    function renderAlbum() {
+        const container = document.getElementById('pagesGrid');
+        container.innerHTML = '';
+        
+        let totalDesbloqueadas = 0;
+        let totalPaginas = Object.keys(albumData).length;
+
+        // Capa (índice 0)
+        const capaData = albumData["capa-back"];
+        const capaDesbloqueada = isPaginaDesbloqueada(0);
+        if (capaDesbloqueada) totalDesbloqueadas++;
+        
+        const capaCard = criarPageCard("capa-back", 0, "Capa", capaData, capaDesbloqueada);
+        container.appendChild(capaCard);
+
+        // Páginas de conteúdo
+        let pageIndex = 1;
+        for (let i = 1; i <= 2; i++) {
+            const frontKey = `page${i}-front`;
+            const backKey = `page${i}-back`;
+            
+            if (albumData[frontKey]) {
+                const frontDesbloqueada = isPaginaDesbloqueada(pageIndex);
+                if (frontDesbloqueada) totalDesbloqueadas++;
+                const frontCard = criarPageCard(frontKey, pageIndex, albumData[frontKey].title, albumData[frontKey], frontDesbloqueada);
+                container.appendChild(frontCard);
+                pageIndex++;
+            }
+            
+            if (albumData[backKey]) {
+                const backDesbloqueada = isPaginaDesbloqueada(pageIndex);
+                if (backDesbloqueada) totalDesbloqueadas++;
+                const backCard = criarPageCard(backKey, pageIndex, albumData[backKey].title, albumData[backKey], backDesbloqueada);
+                container.appendChild(backCard);
+                pageIndex++;
+            }
+        }
+
+        document.getElementById('pageCounter').textContent = `${totalDesbloqueadas} / ${totalPaginas} páginas desbloqueadas`;
+    }
+
+    function criarPageCard(key, pageNum, title, data, isDesbloqueada) {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        
+        const nivelNecessario = data.requiredLevel || 1;
+        const podeDesbloquear = currentLevel >= nivelNecessario;
+        
+        card.innerHTML = `
+            <div class="page-header-card">
+                <span class="page-title-card">${title || `Página ${pageNum}`}</span>
+                <div class="page-lock-status">
+                    ${isDesbloqueada ? '<i class="fas fa-unlock-alt"></i> Desbloqueada' : `<i class="fas fa-lock"></i> Nível ${nivelNecessario}`}
+                </div>
+            </div>
+            <div class="sticker-grid-card">
+                ${data.stickers.map((sticker, idx) => {
+                    const isRare = (idx === 3);
+                    const desbloqueada = isDesbloqueada && isFigurinhaDesbloqueada(key, idx);
+                    return `
+                        <div class="sticker-slot-card ${desbloqueada ? 'unlocked' : ''} ${isRare ? 'rare' : ''}" 
+                             onclick="tentarDesbloquearFigurinha('${key}', ${idx})">
+                            ${isRare && desbloqueada ? '<span class="rare-badge-card">RARA</span>' : ''}
+                            ${desbloqueada ? 
+                                `<img src="${sticker}" class="sticker-img-card" onerror="this.src='https://via.placeholder.com/100?text=Figurinha'">` : 
+                                `<div class="lock-icon-card"><i class="fas fa-lock"></i></div>`
+                            }
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            ${!isDesbloqueada && !podeDesbloquear ? 
+                `<div class="page-footer-card"><i class="fas fa-star"></i> Atinga o nível ${nivelNecessario} para desbloquear</div>` : 
+                !isDesbloqueada && podeDesbloquear ?
+                `<div class="page-footer-card" style="color:#32B5F1; cursor:pointer;" onclick="desbloquearPagina(${pageNum})">
+                    <i class="fas fa-unlock"></i> Clique para desbloquear página
+                </div>` : ''
+            }
+        `;
+        
+        return card;
+    }
+
+    window.tentarDesbloquearFigurinha = tentarDesbloquearFigurinha;
+    window.desbloquearPagina = desbloquearPagina;
+
+    carregarAlbum();
+</script>
+</body>
+</html>
