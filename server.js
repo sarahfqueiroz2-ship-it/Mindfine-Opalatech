@@ -987,12 +987,12 @@ app.get('/api/relatorio/historico', async (req, res) => {
     const { curso, ano } = req.query;
     
     let sql = `
-        SELECT TO_CHAR(e.data, 'YYYY-MM') as mes,
+        SELECT TO_CHAR(TO_DATE(e.data, 'YYYY-MM-DD'), 'YYYY-MM') as mes,
                AVG(u.nivel) as nivel_medio,
                COUNT(e.id) as total_emocoes
         FROM emocoes e
         JOIN usuarios u ON e.matricula = u.matricula
-        WHERE e.data >= CURRENT_DATE - INTERVAL '5 months'
+        WHERE TO_DATE(e.data, 'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '5 months'
     `;
     let params = [];
     let idx = 1;
@@ -1010,7 +1010,7 @@ app.get('/api/relatorio/historico', async (req, res) => {
         idx++;
     }
     
-    sql += ` GROUP BY TO_CHAR(e.data, 'YYYY-MM') ORDER BY mes DESC LIMIT 5`;
+    sql += ` GROUP BY TO_CHAR(TO_DATE(e.data, 'YYYY-MM-DD'), 'YYYY-MM') ORDER BY mes DESC LIMIT 5`;
     
     try {
         const result = await pool.query(sql, params);
@@ -1029,6 +1029,7 @@ app.get('/api/relatorio/historico', async (req, res) => {
         
         res.json(historico);
     } catch (err) {
+        console.error('Erro no histórico:', err);
         res.status(500).json({ erro: err.message });
     }
 });
