@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Playlist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-110vh); opacity: 0; }
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn {
+            color: #32B5F1;
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        .diary-title h2 {
+            font-size: 14px;
+            color: #0277bd;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-header-action {
+            background: #32B5F1;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #32B5F1;
+        }
+
+        /* Content Sections */
+        .content-section {
+            position: absolute;
+            top: 115px;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            padding: 16px;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* Music Grid */
+        .music-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .music-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-img-container {
+            width: 100%;
+            height: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .music-card:active .play-overlay {
+            opacity: 1;
+        }
+
+        .card-info {
+            padding: 10px;
+            position: relative;
+            text-align: center;
+        }
+
+        .card-info strong {
+            font-size: 12px;
+            color: #0277bd;
+            display: block;
+        }
+
+        .card-info p {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .btn-like {
+            position: absolute;
+            top: -15px;
+            right: 8px;
+            background: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #ccc;
+            cursor: pointer;
+        }
+
+        .btn-like.active {
+            color: #ff4757;
+        }
+
+        /* Empty message */
+        .empty-msg {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        /* Navbar inferior */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #b3e5fc;
+            font-size: 10px;
+            font-weight: 600;
+            gap: 4px;
+        }
+
+        .bottom-nav a i {
+            font-size: 20px;
+        }
+
+        .bottom-nav a.active {
+            color: #32B5F1;
+        }
+
+        /* Player Modal */
+        .player-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-modal.open {
+            display: flex;
+        }
+
+        .player-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            position: relative;
+        }
+
+        .player-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #ccc;
+            cursor: pointer;
+        }
+
+        .disk-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            border: 4px solid #32B5F1;
+            overflow: hidden;
+        }
+
+        .disk-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rotating {
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .player-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0277bd;
+            margin-bottom: 4px;
+        }
+
+        .player-artist {
+            font-size: 11px;
+            color: #32B5F1;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-ctrl {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #32B5F1;
+            cursor: pointer;
+        }
+
+        .btn-play {
+            font-size: 44px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 12px;
+            z-index: 400;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<div class="mobile-header">
+    <a href="inicial-mobile.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+    <div class="diary-title"><h2>Playlist</h2></div>
+    <div class="header-right">
+        <button class="btn-header-action" onclick="playSurprise()"><i class="fas fa-random"></i></button>
+        <button class="btn-header-action" onclick="openPlayer()"><i class="fas fa-music"></i></button>
+    </div>
+</div>
+
+<div class="tabs-container">
+    <button class="tab-btn active" onclick="switchTab('natureza', this)">Natureza</button>
+    <button class="tab-btn" onclick="switchTab('lofi', this)">Lo-Fi</button>
+    <button class="tab-btn" onclick="switchTab('foco', this)">Foco</button>
+    <button class="tab-btn" onclick="switchTab('favoritas', this)"><i class="fas fa-heart"></i> Favoritos</button>
+</div>
+
+<div id="natureza" class="content-section active">
+    <div class="music-grid" id="lista-natureza"></div>
+</div>
+<div id="lofi" class="content-section">
+    <div class="music-grid" id="lista-lofi"></div>
+</div>
+<div id="foco" class="content-section">
+    <div class="music-grid" id="lista-foco"></div>
+</div>
+<div id="favoritas" class="content-section">
+    <div class="music-grid" id="lista-favoritas"></div>
+</div>
+
+<div class="bottom-nav">
+    <a href="inicial-mobile.html"><i class="fas fa-home"></i><span>Início</span></a>
+    <a href="diario-mobile.html"><i class="fas fa-book"></i><span>Diário</span></a>
+    <a href="chat-com-psicologa-mobile.html"><i class="fas fa-comments"></i><span>Apoio</span></a>
+    <a href="pagina-de-respiracao-mobile.html"><i class="fas fa-wind"></i><span>Respiração</span></a>
+    <a href="playlist-mobile.html" class="active"><i class="fas fa-music"></i><span>Playlist</span></a>
+</div>
+
+<!-- Player Modal -->
+<div class="player-modal" id="playerModal">
+    <div class="player-card">
+        <button class="player-close" onclick="closePlayer()"><i class="fas fa-times"></i></button>
+        <div class="disk-container" id="disk">
+            <img src="" class="disk-img" id="player-img">
+        </div>
+        <div class="player-title" id="player-title">Selecione uma música</div>
+        <div class="player-artist" id="player-artist">Mindfine</div>
+        <div class="player-controls">
+            <button class="btn-ctrl" onclick="prevTrack()"><i class="fas fa-backward-step"></i></button>
+            <button class="btn-ctrl btn-play" onclick="togglePlayPause()"><i class="fas fa-play-circle" id="play-icon"></i></button>
+            <button class="btn-ctrl" onclick="nextTrack()"><i class="fas fa-forward-step"></i></button>
+        </div>
+        <audio id="main-audio"></audio>
+    </div>
+</div>
+
+<div class="toast" id="toast">✅ Mensagem</div>
+
+<script>
+    let matriculaAtual = '';
+    let favoritos = [];
+    let currentTrackIndex = 0;
+    let currentTrackList = [];
+
+    const musicas = [
+        { id: 0, title: "Chuva Suave", cat: "natureza", img: "../fundos/chuva-caindo.jpeg", src: "../sons/chuva.mp3", artista: "Natureza" },
+        { id: 1, title: "Chuva Musical", cat: "natureza", img: "../fundos/chuva-caindo.jpeg", src: "../sons/chuva-meditação.mp3", artista: "Natureza" },
+        { id: 2, title: "Canto dos pássaros", cat: "natureza", img: "../fundos/chuva-caindo.jpeg", src: "../sons/passaro-calmo.mp3", artista: "Natureza" },
+        { id: 3, title: "Vento suave", cat: "natureza", img: "../fundos/chuva-caindo.jpeg", src: "../sons/vento.mp3", artista: "Natureza" },
+        { id: 4, title: "Noite de Estudo", cat: "lofi", img: "../fundos/chuva-caindo.jpeg", src: "../sons/mar-agitado.mp3", artista: "Lo-Fi" },
+        { id: 5, title: "Vibe Relax", cat: "lofi", img: "../fundos/chuva-caindo.jpeg", src: "../sons/lo-fi-cafeteria.mp3", artista: "Lo-Fi" },
+        { id: 6, title: "Foco Total", cat: "foco", img: "../fundos/chuva-caindo.jpeg", src: "../sons/chuva.mp3", artista: "Foco" }
+    ];
+
+    const audio = document.getElementById('main-audio');
+    const playIcon = document.getElementById('play-icon');
+    const disk = document.getElementById('disk');
+
+    // Toast
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = (isError ? '❌ ' : '✅ ') + msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Partículas
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = s + 'px';
+        b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
+
+    // Backend functions
+    async function carregarFavoritos() {
+        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        matriculaAtual = usuario.matricula;
+        if (!matriculaAtual) {
+            window.location.href = 'login-mobile.html';
+            return;
+        }
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}`);
+            const dados = await response.json();
+            favoritos = dados.favoritos || [];
+            renderPlaylists();
+        } catch (error) {
+            console.error(error);
+            favoritos = [];
+            renderPlaylists();
+        }
+    }
+
+    async function adicionarFavorito(musicaId, titulo, artista) {
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ musica_id: musicaId, titulo: titulo, artista: artista })
+            });
+            const result = await response.json();
+            if (result.sucesso) {
+                favoritos.push(musicaId);
+                renderPlaylists();
+                showToast("Adicionada aos favoritos");
+                return true;
+            }
+            return false;
+        } catch (error) {
+            showToast("Erro ao adicionar", true);
+            return false;
+        }
+    }
+
+    async function removerFavorito(musicaId) {
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/playlist/${matriculaAtual}/${musicaId}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.sucesso) {
+                favoritos = favoritos.filter(id => id !== musicaId);
+                renderPlaylists();
+                showToast("Removida dos favoritos");
+                return true;
+            }
+            return false;
+        } catch (error) {
+            showToast("Erro ao remover", true);
+            return false;
+        }
+    }
+
+    function createCard(m) {
+        const isFav = favoritos.includes(m.id);
+        return `
+            <div class="music-card" onclick="playTrack(${m.id})">
+                <div class="card-img-container">
+                    <img src="${m.img}" class="card-img" onerror="this.src='https://via.placeholder.com/100'">
+                    <div class="play-overlay"><i class="fas fa-play"></i></div>
+                </div>
+                <div class="card-info">
+                    <button class="btn-like ${isFav ? 'active' : ''}" onclick="toggleFavorite(event, ${m.id}, '${m.title}', '${m.artista}')">
+                        <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
+                    </button>
+                    <strong>${m.title}</strong>
+                    <p>${m.cat.toUpperCase()}</p>
+                </div>
+            </div>`;
+    }
+
+    async function toggleFavorite(event, id, titulo, artista) {
+        event.stopPropagation();
+        const isFav = favoritos.includes(id);
+        if (isFav) {
+            await removerFavorito(id);
+        } else {
+            await adicionarFavorito(id, titulo, artista);
+        }
+    }
+
+    function renderPlaylists() {
+        document.getElementById('lista-natureza').innerHTML = musicas.filter(m => m.cat === 'natureza').map(m => createCard(m)).join('');
+        document.getElementById('lista-lofi').innerHTML = musicas.filter(m => m.cat === 'lofi').map(m => createCard(m)).join('');
+        document.getElementById('lista-foco').innerHTML = musicas.filter(m => m.cat === 'foco').map(m => createCard(m)).join('');
+        
+        const favMusic = musicas.filter(m => favoritos.includes(m.id));
+        document.getElementById('lista-favoritas').innerHTML = favMusic.length ? favMusic.map(m => createCard(m)).join('') : '<div class="empty-msg">Nenhuma música favorita ainda</div>';
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function openPlayer() {
+        document.getElementById('playerModal').classList.add('open');
+    }
+
+    function closePlayer() {
+        document.getElementById('playerModal').classList.remove('open');
+    }
+
+    function playTrack(id) {
+        const track = musicas.find(m => m.id === id);
+        if (!track) return;
+        currentTrackIndex = musicas.indexOf(track);
+        currentTrackList = musicas;
+        audio.src = track.src;
+        document.getElementById('player-title').innerText = track.title;
+        document.getElementById('player-artist').innerText = track.cat.toUpperCase();
+        document.getElementById('player-img').src = track.img;
+        openPlayer();
+        audio.play();
+    }
+
+    function togglePlayPause() {
+        if (audio.paused) audio.play();
+        else audio.pause();
+    }
+
+    function updateUI() {
+        if (audio.paused) {
+            playIcon.className = "fas fa-play-circle";
+            disk.classList.remove('rotating');
+        } else {
+            playIcon.className = "fas fa-pause-circle";
+            disk.classList.add('rotating');
+        }
+    }
+
+    function nextTrack() {
+        if (!currentTrackList.length) return;
+        currentTrackIndex = (currentTrackIndex + 1) % currentTrackList.length;
+        const track = currentTrackList[currentTrackIndex];
+        audio.src = track.src;
+        document.getElementById('player-title').innerText = track.title;
+        document.getElementById('player-artist').innerText = track.cat.toUpperCase();
+        document.getElementById('player-img').src = track.img;
+        audio.play();
+    }
+
+    function prevTrack() {
+        if (!currentTrackList.length) return;
+        currentTrackIndex = (currentTrackIndex - 1 + currentTrackList.length) % currentTrackList.length;
+        const track = currentTrackList[currentTrackIndex];
+        audio.src = track.src;
+        document.getElementById('player-title').innerText = track.title;
+        document.getElementById('player-artist').innerText = track.cat.toUpperCase();
+        document.getElementById('player-img').src = track.img;
+        audio.play();
+    }
+
+    function playSurprise() {
+        const randomIndex = Math.floor(Math.random() * musicas.length);
+        playTrack(musicas[randomIndex].id);
+    }
+
+    audio.onplay = updateUI;
+    audio.onpause = updateUI;
+    audio.onended = nextTrack;
+
+    window.switchTab = switchTab;
+    window.toggleFavorite = toggleFavorite;
+    window.playTrack = playTrack;
+    window.togglePlayPause = togglePlayPause;
+    window.nextTrack = nextTrack;
+    window.prevTrack = prevTrack;
+    window.playSurprise = playSurprise;
+    window.openPlayer = openPlayer;
+    window.closePlayer = closePlayer;
+
+    carregarFavoritos();
+</script>
+</body>
+</html>
