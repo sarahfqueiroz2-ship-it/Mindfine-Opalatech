@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Atendimentos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-110vh); opacity: 0; }
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* Conteúdo principal */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 60px;
+        }
+
+        /* Chat Layout */
+        .chat-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        /* Conversas List - Horizontal scroll no mobile */
+        .conversations-list {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .conv-header {
+            padding: 12px 16px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .conv-header h3 {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0277bd;
+            text-transform: uppercase;
+        }
+
+        .conv-count {
+            background: #32B5F1;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .conversations-body {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 12px;
+            scrollbar-width: thin;
+        }
+
+        .conversation-item {
+            min-width: 200px;
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+
+        .conversation-item.active {
+            border-color: #32B5F1;
+            background: #f0faff;
+        }
+
+        .conversation-item.urgent {
+            border-left: 4px solid #ef4444;
+        }
+
+        .conv-info-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .conv-name {
+            font-weight: 800;
+            color: #0277bd;
+            font-size: 13px;
+        }
+
+        .conv-time {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .conv-preview {
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .chat-main-header {
+            padding: 12px 16px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .chat-user-info {
+            flex: 1;
+        }
+
+        #chatUserName {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0277bd;
+        }
+
+        #chatUserStatus {
+            font-size: 10px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .profile-btn {
+            background: none;
+            border: none;
+            color: #32B5F1;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: #f0faff;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            display: flex;
+        }
+
+        .message.student { justify-content: flex-start; }
+        .message.professional { justify-content: flex-end; }
+
+        .message-content {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 13px;
+            line-height: 1.4;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .message.student .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.professional .message-content {
+            background: #32B5F1;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 12px;
+            background: white;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 2px solid #f0f0f0;
+            border-radius: 25px;
+            padding: 10px 16px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            max-height: 80px;
+        }
+
+        .send-btn-chat {
+            background: #0277bd;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Empty State */
+        .empty-state {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 12px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        .modal h3 {
+            color: #0277bd;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+        }
+
+        .modal-btn.cancel {
+            background: white;
+            border: 2px solid #32B5F1;
+            color: #32B5F1;
+        }
+
+        .modal-btn.confirm {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-btn.resolve {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 13px;
+            z-index: 400;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<div class="mobile-header">
+    <div class="logo">Mindfine</div>
+    <button class="clear-btn" onclick="openClearModal()">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+</div>
+
+<div class="main-content">
+    <div class="chat-layout">
+        <!-- Lista de conversas (horizontal) -->
+        <div class="conversations-list">
+            <div class="conv-header">
+                <h3>Atendimentos</h3>
+                <span class="conv-count" id="convCount">0</span>
+            </div>
+            <div class="conversations-body" id="conversationsList"></div>
+        </div>
+
+        <!-- Área do chat -->
+        <div class="chat-area">
+            <div class="chat-main-header" id="chatHeader" style="display: none;">
+                <div class="chat-user-info">
+                    <div id="chatUserName">Nome do Aluno</div>
+                    <div id="chatUserStatus">Online</div>
+                </div>
+                <button class="profile-btn" onclick="viewProfile()">Perfil</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    <p>Selecione um atendimento</p>
+                </div>
+            </div>
+            <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                <textarea class="chat-input" id="messageInput" placeholder="Digite sua mensagem..." rows="1"></textarea>
+                <button class="send-btn-chat" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Limpar -->
+<div class="modal-overlay" id="clearModal">
+    <div class="modal">
+        <i class="fas fa-trash-alt" style="font-size: 36px; color: #ef4444; margin-bottom: 16px;"></i>
+        <h3>Limpar conversas</h3>
+        <p style="font-size: 13px; color: #666;">Deseja realmente limpar todas as conversas?</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeClearModal()">Cancelar</button>
+            <button class="modal-btn confirm" onclick="confirmClear()">Limpar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Finalizar -->
+<div class="modal-overlay" id="resolveModal">
+    <div class="modal">
+        <i class="fas fa-check-circle" style="font-size: 36px; color: #10b981; margin-bottom: 16px;"></i>
+        <h3>Finalizar atendimento</h3>
+        <p style="font-size: 13px; color: #666;">Deseja finalizar este atendimento?</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeResolveModal()">Cancelar</button>
+            <button class="modal-btn resolve" onclick="confirmResolve()">Finalizar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Perfil -->
+<div class="modal-overlay" id="profileModal">
+    <div class="modal">
+        <i class="fas fa-user-circle" style="font-size: 48px; color: #32B5F1; margin-bottom: 16px;"></i>
+        <h3 id="profileName">Perfil</h3>
+        <p id="profileInfo" style="font-size: 13px; color: #666;"></p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeProfileModal()" style="width:100%">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">✅ Mensagem</div>
+
+<script>
+    let conversations = [];
+    let currentConversation = null;
+    let pendingResolveId = null;
+    let pendingClear = false;
+
+    // Verificar login
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!usuario || !usuario.matricula) {
+        window.location.href = 'login-mobile.html';
+    }
+
+    // Partículas
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = s + 'px';
+        b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
+
+    // Funções auxiliares
+    function formatarData(dataISO) {
+        if (!dataISO) return '';
+        const d = new Date(dataISO);
+        return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = (isError ? '❌ ' : '✅ ') + msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // API Calls
+    async function loadConversations() {
+        try {
+            const response = await fetch('https://mindfine-backend.onrender.com/api/chats');
+            conversations = await response.json();
+            renderConversations();
+        } catch (error) {
+            console.error('Erro:', error);
+            conversations = [];
+            renderConversations();
+        }
+    }
+
+    async function loadMessages(conversaId) {
+        try {
+            const response = await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/mensagens`);
+            return await response.json();
+        } catch (error) {
+            return [];
+        }
+    }
+
+    async function sendMessageToBackend(conversaId, remetente, texto) {
+        try {
+            await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/mensagens`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remetente, texto })
+            });
+        } catch (error) { console.error(error); }
+    }
+
+    async function updateConversaStatus(conversaId, acao) {
+        try {
+            await fetch(`https://mindfine-backend.onrender.com/api/chats/${conversaId}/${acao}`, { method: 'PUT' });
+        } catch (error) { console.error(error); }
+    }
+
+    async function clearAllChats() {
+        try {
+            await fetch('https://mindfine-backend.onrender.com/api/chats', { method: 'DELETE' });
+            await loadConversations();
+            currentConversation = null;
+            document.getElementById('chatHeader').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'none';
+            document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Selecione um atendimento</p></div>';
+            showToast('Conversas limpas');
+        } catch (error) {
+            showToast('Erro ao limpar', true);
+        }
+    }
+
+    // Renderização
+    function renderConversations() {
+        const container = document.getElementById('conversationsList');
+        const ativas = conversations.filter(c => !c.resolvido);
+        const urgenteCount = ativas.filter(c => c.urgente).length;
+
+        document.getElementById('convCount').textContent = ativas.length;
+
+        if (ativas.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Nenhuma conversa ativa</div>';
+            return;
+        }
+
+        container.innerHTML = ativas.map(conv => `
+            <div class="conversation-item ${conv.urgente ? 'urgent' : ''} ${currentConversation?.id === conv.id ? 'active' : ''}"
+                 onclick="selectConversation('${conv.id}')">
+                <div class="conv-info-top">
+                    <span class="conv-name">${conv.nome_aluno}</span>
+                    <span class="conv-time">${formatarData(conv.ultima_data)}</span>
+                </div>
+                <div class="conv-preview">${conv.ultima_mensagem || 'Clique para conversar'}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderMessages(messages) {
+        const container = document.getElementById('chatMessages');
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Nenhuma mensagem ainda</p></div>';
+            return;
+        }
+        container.innerHTML = messages.map(msg => `
+            <div class="message ${msg.remetente === 'aluno' ? 'student' : 'professional'}">
+                <div class="message-content">
+                    ${msg.texto}
+                    <div class="message-time">${formatarData(msg.data_hora)}</div>
+                </div>
+            </div>
+        `).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function selectConversation(id) {
+        currentConversation = conversations.find(c => c.id === id);
+        if (!currentConversation) return;
+
+        document.getElementById('chatHeader').style.display = 'flex';
+        document.getElementById('chatInputArea').style.display = 'flex';
+        document.getElementById('chatUserName').innerText = currentConversation.nome_aluno;
+
+        const messages = await loadMessages(id);
+        renderMessages(messages);
+        renderConversations();
+        document.getElementById('messageInput').focus();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text || !currentConversation) return;
+
+        const now = new Date();
+        const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+        const container = document.getElementById('chatMessages');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message professional';
+        msgDiv.innerHTML = `<div class="message-content">${text}<div class="message-time">${time}</div></div>`;
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+        input.value = '';
+
+        await sendMessageToBackend(currentConversation.id, 'professional', text);
+        await loadConversations();
+    }
+
+    async function toggleUrgent(id) {
+        await updateConversaStatus(id, 'urgente');
+        await loadConversations();
+        if (currentConversation?.id === id) {
+            currentConversation.urgente = !currentConversation.urgente;
+        }
+        renderConversations();
+    }
+
+    function openResolveModal(id) {
+        pendingResolveId = id;
+        document.getElementById('resolveModal').classList.add('open');
+    }
+
+    function closeResolveModal() {
+        document.getElementById('resolveModal').classList.remove('open');
+        pendingResolveId = null;
+    }
+
+    async function confirmResolve() {
+        if (pendingResolveId) {
+            await updateConversaStatus(pendingResolveId, 'resolver');
+            await loadConversations();
+            if (currentConversation?.id === pendingResolveId) {
+                currentConversation = null;
+                document.getElementById('chatHeader').style.display = 'none';
+                document.getElementById('chatInputArea').style.display = 'none';
+                document.getElementById('chatMessages').innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>Selecione um atendimento</p></div>';
+            }
+            showToast('Atendimento finalizado');
+        }
+        closeResolveModal();
+    }
+
+    function openClearModal() {
+        document.getElementById('clearModal').classList.add('open');
+    }
+
+    function closeClearModal() {
+        document.getElementById('clearModal').classList.remove('open');
+    }
+
+    async function confirmClear() {
+        closeClearModal();
+        await clearAllChats();
+    }
+
+    function viewProfile() {
+        if (!currentConversation) return;
+        const modal = document.getElementById('profileModal');
+        if (currentConversation.anonimo) {
+            document.getElementById('profileName').innerText = 'Perfil Protegido';
+            document.getElementById('profileInfo').innerHTML = '<i class="fas fa-user-secret"></i> Este aluno escolheu ser anônimo.';
+        } else {
+            document.getElementById('profileName').innerText = currentConversation.nome_aluno;
+            document.getElementById('profileInfo').innerHTML = `Matrícula: ${currentConversation.matricula_aluno}`;
+        }
+        modal.classList.add('open');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.remove('open');
+    }
+
+    // Auto-refresh
+    setInterval(async () => {
+        await loadConversations();
+        if (currentConversation) {
+            const messages = await loadMessages(currentConversation.id);
+            renderMessages(messages);
+        }
+    }, 5000);
+
+    // Inicializar
+    loadConversations();
+
+    // Enter para enviar
+    document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>
