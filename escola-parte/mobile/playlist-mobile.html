@@ -22,14 +22,14 @@
             background: #000;
         }
 
-        .background-layer {
+        .background-layer { z-index: 0;
             position: fixed;
             width: 110%;
             height: 110%;
             background-image: url('../fundos/fundo-a.png');
             background-size: cover;
             background-position: center;
-            z-index: 1;
+            z-index: 0;
             left: -5%;
             top: -5%;
             filter: blur(8px) brightness(0.6);
@@ -42,7 +42,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 2;
+            z-index: 1;
         }
 
         .bubble {
@@ -392,7 +392,7 @@
             transform: translateY(0);
             opacity: 1;
         }
-    </style>
+    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
 </head>
 <body>
 
@@ -717,4 +717,4 @@ carregarFavoritos();
     z-index: 150 !important;
     position: relative;
 }
-</style>
+.background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>

@@ -21,7 +21,7 @@
             background: #000;
         }
 
-        .background-layer {
+        .background-layer { z-index: 0;
             position: fixed;
             width: 110%;
             height: 110%;
@@ -39,7 +39,7 @@
             width: 100vw;
             height: 100vh;
             position: absolute;
-            z-index: 1;
+            z-index: 0;
             top: 0;
             left: 0;
         }
@@ -51,7 +51,7 @@
             border-radius: 50%;
             pointer-events: none;
             box-shadow: 0 0 10px white;
-            z-index: 2;
+            z-index: 1;
             animation: rise linear infinite;
         }
 
@@ -202,7 +202,7 @@
             width: 100%;
             cursor: pointer;
         }
-    </style>
+    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
 </head>
 <body>
 
