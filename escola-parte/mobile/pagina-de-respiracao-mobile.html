@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Respiração</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #000;
+            color: white;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px;
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .neon-title {
+            font-weight: 800;
+            font-size: 18px;
+            color: white;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px #32B5F1;
+            letter-spacing: 2px;
+        }
+
+        /* Main Content */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 16px 80px;
+        }
+
+        /* Menu Container */
+        #menu-container {
+            background: white;
+            border: 2px solid #32B5F1;
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #menu-container h2 {
+            color: #0277bd;
+            font-weight: 800;
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        #menu-container p {
+            color: #32B5F1;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            margin: 12px 0;
+            border: none;
+            background: #32B5F1;
+            color: white;
+            font-size: 14px;
+            font-weight: 800;
+            border-radius: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        /* Exercise Container */
+        #exercise-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            text-align: center;
+        }
+
+        #exercise-container.show {
+            display: flex;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .btn-back {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 110;
+            background: white;
+            color: #32B5F1;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        #status-text {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.5s ease;
+        }
+
+        .breathing-circle {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            border: 6px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .breathing-circle img {
+            width: 65%;
+            height: 65%;
+            object-fit: contain;
+        }
+
+        /* Animações */
+        @keyframes anim-478 { 0% { transform: scale(1); } 21% { transform: scale(1.4); } 58% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        @keyframes anim-box { 0% { transform: scale(1); } 25% { transform: scale(1.4); } 50% { transform: scale(1.4); } 75% { transform: scale(1); } 100% { transform: scale(1); } }
+        @keyframes anim-balance { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+        .run-478 { animation: anim-478 19s infinite ease-in-out; }
+        .run-box { animation: anim-box 16s infinite linear; }
+        .run-balance { animation: anim-balance 10s infinite ease-in-out; }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #b3e5fc;
+            font-size: 10px;
+            font-weight: 600;
+            gap: 4px;
+        }
+
+        .bottom-nav a i {
+            font-size: 20px;
+        }
+
+        .bottom-nav a.active {
+            color: #32B5F1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+
+<div class="mobile-header">
+    <div class="neon-title">RESPIRAÇÃO</div>
+</div>
+
+<div class="main-content">
+    <div id="menu-container">
+        <h2>Mindfine</h2>
+        <p>Escolha uma técnica para relaxar</p>
+        <button class="btn" onclick="startBreathing('478')">Relaxamento (4-7-8)</button>
+        <button class="btn" onclick="startBreathing('box')">Quadrada (Box)</button>
+        <button class="btn" onclick="startBreathing('balance')">Equilíbrio (5-5)</button>
+    </div>
+
+    <div id="exercise-container">
+        <button class="btn-back" onclick="resetApp()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div id="status-text">Prepare-se...</div>
+        <div class="breathing-circle" id="circle">
+            <img src="../pandas/skin.png" alt="Panda">
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="inicial-mobile.html"><i class="fas fa-home"></i><span>Início</span></a>
+    <a href="diario-mobile.html"><i class="fas fa-book"></i><span>Diário</span></a>
+    <a href="chat-com-psicologa-mobile.html"><i class="fas fa-comments"></i><span>Apoio</span></a>
+    <a href="pagina-de-respiracao-mobile.html" class="active"><i class="fas fa-wind"></i><span>Respiração</span></a>
+    <a href="playlist-mobile.html"><i class="fas fa-music"></i><span>Playlist</span></a>
+</div>
+
+<script>
+    const menu = document.getElementById('menu-container');
+    const exercise = document.getElementById('exercise-container');
+    const circle = document.getElementById('circle');
+    const text = document.getElementById('status-text');
+    let textInterval = null;
+
+    const phaseColors = {
+        inspire: "#32B5F1",
+        segure: "#ffffff",
+        expire: "#2ecc71",
+        aguarde: "#f1c40f"
+    };
+
+    function updatePhase(status, color) {
+        text.innerText = status;
+        text.style.color = color;
+        text.style.textShadow = `0 0 10px ${color}`;
+        circle.style.borderColor = color;
+        circle.style.boxShadow = `0 0 20px ${color}66`;
+    }
+
+    function startBreathing(type) {
+        menu.style.display = 'none';
+        exercise.classList.add('show');
+        
+        circle.className = 'breathing-circle';
+        updatePhase("Inspire...", phaseColors.inspire);
+
+        if (type === '478') {
+            circle.classList.add('run-478');
+            runTextCycle(4000, 7000, 8000, 0);
+        } else if (type === 'box') {
+            circle.classList.add('run-box');
+            runTextCycle(4000, 4000, 4000, 4000);
+        } else if (type === 'balance') {
+            circle.classList.add('run-balance');
+            runTextCycle(5000, 0, 5000, 0);
+        }
+    }
+
+    function runTextCycle(inTime, holdTime, outTime, holdEmptyTime) {
+        const totalTime = inTime + holdTime + outTime + holdEmptyTime;
+        
+        const cycle = () => {
+            updatePhase("Inspire...", phaseColors.inspire);
+            
+            setTimeout(() => {
+                if (holdTime > 0) updatePhase("Segure...", phaseColors.segure);
+                
+                setTimeout(() => {
+                    updatePhase("Expire...", phaseColors.expire);
+                    
+                    setTimeout(() => {
+                        if (holdEmptyTime > 0) updatePhase("Aguarde...", phaseColors.aguarde);
+                    }, outTime);
+                }, holdTime);
+            }, inTime);
+        };
+        
+        cycle();
+        if (textInterval) clearInterval(textInterval);
+        textInterval = setInterval(cycle, totalTime);
+    }
+
+    function resetApp() {
+        if (textInterval) clearInterval(textInterval);
+        circle.className = 'breathing-circle';
+        circle.style.borderColor = "rgba(255,255,255,0.5)";
+        circle.style.boxShadow = "none";
+        text.style.color = "white";
+        text.style.textShadow = "none";
+        text.innerText = "Prepare-se...";
+        exercise.classList.remove('show');
+        menu.style.display = 'block';
+    }
+
+    // Verificar login
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!usuario || !usuario.matricula) {
+        window.location.href = 'login-mobile.html';
+    }
+</script>
+</body>
+</html>
