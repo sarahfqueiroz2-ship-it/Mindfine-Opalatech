@@ -703,62 +703,74 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
     }
 }
     
-    function gerarAlertasReais(alunos) {
-        const alertasGerados = [];
-        const agora = new Date();
-        const hora = `${agora.getHours()}:${agora.getMinutes().toString().padStart(2, '0')}`;
+   function gerarAlertasReais(alunos) {
+    const alertasGerados = [];
+    const agora = new Date();
+    const hora = `${agora.getHours()}:${agora.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Agrupar alunos por turma
+    const turmasMap = {};
+    alunos.forEach(aluno => {
+        const turma = getTurmaFromMatricula(aluno.matricula);
+        if (!turmasMap[turma]) {
+            turmasMap[turma] = [];
+        }
+        turmasMap[turma].push(aluno);
+    });
+    
+    // Alunos com nível baixo (1 ou 2) - mostrar por turma
+    for (const [turma, alunosDaTurma] of Object.entries(turmasMap)) {
+        const alunosBaixoNivel = alunosDaTurma.filter(a => (a.nivel || 1) <= 2);
         
-        // Alunos com nível baixo (1 ou 2)
-        const alunosBaixoNivel = alunos.filter(a => (a.nivel || 1) <= 2);
-        alunosBaixoNivel.forEach(aluno => {
+        if (alunosBaixoNivel.length > 0) {
             alertasGerados.push({
-                id: Date.now() + Math.random(),
+                id: Date.now() + Math.random() + turma,
                 sev: 'critico',
-                tipo: 'aluno',
+                tipo: 'turma',
                 emoji: 'alert-circle',
-                titulo: `Baixo engajamento — ${aluno.nome}`,
-                desc: `Aluno com nível ${aluno.nivel || 1} e apenas ${aluno.moedas || 0} moedas. Pouca participação nas atividades.`,
-                turma: getTurmaFromMatricula(aluno.matricula),
-                aluno: aluno.nome,
+                titulo: `Baixo engajamento - ${turma}`,
+                desc: `${alunosBaixoNivel.length} aluno(s) da ${turma} com nível crítico (≤ 2). Pouca participação nas atividades.`,
+                turma: turma,
+                aluno: '',
                 data: `Hoje, ${hora}`,
                 resolvido: false,
                 detalhes: {
-                    'Nível': aluno.nivel || 1,
-                    'Moedas': aluno.moedas || 0,
-                    'XP': aluno.xp || 0,
-                    'Matrícula': aluno.matricula
+                    'Turma': turma,
+                    'Alunos críticos': alunosBaixoNivel.length,
+                    'Nível médio da turma': (alunosDaTurma.reduce((sum, a) => sum + (a.nivel || 1), 0) / alunosDaTurma.length).toFixed(1)
                 }
             });
-        });
+        }
         
-        // Alunos com muitas moedas mas nível baixo (pode ser desbalanceado)
-        const alunosDesbalanceados = alunos.filter(a => (a.moedas || 0) > 500 && (a.nivel || 1) <= 2);
-        alunosDesbalanceados.forEach(aluno => {
+        // Alunos com muitas moedas mas nível baixo
+        const alunosDesbalanceados = alunosDaTurma.filter(a => (a.moedas || 0) > 500 && (a.nivel || 1) <= 2);
+        if (alunosDesbalanceados.length > 0) {
             alertasGerados.push({
-                id: Date.now() + Math.random(),
+                id: Date.now() + Math.random() + turma + 'desb',
                 sev: 'alto',
-                tipo: 'aluno',
+                tipo: 'turma',
                 emoji: 'alert-triangle',
-                titulo: `Progresso desbalanceado — ${aluno.nome}`,
-                desc: `Aluno acumulou ${aluno.moedas || 0} moedas mas ainda está no nível ${aluno.nivel || 1}. Pode estar gastando XP de forma inadequada.`,
-                turma: getTurmaFromMatricula(aluno.matricula),
-                aluno: aluno.nome,
+                titulo: `Progresso desbalanceado - ${turma}`,
+                desc: `${alunosDesbalanceados.length} aluno(s) da ${turma} acumularam muitas moedas mas estão com nível baixo.`,
+                turma: turma,
+                aluno: '',
                 data: `Hoje, ${hora}`,
                 resolvido: false,
                 detalhes: {
-                    'Moedas': aluno.moedas || 0,
-                    'Nível': aluno.nivel || 1,
-                    'Proporção': `${Math.round((aluno.moedas || 0) / ((aluno.nivel || 1) * 100))}x`
+                    'Turma': turma,
+                    'Alunos': alunosDesbalanceados.length,
+                    'Situação': 'Moedas acumuladas sem progresso de nível'
                 }
             });
-        });
-        
-        // Ordenar por severidade
-        return alertasGerados.sort((a, b) => {
-            const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
-            return ordem[a.sev] - ordem[b.sev];
-        });
+        }
     }
+    
+    // Ordenar por severidade
+    return alertasGerados.sort((a, b) => {
+        const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+        return ordem[a.sev] - ordem[b.sev];
+    });
+}
     
     function getTurmaFromMatricula(matricula) {
         if (!matricula || matricula.length < 5) return "Turma não definida";
@@ -850,10 +862,9 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
                         <div class="alert-titulo">${a.titulo}</div>
                         <div class="alert-desc">${a.desc}</div>
                         <div class="alert-meta">
-                            <span class="meta-chip turma">${a.turma}</span>
-                            ${a.aluno ? `<span class="meta-chip aluno">${a.aluno}</span>` : ''}
-                            <span class="meta-chip">${a.tipo === 'aluno' ? 'Individual' : 'Geral'}</span>
-                        </div>
+    <span class="meta-chip turma">${a.turma}</span>
+    <span class="meta-chip">${a.tipo === 'turma' ? 'Alerta por Turma' : 'Geral'}</span>
+</div>
                     </div>
                     <div class="alert-time-col">
                         <span class="alert-time">${a.data}</span>
