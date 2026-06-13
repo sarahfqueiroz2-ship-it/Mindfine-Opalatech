@@ -703,7 +703,7 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
     }
 }
     
-   function gerarAlertasReais(alunos) {
+  function gerarAlertasReais(alunos) {
     const alertasGerados = [];
     const agora = new Date();
     const hora = `${agora.getHours()}:${agora.getMinutes().toString().padStart(2, '0')}`;
@@ -713,53 +713,68 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
     alunos.forEach(aluno => {
         const turma = getTurmaFromMatricula(aluno.matricula);
         if (!turmasMap[turma]) {
-            turmasMap[turma] = [];
+            turmasMap[turma] = {
+                nome: turma,
+                alunos: [],
+                totalMoedas: 0,
+                totalXP: 0,
+                niveis: []
+            };
         }
-        turmasMap[turma].push(aluno);
+        turmasMap[turma].alunos.push(aluno);
+        turmasMap[turma].totalMoedas += aluno.moedas || 0;
+        turmasMap[turma].totalXP += aluno.xp || 0;
+        turmasMap[turma].niveis.push(aluno.nivel || 1);
     });
     
-    // Alunos com nível baixo (1 ou 2) - mostrar por turma
-    for (const [turma, alunosDaTurma] of Object.entries(turmasMap)) {
-        const alunosBaixoNivel = alunosDaTurma.filter(a => (a.nivel || 1) <= 2);
+    // Para cada turma, gerar alertas baseados na média
+    for (const [turmaNome, turmaData] of Object.entries(turmasMap)) {
+        const totalAlunos = turmaData.alunos.length;
+        const mediaNivel = turmaData.niveis.reduce((a,b) => a + b, 0) / totalAlunos;
+        const alunosBaixoNivel = turmaData.alunos.filter(a => (a.nivel || 1) <= 2).length;
         
-        if (alunosBaixoNivel.length > 0) {
+        // Alerta crítico: turma com nível médio baixo
+        if (mediaNivel < 3) {
             alertasGerados.push({
-                id: Date.now() + Math.random() + turma,
+                id: Date.now() + Math.random() + turmaNome,
                 sev: 'critico',
                 tipo: 'turma',
                 emoji: 'alert-circle',
-                titulo: `Baixo engajamento - ${turma}`,
-                desc: `${alunosBaixoNivel.length} aluno(s) da ${turma} com nível crítico (≤ 2). Pouca participação nas atividades.`,
-                turma: turma,
+                titulo: `⚠️ Nível crítico - ${turmaNome}`,
+                desc: `A turma ${turmaNome} está com nível médio ${mediaNivel.toFixed(1)}. ${alunosBaixoNivel} aluno(s) com nível crítico. Recomenda-se intervenção imediata.`,
+                turma: turmaNome,
                 aluno: '',
                 data: `Hoje, ${hora}`,
                 resolvido: false,
                 detalhes: {
-                    'Turma': turma,
-                    'Alunos críticos': alunosBaixoNivel.length,
-                    'Nível médio da turma': (alunosDaTurma.reduce((sum, a) => sum + (a.nivel || 1), 0) / alunosDaTurma.length).toFixed(1)
+                    'Turma': turmaNome,
+                    'Nível Médio': mediaNivel.toFixed(1),
+                    'Alunos na turma': totalAlunos,
+                    'Alunos críticos': alunosBaixoNivel,
+                    'Total de Moedas': turmaData.totalMoedas,
+                    'Total de XP': turmaData.totalXP
                 }
             });
         }
-        
-        // Alunos com muitas moedas mas nível baixo
-        const alunosDesbalanceados = alunosDaTurma.filter(a => (a.moedas || 0) > 500 && (a.nivel || 1) <= 2);
-        if (alunosDesbalanceados.length > 0) {
+        // Alerta médio: turma com nível médio moderado
+        else if (mediaNivel < 5) {
             alertasGerados.push({
-                id: Date.now() + Math.random() + turma + 'desb',
-                sev: 'alto',
+                id: Date.now() + Math.random() + turmaNome + 'mod',
+                sev: 'medio',
                 tipo: 'turma',
                 emoji: 'alert-triangle',
-                titulo: `Progresso desbalanceado - ${turma}`,
-                desc: `${alunosDesbalanceados.length} aluno(s) da ${turma} acumularam muitas moedas mas estão com nível baixo.`,
-                turma: turma,
+                titulo: `📊 Atenção - ${turmaNome}`,
+                desc: `A turma ${turmaNome} está com nível médio ${mediaNivel.toFixed(1)}. ${alunosBaixoNivel} aluno(s) precisam de acompanhamento.`,
+                turma: turmaNome,
                 aluno: '',
                 data: `Hoje, ${hora}`,
                 resolvido: false,
                 detalhes: {
-                    'Turma': turma,
-                    'Alunos': alunosDesbalanceados.length,
-                    'Situação': 'Moedas acumuladas sem progresso de nível'
+                    'Turma': turmaNome,
+                    'Nível Médio': mediaNivel.toFixed(1),
+                    'Alunos na turma': totalAlunos,
+                    'Alunos críticos': alunosBaixoNivel,
+                    'Total de Moedas': turmaData.totalMoedas
                 }
             });
         }
@@ -767,7 +782,7 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
     
     // Ordenar por severidade
     return alertasGerados.sort((a, b) => {
-        const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
+        const ordem = { critico: 0, medio: 1, baixo: 2 };
         return ordem[a.sev] - ordem[b.sev];
     });
 }
@@ -831,54 +846,54 @@ await fetch('https://mindfine-backend.onrender.com/api/alertas', {
         lucide.createIcons();
     }
     
-    function alertCardHTML(a) {
-        const sevLabel = { critico:'Crítico', alto:'Alto', medio:'Médio', baixo:'Baixo', resolvido:'Resolvido' };
-        const resolvidoCls = a.resolvido ? ' resolvido' : '';
-        
-        const detailsHTML = `
-            <div class="alert-expanded" id="exp-${a.id}">
-                <div class="exp-grid">
-                    ${Object.entries(a.detalhes).map(([k,v]) => `
-                        <div class="exp-item">
-                            <div class="exp-label">${k}</div>
-                            <div class="exp-val">${v}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn-sm intervir" onclick="event.stopPropagation();criarIntervencao(${a.id})">Criar Intervenção</button>
-                    ${!a.resolvido ? `<button class="btn-sm resolve" onclick="event.stopPropagation();resolver(${a.id})">Marcar Resolvido</button>` : ''}
-                </div>
-            </div>`;
-        
-        return `
-            <div class="alert-card ${a.sev}${resolvidoCls}" id="card-${a.id}" onclick="toggleCard(${a.id})">
-                <div class="alert-card-inner">
-                    <div class="alert-left">
-                        <span class="alert-emoji"><i data-lucide="${a.emoji}" style="width:24px;height:24px;"></i></span>
-                        <span class="alert-sev ${a.resolvido ? 'resolvido' : a.sev}">${a.resolvido ? 'Resolvido' : sevLabel[a.sev]}</span>
+  function alertCardHTML(a) {
+    const sevLabel = { critico:'Crítico', medio:'Médio', baixo:'Baixo', resolvido:'Resolvido' };
+    const resolvidoCls = a.resolvido ? ' resolvido' : '';
+    
+    const detailsHTML = `
+        <div class="alert-expanded" id="exp-${a.id}">
+            <div class="exp-grid">
+                ${Object.entries(a.detalhes).map(([k,v]) => `
+                    <div class="exp-item">
+                        <div class="exp-label">${k}</div>
+                        <div class="exp-val">${v}</div>
                     </div>
-                    <div class="alert-body">
-                        <div class="alert-titulo">${a.titulo}</div>
-                        <div class="alert-desc">${a.desc}</div>
-                        <div class="alert-meta">
-    <span class="meta-chip turma">${a.turma}</span>
-    <span class="meta-chip">${a.tipo === 'turma' ? 'Alerta por Turma' : 'Geral'}</span>
-</div>
-                    </div>
-                    <div class="alert-time-col">
-                        <span class="alert-time">${a.data}</span>
-                        <div class="alert-actions" onclick="event.stopPropagation()">
-                            ${!a.resolvido
-                                ? `<button class="btn-sm resolve" onclick="resolver(${a.id})">Resolver</button>`
-                                : ''
-                            }
-                        </div>
+                `).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-sm intervir" onclick="event.stopPropagation();criarIntervencao('${a.id}')">Criar Intervenção</button>
+                ${!a.resolvido ? `<button class="btn-sm resolve" onclick="event.stopPropagation();resolver('${a.id}')">Marcar Resolvido</button>` : ''}
+            </div>
+        </div>`;
+    
+    return `
+        <div class="alert-card ${a.sev}${resolvidoCls}" id="card-${a.id}" onclick="toggleCard('${a.id}')">
+            <div class="alert-card-inner">
+                <div class="alert-left">
+                    <span class="alert-emoji"><i data-lucide="${a.emoji}" style="width:24px;height:24px;"></i></span>
+                    <span class="alert-sev ${a.resolvido ? 'resolvido' : a.sev}">${a.resolvido ? 'Resolvido' : sevLabel[a.sev]}</span>
+                </div>
+                <div class="alert-body">
+                    <div class="alert-titulo">${a.titulo}</div>
+                    <div class="alert-desc">${a.desc}</div>
+                    <div class="alert-meta">
+                        <span class="meta-chip turma">📚 ${a.turma}</span>
+                        <span class="meta-chip">🏫 Alerta por Turma</span>
                     </div>
                 </div>
-                ${detailsHTML}
-            </div>`;
-    }
+                <div class="alert-time-col">
+                    <span class="alert-time">${a.data}</span>
+                    <div class="alert-actions" onclick="event.stopPropagation()">
+                        ${!a.resolvido
+                            ? `<button class="btn-sm resolve" onclick="resolver('${a.id}')">Resolver</button>`
+                            : ''
+                        }
+                    </div>
+                </div>
+            </div>
+            ${detailsHTML}
+        </div>`;
+} 
     
     function toggleCard(id) {
         const card = document.getElementById('card-' + id);
