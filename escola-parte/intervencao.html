@@ -712,409 +712,469 @@
 
 
 <script>
-    let intervencoes = [];
-    let filtroPrioridade = 'todos';
-    let openId = null;
 
-    // ========== CARREGAR DADOS DO LOCALSTORAGE ==========
-    
-    function carregarIntervencoes() {
-        try {
-            // Tentar carregar do localStorage primeiro
-            const salvas = localStorage.getItem('mindfine_intervencoes');
-            if (salvas) {
-                intervencoes = JSON.parse(salvas);
-                console.log('✅ Intervenções carregadas do localStorage:', intervencoes.length);
-            } else {
-                // Gerar intervenções de exemplo
-                intervencoes = gerarIntervencoesExemplo();
-                salvarIntervencoes();
-                console.log('✅ Intervenções de exemplo geradas:', intervencoes.length);
-            }
-            
-            renderKanban();
-            atualizarKPIs();
-        } catch (error) {
-            console.error('❌ Erro:', error);
-            intervencoes = gerarIntervencoesExemplo();
-            renderKanban();
+let intervencoes = [];
+let filtroPrioridade = 'todos';
+let openId = null;
+let usuarios = [];
+
+// ========== CARREGAR DADOS DO BACKEND ==========
+
+async function carregarUsuarios() {
+    try {
+        const response = await fetch('https://mindfine-backend.onrender.com/api/admin/usuarios');
+        const data = await response.json();
+        // Filtrar apenas gestão e psicologia
+        usuarios = data.filter(u => u.tipo === 'gestao' || u.tipo === 'psicologia');
+        console.log('✅ Usuários carregados:', usuarios);
+        renderResponsaveis();
+        return usuarios;
+    } catch (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+        usuarios = [];
+        renderResponsaveis();
+        return [];
+    }
+}
+
+async function carregarIntervencoes() {
+    try {
+        const response = await fetch('https://mindfine-backend.onrender.com/api/intervencoes');
+        const data = await response.json();
+        if (data && data.length > 0) {
+            intervencoes = data;
+        } else {
+            // Gerar intervenções baseadas nos alertas
+            await gerarIntervencoesDosAlertas();
         }
-    }
-    
-    function salvarIntervencoes() {
-        localStorage.setItem('mindfine_intervencoes', JSON.stringify(intervencoes));
-    }
-    
-    function gerarIntervencoesExemplo() {
-        const hoje = new Date().toISOString().split('T')[0];
-        return [
-            {
-                id: Date.now() + 1,
-                status: 'pendente',
-                prioridade: 'urgente',
-                tipo: 'heart',
-                titulo: 'Acompanhamento pedagógico',
-                desc: 'Aluno com baixo engajamento. Necessita de acompanhamento individualizado.',
-                turma: '1° Informática',
-                responsavel: 'Coordenação',
-                data: hoje,
-                progresso: 0,
-                curso: 'inf',
-                aluno: 'João Silva'
-            },
-            {
-                id: Date.now() + 2,
-                status: 'andamento',
-                prioridade: 'media',
-                tipo: 'target',
-                titulo: 'Redirecionamento de foco',
-                desc: 'Aluno acumulou muitas moedas mas está no nível baixo.',
-                turma: '2° Administração',
-                responsavel: 'Prof. Orientador',
-                data: hoje,
-                progresso: 50,
-                curso: 'adm',
-                aluno: 'Maria Santos'
-            },
-            {
-                id: Date.now() + 3,
-                status: 'concluido',
-                prioridade: 'baixa',
-                tipo: 'check-circle',
-                titulo: 'Conversa de acolhimento',
-                desc: 'Atendimento realizado com sucesso.',
-                turma: '3° Meio Ambiente',
-                responsavel: 'Psicólogo Escolar',
-                data: hoje,
-                progresso: 100,
-                curso: 'ma',
-                aluno: 'Pedro Costa'
-            }
-        ];
-    }
-    
-    function getCursoCodigo(turma) {
-        if (turma.includes('Informática')) return 'inf';
-        if (turma.includes('Administração')) return 'adm';
-        if (turma.includes('Meio Ambiente')) return 'ma';
-        return 'todos';
-    }
-    
-    // ========== RENDER KANBAN ==========
-    
-    function renderKanban() {
-        const board = document.getElementById('kanbanBoard');
-        if (!board) {
-            console.error('Elemento kanbanBoard não encontrado!');
-            return;
-        }
-        
-        const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        const cols = ['pendente', 'andamento', 'concluido'];
-        const colMeta = {
-            pendente: { label: 'Pendente', cls: 'pending', icon: 'circle-x' },
-            andamento: { label: 'Em Andamento', cls: 'progress', icon: 'loader' },
-            concluido: { label: 'Concluído', cls: 'done', icon: 'check-circle' }
-        };
-        
-        board.innerHTML = cols.map(col => {
-            const itens = intervencoes.filter(i =>
-                i.status === col &&
-                (filtroPrioridade === 'todos' || i.prioridade === filtroPrioridade) &&
-                (q === '' || (i.titulo || '').toLowerCase().includes(q) || (i.turma || '').toLowerCase().includes(q) || (i.aluno || '').toLowerCase().includes(q))
-            );
-            const m = colMeta[col];
-            return `
-                <div class="kanban-col">
-                    <div class="col-header ${m.cls}">
-                        <span class="col-dot ${m.cls}"></span>
-                        <span class="col-title ${m.cls}">${m.label}</span>
-                        <span class="col-count ${m.cls}">${itens.length}</span>
-                    </div>
-                    ${itens.length === 0
-                        ? `<div class="empty-col"><div class="empty-col-icon"><i data-lucide="${m.icon}" style="width:28px;height:28px;color:#cbd5e1"></i></div><div class="empty-col-text">Nenhuma ação aqui</div></div>`
-                        : itens.map(i => cardHTML(i)).join('')}
-                </div>`;
-        }).join('');
-        
+        renderKanban();
         atualizarKPIs();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-        setTimeout(animateBars, 100);
-    }
-    
-    function cardHTML(i) {
-        const pLabel = { urgente: 'Urgente', media: 'Média', baixa: 'Baixa', info: 'Info' };
-        const cursoTag = `<span class="int-tag ${i.curso || getCursoCodigo(i.turma)}">${i.turma}</span>`;
-        const alunoTag = i.aluno ? `<span class="int-tag">${i.aluno}</span>` : '';
-        
-        const progBar = i.status !== 'pendente' ? `
-            <div class="int-progress-bar">
-                <div class="int-progress-fill" data-w="${i.progresso}"
-                     style="width:${i.progresso}%;background:${i.status === 'concluido' ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#32B5F1,#0277bd)'}">
-                </div>
-            </div>
-            <div class="int-progress-label">${i.progresso}% concluído</div>
-        ` : '';
-        
-        return `
-            <div class="int-card ${i.prioridade}" onclick="abrirModal(${i.id})">
-                <div class="int-card-top">
-                    <span class="int-tipo"><i data-lucide="${i.tipo}" style="width:18px;height:18px;"></i></span>
-                    <span class="int-prioridade ${i.prioridade}">${pLabel[i.prioridade]}</span>
-                </div>
-                <div class="int-titulo">${i.titulo}</div>
-                <div class="int-desc">${i.desc.substring(0, 80)}${i.desc.length > 80 ? '...' : ''}</div>
-                ${progBar}
-                <div class="int-footer">
-                    ${cursoTag}
-                    ${alunoTag}
-                    <span class="int-tag">${i.responsavel}</span>
-                    <span class="int-date">${formatarData(i.data)}</span>
-                </div>
-            </div>`;
-    }
-    
-    function atualizarKPIs() {
-        const total = intervencoes.length;
-        const pendentes = intervencoes.filter(i => i.status === 'pendente').length;
-        const concluidas = intervencoes.filter(i => i.status === 'concluido').length;
-        const eficacia = total > 0 ? Math.round((concluidas / total) * 100) : 0;
-        
-        const kpiValues = document.querySelectorAll('.kpi-value');
-        if (kpiValues[0]) kpiValues[0].textContent = total;
-        if (kpiValues[1]) kpiValues[1].textContent = pendentes;
-        if (kpiValues[2]) kpiValues[2].textContent = concluidas;
-        if (kpiValues[3]) kpiValues[3].textContent = eficacia + '%';
-    }
-    
-    function formatarData(d) {
-        if (!d) return '—';
-        const partes = d.split('-');
-        if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        return d;
-    }
-    
-    function animateBars() {
-        document.querySelectorAll('.int-progress-fill').forEach(el => {
-            const width = el.style.width;
-            if (width === '0%') el.style.width = el.getAttribute('data-w') + '%';
-        });
-    }
-    
-    // ========== FILTROS ==========
-    
-    function filtrar() {
+        renderTimeline();
+    } catch (error) {
+        console.error('❌ Erro ao carregar intervenções:', error);
+        intervencoes = [];
         renderKanban();
     }
-    
-    function setPill(btn, f) {
-        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        filtroPrioridade = f;
-        filtrar();
-    }
-    
-    // ========== MODAL ==========
-    
-    function abrirModal(id) {
-        const i = intervencoes.find(x => x.id === id);
-        if (!i) return;
-        openId = id;
+}
+
+async function gerarIntervencoesDosAlertas() {
+    try {
+        const responseAlertas = await fetch('https://mindfine-backend.onrender.com/api/alertas');
+        const alertas = await responseAlertas.json();
+        const alertasNaoResolvidos = alertas.filter(a => a.resolvido !== 1);
         
-        const statusLabel = { pendente: 'Pendente', andamento: 'Em Andamento', concluido: 'Concluído' };
-        const nextLabel = { pendente: '▶ Iniciar Ação', andamento: '✓ Marcar Concluído', concluido: '↺ Reabrir' };
-        
-        document.getElementById('modalTitulo').textContent = i.titulo;
-        document.getElementById('modalBtnOk').textContent = nextLabel[i.status];
-        
-        document.getElementById('modalBody').innerHTML = `
-            <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                <span class="int-prioridade ${i.prioridade}" style="font-size:11px;padding:5px 12px;">${i.prioridade === 'urgente' ? 'Urgente' : i.prioridade === 'media' ? 'Média' : i.prioridade === 'baixa' ? 'Baixa' : 'Info'}</span>
-                <span style="font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;background:#f0f4f8;color:var(--muted);">${statusLabel[i.status]}</span>
-            </div>
-            <div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="file-text"></i></span><div><div class="modal-detail-label">Descrição</div><div class="modal-detail-val">${i.desc}</div></div></div>
-            <div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="users"></i></span><div><div class="modal-detail-label">Turma</div><div class="modal-detail-val">${i.turma}</div></div></div>
-            ${i.aluno ? `<div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="user"></i></span><div><div class="modal-detail-label">Aluno</div><div class="modal-detail-val">${i.aluno}</div></div></div>` : ''}
-            <div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="user-check"></i></span><div><div class="modal-detail-label">Responsável</div><div class="modal-detail-val">${i.responsavel}</div></div></div>
-            <div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="calendar"></i></span><div><div class="modal-detail-label">Data Prevista</div><div class="modal-detail-val">${formatarData(i.data)}</div></div></div>
-            ${i.status !== 'pendente' ? `<div class="modal-detail-row"><span class="modal-detail-icon"><i data-lucide="bar-chart-2"></i></span><div><div class="modal-detail-label">Progresso</div><div class="modal-detail-val">${i.progresso}%</div></div></div>` : ''}
-        `;
-        
-        document.getElementById('modalOverlay').classList.add('open');
-        setTimeout(() => lucide.createIcons(), 100);
-    }
-    
-    function fecharModal(e) {
-        if (e.target === document.getElementById('modalOverlay') || e.target === document.querySelector('.modal-close')) {
-            fecharModalBtn();
+        for (const alerta of alertasNaoResolvidos) {
+            const novaIntervencao = {
+                id: Date.now() + Math.random(),
+                titulo: `Intervenção: ${alerta.titulo}`,
+                desc: alerta.descricao || 'Intervenção gerada automaticamente a partir do alerta.',
+                turma: alerta.turma,
+                aluno: '',
+                prioridade: alerta.severidade === 'critico' ? 'urgente' : (alerta.severidade === 'alto' ? 'media' : 'baixa'),
+                tipo: 'target',
+                responsavel: 'Coordenação',
+                data: new Date().toISOString().split('T')[0],
+                progresso: 0,
+                status: 'pendente',
+                curso: getCursoCodigo(alerta.turma)
+            };
+            
+            await fetch('https://mindfine-backend.onrender.com/api/intervencoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(novaIntervencao)
+            });
+            intervencoes.push(novaIntervencao);
         }
+        
+        renderKanban();
+    } catch (error) {
+        console.error('Erro ao gerar intervenções:', error);
+    }
+}
+
+async function salvarIntervencaoNoBackend(intervencao) {
+    try {
+        const response = await fetch('https://mindfine-backend.onrender.com/api/intervencoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(intervencao)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erro ao salvar intervenção:', error);
+        return null;
+    }
+}
+
+async function atualizarIntervencaoNoBackend(id, updates) {
+    try {
+        const response = await fetch(`https://mindfine-backend.onrender.com/api/intervencoes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erro ao atualizar intervenção:', error);
+        return null;
+    }
+}
+
+async function deletarIntervencaoNoBackend(id) {
+    try {
+        await fetch(`https://mindfine-backend.onrender.com/api/intervencoes/${id}`, {
+            method: 'DELETE'
+        });
+        return true;
+    } catch (error) {
+        console.error('Erro ao deletar intervenção:', error);
+        return false;
+    }
+}
+
+function getCursoCodigo(turma) {
+    if (!turma) return 'todos';
+    if (turma.includes('Informática')) return 'inf';
+    if (turma.includes('Administração')) return 'adm';
+    if (turma.includes('Meio Ambiente')) return 'ma';
+    return 'todos';
+}
+
+// ========== RENDER KANBAN ==========
+
+function renderKanban() {
+    const board = document.getElementById('kanbanBoard');
+    if (!board) return;
+    
+    const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const cols = ['pendente', 'andamento', 'concluido'];
+    const colMeta = {
+        pendente: { label: 'Pendente', cls: 'pending', icon: 'circle-x' },
+        andamento: { label: 'Em Andamento', cls: 'progress', icon: 'loader' },
+        concluido: { label: 'Concluído', cls: 'done', icon: 'check-circle' }
+    };
+    
+    board.innerHTML = cols.map(col => {
+        const itens = intervencoes.filter(i =>
+            i.status === col &&
+            (filtroPrioridade === 'todos' || i.prioridade === filtroPrioridade) &&
+            (q === '' || (i.titulo || '').toLowerCase().includes(q) || (i.turma || '').toLowerCase().includes(q))
+        );
+        const m = colMeta[col];
+        return `
+            <div class="kanban-col">
+                <div class="col-header ${m.cls}">
+                    <span class="col-dot ${m.cls}"></span>
+                    <span class="col-title ${m.cls}">${m.label}</span>
+                    <span class="col-count ${m.cls}">${itens.length}</span>
+                </div>
+                ${itens.length === 0
+                    ? `<div class="empty-col"><div class="empty-col-icon">📋</div><div class="empty-col-text">Nenhuma ação aqui</div></div>`
+                    : itens.map(i => cardHTML(i)).join('')}
+            </div>`;
+    }).join('');
+    
+    lucide.createIcons();
+    setTimeout(animateBars, 100);
+}
+
+function cardHTML(i) {
+    const pLabel = { urgente: 'Urgente', media: 'Média', baixa: 'Baixa', info: 'Info' };
+    const prioridadeClass = i.prioridade === 'urgente' ? 'urgente' : (i.prioridade === 'media' ? 'media' : 'baixa');
+    
+    const progBar = i.status !== 'pendente' ? `
+        <div class="int-progress-bar">
+            <div class="int-progress-fill" data-w="${i.progresso}"
+                 style="width:${i.progresso}%;background:${i.status === 'concluido' ? 'linear-gradient(90deg,#34d399,#10b981)' : 'linear-gradient(90deg,#32B5F1,#0277bd)'}">
+            </div>
+        </div>
+        <div class="int-progress-label">${i.progresso}% concluído</div>
+    ` : '';
+    
+    return `
+        <div class="int-card ${prioridadeClass}" onclick="abrirModal(${i.id})">
+            <div class="int-card-top">
+                <span class="int-tipo">🎯</span>
+                <span class="int-prioridade ${prioridadeClass}">${pLabel[i.prioridade] || 'Média'}</span>
+            </div>
+            <div class="int-titulo">${i.titulo || 'Sem título'}</div>
+            <div class="int-desc">${(i.descricao || i.desc || 'Sem descrição').substring(0, 80)}${(i.descricao || i.desc || '').length > 80 ? '...' : ''}</div>
+            ${progBar}
+            <div class="int-footer">
+                <span class="int-tag turma">📚 ${i.turma || 'Turma não definida'}</span>
+                <span class="int-tag">👤 ${i.responsavel || 'Não atribuído'}</span>
+                <span class="int-date">📅 ${formatarData(i.data_prevista || i.data)}</span>
+            </div>
+        </div>`;
+}
+
+function atualizarKPIs() {
+    const total = intervencoes.length;
+    const pendentes = intervencoes.filter(i => i.status === 'pendente').length;
+    const concluidas = intervencoes.filter(i => i.status === 'concluido').length;
+    const eficacia = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+    
+    const kpiValues = document.querySelectorAll('.kpi-value');
+    if (kpiValues[0]) kpiValues[0].textContent = total;
+    if (kpiValues[1]) kpiValues[1].textContent = pendentes;
+    if (kpiValues[2]) kpiValues[2].textContent = concluidas;
+    if (kpiValues[3]) kpiValues[3].textContent = eficacia + '%';
+}
+
+function formatarData(d) {
+    if (!d) return '—';
+    const partes = d.split('-');
+    if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    return d;
+}
+
+function animateBars() {
+    document.querySelectorAll('.int-progress-fill').forEach(el => {
+        const width = el.style.width;
+        if (width === '0%') el.style.width = el.getAttribute('data-w') + '%';
+    });
+}
+
+// ========== RENDER RESPONSÁVEIS (APENAS GESTÃO E PSICOLOGIA) ==========
+
+function renderResponsaveis() {
+    const container = document.getElementById('respContainer');
+    if (!container) return;
+    
+    if (usuarios.length === 0) {
+        container.innerHTML = '<div class="resp-row"><div class="resp-info"><div class="resp-name">Nenhum responsável cadastrado</div></div></div>';
+        return;
     }
     
-    function fecharModalBtn() {
-        document.getElementById('modalOverlay').classList.remove('open');
-        openId = null;
+    container.innerHTML = usuarios.map(user => {
+        const inicial = user.nome ? user.nome.substring(0, 2).toUpperCase() : 'US';
+        const cor = user.tipo === 'gestao' ? '#32B5F1' : '#8b5cf6';
+        const count = intervencoes.filter(i => i.responsavel === user.nome).length;
+        return `
+            <div class="resp-row">
+                <div class="resp-avatar" style="background:${cor}">${inicial}</div>
+                <div class="resp-info">
+                    <div class="resp-name">${user.nome || 'Usuário'}</div>
+                    <div class="resp-role">${user.tipo === 'gestao' ? 'Gestão Escolar' : 'Psicologia'}</div>
+                </div>
+                <span class="resp-count">${count} ação(ões)</span>
+            </div>`;
+    }).join('');
+}
+
+// ========== RENDER TIMELINE ==========
+
+function renderTimeline() {
+    const container = document.getElementById('timelineContainer');
+    if (!container) return;
+    
+    const concluidas = intervencoes.filter(i => i.status === 'concluido').slice(-5);
+    if (concluidas.length === 0) {
+        container.innerHTML = '<div class="tl-item"><div class="tl-content"><div class="tl-sub">Nenhuma intervenção concluída ainda</div></div></div>';
+        return;
     }
     
-    function avancarStatus() {
-        if (openId === null) return;
-        const i = intervencoes.find(x => x.id === openId);
-        if (!i) return;
-        
-        const next = { pendente: 'andamento', andamento: 'concluido', concluido: 'pendente' };
-        const prog = { pendente: 30, andamento: 100, concluido: 0 };
-        
-        i.status = next[i.status];
-        i.progresso = prog[i.status];
-        
-        salvarIntervencoes();
+    container.innerHTML = concluidas.map(i => `
+        <div class="tl-item">
+            <div class="tl-line-col"><div class="tl-dot" style="background:#10b981"></div><div class="tl-line"></div></div>
+            <div class="tl-content">
+                <div class="tl-title">${i.titulo || 'Sem título'}</div>
+                <div class="tl-sub">${i.turma || 'Turma não definida'}</div>
+                <div class="tl-time">${formatarData(i.data_prevista || i.data)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ========== FILTROS ==========
+
+function filtrar() {
+    renderKanban();
+}
+
+function setPill(btn, f) {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    filtroPrioridade = f;
+    filtrar();
+}
+
+// ========== MODAL ==========
+
+function abrirModal(id) {
+    const i = intervencoes.find(x => x.id == id);
+    if (!i) return;
+    openId = id;
+    
+    const statusLabel = { pendente: 'Pendente', andamento: 'Em Andamento', concluido: 'Concluído' };
+    const nextLabel = { pendente: '▶ Iniciar Ação', andamento: '✓ Marcar Concluído', concluido: '↺ Reabrir' };
+    
+    document.getElementById('modalTitulo').textContent = i.titulo || 'Sem título';
+    document.getElementById('modalBtnOk').textContent = nextLabel[i.status] || 'Avançar';
+    
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+            <span class="int-prioridade ${i.prioridade}" style="font-size:11px;padding:5px 12px;">${i.prioridade === 'urgente' ? 'Urgente' : i.prioridade === 'media' ? 'Média' : i.prioridade === 'baixa' ? 'Baixa' : 'Info'}</span>
+            <span style="font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;background:#f0f4f8;color:var(--muted);">${statusLabel[i.status] || 'Pendente'}</span>
+        </div>
+        <div class="modal-detail-row"><span class="modal-detail-icon">📄</span><div><div class="modal-detail-label">Descrição</div><div class="modal-detail-val">${i.descricao || i.desc || 'Sem descrição'}</div></div></div>
+        <div class="modal-detail-row"><span class="modal-detail-icon">👥</span><div><div class="modal-detail-label">Turma</div><div class="modal-detail-val">${i.turma || 'Turma não definida'}</div></div></div>
+        <div class="modal-detail-row"><span class="modal-detail-icon">👤</span><div><div class="modal-detail-label">Responsável</div><div class="modal-detail-val">${i.responsavel || 'Não atribuído'}</div></div></div>
+        <div class="modal-detail-row"><span class="modal-detail-icon">📅</span><div><div class="modal-detail-label">Data Prevista</div><div class="modal-detail-val">${formatarData(i.data_prevista || i.data)}</div></div></div>
+        ${i.status !== 'pendente' ? `<div class="modal-detail-row"><span class="modal-detail-icon">📊</span><div><div class="modal-detail-label">Progresso</div><div class="modal-detail-val">${i.progresso || 0}%</div></div></div>` : ''}
+    `;
+    
+    document.getElementById('modalOverlay').classList.add('open');
+}
+
+function fecharModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+        fecharModalBtn();
+    }
+}
+
+function fecharModalBtn() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    openId = null;
+}
+
+async function avancarStatus() {
+    if (openId === null) return;
+    const i = intervencoes.find(x => x.id == openId);
+    if (!i) return;
+    
+    const next = { pendente: 'andamento', andamento: 'concluido', concluido: 'pendente' };
+    const prog = { pendente: 30, andamento: 100, concluido: 0 };
+    
+    i.status = next[i.status];
+    i.progresso = prog[i.status];
+    
+    await atualizarIntervencaoNoBackend(i.id, { status: i.status, progresso: i.progresso });
+    fecharModalBtn();
+    renderKanban();
+    atualizarKPIs();
+    renderTimeline();
+    showNotif('Status atualizado!', `Intervenção ${i.status === 'concluido' ? 'concluída' : i.status === 'andamento' ? 'em andamento' : 'reaberta'}`, 'success');
+}
+
+async function excluirIntervencao() {
+    if (openId === null) return;
+    document.getElementById('confirmRemoveModal').style.display = 'flex';
+    document.getElementById('confirmRemoveBtn').onclick = async () => {
+        document.getElementById('confirmRemoveModal').style.display = 'none';
+        await deletarIntervencaoNoBackend(openId);
+        intervencoes = intervencoes.filter(x => x.id !== openId);
         fecharModalBtn();
         renderKanban();
-        showNotif('Status atualizado!', `Intervenção ${i.status === 'concluido' ? 'concluída' : i.status === 'andamento' ? 'em andamento' : 'reaberta'}`, 'success');
+        atualizarKPIs();
+        renderTimeline();
+        renderResponsaveis();
+        showNotif('Removido', 'Intervenção removida com sucesso!', 'info');
+    };
+}
+
+async function criarIntervencao() {
+    const titulo = document.getElementById('fTitulo').value;
+    const turma = document.getElementById('fTurma').value;
+    const tipo = document.getElementById('fTipo').value;
+    const prioridade = document.getElementById('fPrioridade').value;
+    const responsavel = document.getElementById('fResp').value;
+    const desc = document.getElementById('fObs').value;
+    const data = document.getElementById('fData').value;
+    
+    if (!titulo) {
+        showNotif('Atenção', 'Preencha o título da intervenção!', 'warning');
+        return;
     }
     
-    function excluirIntervencao() {
-        if (openId === null) return;
-        document.getElementById('confirmRemoveModal').style.display = 'flex';
-        document.getElementById('confirmRemoveBtn').onclick = () => {
-            document.getElementById('confirmRemoveModal').style.display = 'none';
-            intervencoes = intervencoes.filter(x => x.id !== openId);
-            salvarIntervencoes();
-            fecharModalBtn();
-            renderKanban();
-            showNotif('Removido', 'Intervenção removida com sucesso!', 'info');
-        };
-    }
+    const novaIntervencao = {
+        id: Date.now().toString(),
+        titulo: titulo,
+        descricao: desc || 'Sem descrição',
+        turma: turma,
+        aluno: '',
+        prioridade: prioridade,
+        tipo: tipo,
+        responsavel: responsavel,
+        data_prevista: data || new Date().toISOString().split('T')[0],
+        progresso: 0,
+        status: 'pendente',
+        curso: getCursoCodigo(turma)
+    };
     
-    async function criarIntervencao() {
-        const titulo = document.getElementById('fTitulo').value;
-        const turma = document.getElementById('fTurma').value;
-        const tipo = document.getElementById('fTipo').value;
-        const prioridade = document.getElementById('fPrioridade').value;
-        const responsavel = document.getElementById('fResp').value;
-        const desc = document.getElementById('fObs').value;
-        const data = document.getElementById('fData').value;
-        
-        if (!titulo) {
-            showNotif('Atenção', 'Preencha o título da intervenção!', 'warning');
-            return;
-        }
-        
-        const novaIntervencao = {
-            id: Date.now(),
-            titulo: titulo,
-            desc: desc || 'Sem descrição',
-            turma: turma,
-            aluno: '',
-            prioridade: prioridade,
-            tipo: tipo === 'Conversa' ? 'heart' : 'target',
-            responsavel: responsavel,
-            data: data || new Date().toISOString().split('T')[0],
-            progresso: 0,
-            status: 'pendente',
-            curso: getCursoCodigo(turma)
-        };
-        
-        intervencoes.unshift(novaIntervencao);
-        salvarIntervencoes();
-        renderKanban();
-        showNotif('Sucesso', 'Intervenção criada com sucesso!', 'success');
-        
-        document.getElementById('fTitulo').value = '';
-        document.getElementById('fObs').value = '';
-        document.getElementById('fData').value = '';
-    }
+    await salvarIntervencaoNoBackend(novaIntervencao);
+    intervencoes.unshift(novaIntervencao);
+    renderKanban();
+    atualizarKPIs();
+    renderResponsaveis();
+    showNotif('Sucesso', 'Intervenção criada com sucesso!', 'success');
     
-    function abrirNovaIntervencao() {
-        showNotif('Nova Intervenção', 'Preencha o formulário ao lado para criar uma intervenção.', 'info');
-    }
-    
-    function exportarCSV() {
-        const linhas = [['Título', 'Turma', 'Aluno', 'Prioridade', 'Status', 'Data', 'Progresso']];
-        intervencoes.forEach(i => {
-            linhas.push([i.titulo, i.turma, i.aluno || '-', i.prioridade, i.status, formatarData(i.data), i.progresso + '%']);
-        });
-        const csv = linhas.map(l => l.join(',')).join('\n');
-        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'intervencoes-mindfine.csv'; a.click();
-        URL.revokeObjectURL(url);
-    }
-    
-    function showNotif(title, msg, type = 'info') {
-        const modal = document.getElementById('notifModal');
-        document.getElementById('notifTitle').innerText = title;
-        document.getElementById('notifMsg').innerText = msg;
-        modal.classList.add('visible');
-        setTimeout(() => modal.classList.remove('visible'), 3000);
-    }
-    
-    // ========== BOLHAS ==========
-    
-    function createBubble() {
-        const c = document.getElementById('particles-container');
-        if (!c) return;
-        const b = document.createElement('div');
-        b.className = 'bubble';
-        const s = Math.random() * 20 + 5;
-        b.style.width = b.style.height = s + 'px';
-        b.style.left = Math.random() * 100 + '%';
-        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
-        c.appendChild(b);
-        setTimeout(() => b.remove(), 10000);
-    }
-    
-    setInterval(createBubble, 1500);
-    
-    // ========== SIDEBAR MOBILE ==========
-    
-    document.getElementById('menuToggle')?.addEventListener('click', () => {
-        document.getElementById('sidebar')?.classList.toggle('open');
+    document.getElementById('fTitulo').value = '';
+    document.getElementById('fObs').value = '';
+    document.getElementById('fData').value = '';
+}
+
+function abrirNovaIntervencao() {
+    showNotif('Nova Intervenção', 'Preencha o formulário ao lado para criar uma intervenção.', 'info');
+}
+
+function exportarCSV() {
+    const linhas = [['Título', 'Turma', 'Prioridade', 'Status', 'Data', 'Progresso', 'Responsável']];
+    intervencoes.forEach(i => {
+        linhas.push([i.titulo, i.turma, i.prioridade, i.status, formatarData(i.data_prevista || i.data), i.progresso + '%', i.responsavel]);
     });
-    
-    // ========== RESPONSÁVEIS ==========
-    
-    function renderResposaveis() {
-        const container = document.getElementById('respContainer');
-        if (!container) return;
-        container.innerHTML = `
-            <div class="resp-row"><div class="resp-avatar" style="background:#32B5F1">CO</div><div class="resp-info"><div class="resp-name">Coordenação</div><div class="resp-role">Ações atribuídas</div></div><span class="resp-count">${intervencoes.filter(i => i.responsavel === 'Coordenação').length}</span></div>
-            <div class="resp-row"><div class="resp-avatar" style="background:#8b5cf6">PS</div><div class="resp-info"><div class="resp-name">Psicólogo Escolar</div><div class="resp-role">Ações atribuídas</div></div><span class="resp-count">${intervencoes.filter(i => i.responsavel === 'Psicólogo Escolar').length}</span></div>
-            <div class="resp-row"><div class="resp-avatar" style="background:#fbbf24">PN</div><div class="resp-info"><div class="resp-name">Profª. Patricia Neves</div><div class="resp-role">Ações atribuídas</div></div><span class="resp-count">${intervencoes.filter(i => i.responsavel === 'Profª. Patricia Neves').length}</span></div>
-        `;
-    }
-    
-    function renderTimeline() {
-        const container = document.getElementById('timelineContainer');
-        if (!container) return;
-        const concluidas = intervencoes.filter(i => i.status === 'concluido').slice(-3);
-        if (concluidas.length === 0) {
-            container.innerHTML = '<div class="tl-item"><div class="tl-content"><div class="tl-sub">Nenhuma intervenção concluída ainda</div></div></div>';
-            return;
-        }
-        container.innerHTML = concluidas.map(i => `
-            <div class="tl-item">
-                <div class="tl-line-col"><div class="tl-dot" style="background:#10b981"></div><div class="tl-line"></div></div>
-                <div class="tl-content"><div class="tl-title">${i.titulo}</div><div class="tl-sub">${i.turma}</div><div class="tl-time">${formatarData(i.data)}</div></div>
-            </div>
-        `).join('');
-    }
-    
-    // ========== BADGE DE ALERTAS SINCRONIZADO ==========
+    const csv = linhas.map(l => l.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'intervencoes-mindfine.csv'; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showNotif(title, msg, type = 'info') {
+    const modal = document.getElementById('notifModal');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifMsg').innerText = msg;
+    modal.classList.add('visible');
+    setTimeout(() => modal.classList.remove('visible'), 3000);
+}
+
+// ========== BOLHAS ==========
+
+function createBubble() {
+    const c = document.getElementById('particles-container');
+    if (!c) return;
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const s = Math.random() * 20 + 5;
+    b.style.width = b.style.height = s + 'px';
+    b.style.left = Math.random() * 100 + '%';
+    b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+    c.appendChild(b);
+    setTimeout(() => b.remove(), 10000);
+}
+
+setInterval(createBubble, 1500);
+
+// ========== SIDEBAR MOBILE ==========
+
+document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar')?.classList.toggle('open');
+});
+
+// ========== BADGE DE ALERTAS ==========
+
 function atualizarBadgeAlertas() {
     const contadorSalvo = localStorage.getItem('mindfine_alertas_count');
-    const timestamp = localStorage.getItem('mindfine_alertas_timestamp');
-    
     const badge = document.getElementById('sidebarBadge');
     if (!badge) return;
     
-    // Se tem contador salvo e não é muito antigo (menos de 1 hora), usa ele
-    if (contadorSalvo !== null && timestamp && (Date.now() - parseInt(timestamp) < 3600000)) {
+    if (contadorSalvo) {
         badge.textContent = contadorSalvo;
         badge.style.display = parseInt(contadorSalvo) > 0 ? 'inline-block' : 'none';
     } else {
-        // Se não tem ou está antigo, buscar do backend
-        buscarAlertasDoBackend();
+        badge.style.display = 'none';
     }
 }
 
@@ -1124,45 +1184,42 @@ async function buscarAlertasDoBackend() {
         const alertas = await response.json();
         const ativos = alertas.filter(a => a.resolvido !== 1).length;
         
+        localStorage.setItem('mindfine_alertas_count', ativos);
+        localStorage.setItem('mindfine_alertas_timestamp', Date.now());
+        
         const badge = document.getElementById('sidebarBadge');
         if (badge) {
             badge.textContent = ativos;
             badge.style.display = ativos > 0 ? 'inline-block' : 'none';
         }
-        
-        // Atualizar cache
-        localStorage.setItem('mindfine_alertas_count', ativos);
-        localStorage.setItem('mindfine_alertas_timestamp', Date.now());
-        
     } catch (error) {
         console.error('Erro ao buscar alertas:', error);
-        const badge = document.getElementById('sidebarBadge');
-        if (badge) badge.style.display = 'none';
     }
 }
 
-// Executar ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
+// ========== INICIALIZAR ==========
+
+window.filtrar = filtrar;
+window.setPill = setPill;
+window.abrirModal = abrirModal;
+window.fecharModal = fecharModal;
+window.fecharModalBtn = fecharModalBtn;
+window.avancarStatus = avancarStatus;
+window.excluirIntervencao = excluirIntervencao;
+window.abrirNovaIntervencao = abrirNovaIntervencao;
+window.exportarCSV = exportarCSV;
+window.criarIntervencao = criarIntervencao;
+
+async function init() {
+    await carregarUsuarios();
+    await carregarIntervencoes();
+    await buscarAlertasDoBackend();
+    setInterval(buscarAlertasDoBackend, 30000);
     atualizarBadgeAlertas();
-    // Atualizar a cada 30 segundos para manter sincronizado
-    setInterval(atualizarBadgeAlertas, 30000);
-});
-    // ========== INICIALIZAR ==========
-    
-    window.filtrar = filtrar;
-    window.setPill = setPill;
-    window.abrirModal = abrirModal;
-    window.fecharModal = fecharModal;
-    window.fecharModalBtn = fecharModalBtn;
-    window.avancarStatus = avancarStatus;
-    window.excluirIntervencao = excluirIntervencao;
-    window.abrirNovaIntervencao = abrirNovaIntervencao;
-    window.exportarCSV = exportarCSV;
-    window.criarIntervencao = criarIntervencao;
-    
-    carregarIntervencoes();
-    renderResposaveis();
-    renderTimeline();
+}
+
+init();
+
 </script>
 </body>
 </html>
