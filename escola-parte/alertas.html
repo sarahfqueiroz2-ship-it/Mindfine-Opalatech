@@ -683,7 +683,7 @@ const responseAlunos = await fetch('https://mindfine-backend.onrender.com/api/es
             
             // Salvar alertas gerados no backend
             for (const alerta of alertas) {
-                await fetch('http://localhost:5001/api/alertas', {
+await fetch('https://mindfine-backend.onrender.com/api/alertas', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(alerta)
