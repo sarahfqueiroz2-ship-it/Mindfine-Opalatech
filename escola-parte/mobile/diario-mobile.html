@@ -578,7 +578,7 @@
             audio_base64: currentAudioBase64
         };
 
-        const success = await salvarEntrada(entry);
+        const response = await fetch(`https://mindfine-backend.onrender.com/api/diario/${matriculaAtual}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }); const result = await response.json(); if (result.sucesso) { closeModal(); showToast("Registro salvo!"); await carregarDiario(); } else { showToast("Erro ao salvar", true); }
         if (success) {
             closeModal();
             if (currentAudioBase64) switchTab('audio');
