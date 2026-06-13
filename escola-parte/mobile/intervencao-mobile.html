@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Intervenções</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #32B5F1;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            padding: 70px 16px 20px;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .close-sidebar {
+            font-size: 22px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 6px;
+        }
+
+        .nav-item.active {
+            background: #e3f2fd;
+            color: #0277bd;
+        }
+
+        .nav-item i {
+            width: 20px;
+            color: #32B5F1;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .logout-item {
+            color: #f87171 !important;
+            margin-top: 10px;
+        }
+
+        /* Conteúdo principal */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            padding: 70px 16px 30px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0277bd;
+            margin-bottom: 4px;
+        }
+
+        .page-title span {
+            background: linear-gradient(90deg, #32B5F1, #0277bd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        /* Botões */
+        .btn-primary, .btn-ghost {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #32B5F1, #0277bd);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: white;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+
+        /* KPI Strip */
+        .kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .kpi-icon.blue { background: rgba(50,181,241,0.12); color: #32B5F1; }
+        .kpi-icon.orange { background: rgba(249,115,22,0.12); color: #f97316; }
+        .kpi-icon.green { background: rgba(52,211,153,0.12); color: #34d399; }
+        .kpi-icon.purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+
+        .kpi-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0277bd;
+        }
+
+        .kpi-label {
+            font-size: 9px;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        /* Kanban Header */
+        .kanban-header {
+            background: white;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .kanban-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0277bd;
+            text-transform: uppercase;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            outline: none;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid #f0f0f0;
+            background: #f8fafc;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .filter-pill.active {
+            background: #e3f2fd;
+            border-color: #32B5F1;
+            color: #0277bd;
+        }
+
+        /* Kanban Board */
+        .kanban-board {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .kanban-col {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .col-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #f8fafc;
+        }
+
+        .col-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .col-dot.pending { background: #ef4444; }
+        .col-dot.progress { background: #f97316; }
+        .col-dot.done { background: #34d399; }
+
+        .col-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .col-title.pending { color: #ef4444; }
+        .col-title.progress { color: #f97316; }
+        .col-title.done { color: #10b981; }
+
+        .col-count {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .int-card {
+            padding: 14px;
+            border-bottom: 1px solid #f0f4f8;
+            cursor: pointer;
+        }
+
+        .int-card:last-child { border-bottom: none; }
+
+        .int-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .int-prioridade {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .int-prioridade.urgente { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .int-prioridade.media { background: rgba(249,115,22,0.12); color: #f97316; }
+        .int-prioridade.baixa { background: rgba(251,191,36,0.12); color: #d97706; }
+
+        .int-titulo {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .int-desc {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .int-progress-bar {
+            height: 4px;
+            background: #f0f4f8;
+            border-radius: 4px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .int-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: #32B5F1;
+        }
+
+        .int-progress-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        .int-footer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .int-tag {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: #f0f4f8;
+            color: #64748b;
+        }
+
+        .int-tag.turma { background: rgba(50,181,241,0.1); color: #0277bd; }
+
+        /* Empty col */
+        .empty-col {
+            padding: 24px;
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0277bd;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            background: #f8fafc;
+        }
+
+        .form-textarea {
+            height: 70px;
+            resize: none;
+        }
+
+        /* Responsáveis */
+        .resp-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .resp-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .resp-info { flex: 1; }
+        .resp-name { font-size: 12px; font-weight: 800; }
+        .resp-role { font-size: 10px; color: #64748b; }
+
+        .resp-count {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(50,181,241,0.1);
+            color: #0277bd;
+        }
+
+        /* Timeline */
+        .tl-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .tl-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-top: 4px;
+        }
+
+        .tl-title {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tl-sub {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0277bd;
+        }
+
+        .modal-close {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f4f8;
+        }
+
+        .modal-detail-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .modal-detail-val {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-success {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #34d399, #10b981);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            flex: 1;
+            padding: 12px;
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+            border: 2px solid rgba(239,68,68,0.2);
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 13px;
+            z-index: 400;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Partículas */
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            to { transform: translateY(-110vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+<div id="particles-container"></div>
+
+<!-- Header Mobile -->
+<div class="mobile-header">
+    <button class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="logo">Mindfine</div>
+    <div style="width: 30px;"></div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">Mindfine</div>
+        <div class="close-sidebar" onclick="closeSidebar()">✕</div>
+    </div>
+    <a href="inicio-escola-mobile.html" class="nav-item">
+        <i class="fas fa-tachometer-alt"></i> Painel Geral
+    </a>
+    <a href="turma-mobile.html" class="nav-item">
+        <i class="fas fa-users"></i> Turmas
+    </a>
+    <a href="relatorio-mobile.html" class="nav-item">
+        <i class="fas fa-chart-line"></i> Relatórios
+    </a>
+    <a href="alertas-mobile.html" class="nav-item">
+        <i class="fas fa-bell"></i> Alertas
+        <span class="nav-badge" id="sidebarBadge">0</span>
+    </a>
+    <a href="intervencao-mobile.html" class="nav-item active">
+        <i class="fas fa-bullseye"></i> Intervenções
+    </a>
+    <div class="user-card">
+        <div class="user-avatar">EP</div>
+        <div>
+            <div style="font-size: 13px; font-weight: 600; color: #0097dd;">Escola Painel</div>
+            <div style="font-size: 11px; color: #64748b;">Administrador</div>
+        </div>
+    </div>
+    <a href="login-mobile.html" class="nav-item logout-item">
+        <i class="fas fa-sign-out-alt"></i> Sair
+    </a>
+</div>
+
+<!-- Conteúdo principal -->
+<main class="main-content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Plano de <span>Intervenções</span></h1>
+            <p class="page-subtitle">Acompanhamento de ações</p>
+        </div>
+        <div class="header-right">
+            <button class="btn-ghost" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="btn-primary" onclick="abrirNovaIntervencao()"><i class="fas fa-plus"></i> Nova</button>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip">
+        <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-tasks"></i></div><div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-label">Total</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon orange"><i class="fas fa-clock"></i></div><div><div class="kpi-value" id="kpiPendentes">0</div><div class="kpi-label">Pendentes</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon green"><i class="fas fa-check-circle"></i></div><div><div class="kpi-value" id="kpiConcluidas">0</div><div class="kpi-label">Concluídas</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon purple"><i class="fas fa-chart-line"></i></div><div><div class="kpi-value" id="kpiEficacia">0%</div><div class="kpi-label">Eficácia</div></div></div>
+    </div>
+
+    <!-- Kanban Header -->
+    <div class="kanban-header">
+        <div class="kanban-title">Quadro de Ações</div>
+        <div class="search-box">
+            <i class="fas fa-search" style="color:#64748b;"></i>
+            <input type="text" id="searchInput" placeholder="Buscar..." oninput="filtrar()">
+        </div>
+        <div class="filter-row">
+            <button class="filter-pill active" onclick="setPill(this,'todos')">Todos</button>
+            <button class="filter-pill" onclick="setPill(this,'urgente')">Urgente</button>
+            <button class="filter-pill" onclick="setPill(this,'media')">Média</button>
+            <button class="filter-pill" onclick="setPill(this,'baixa')">Baixa</button>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div id="kanbanBoard"></div>
+
+    <!-- Side Panel -->
+    <div class="side-panel">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-plus-circle"></i> Nova Intervenção</div>
+            <div class="form-group"><label class="form-label">Título</label><input class="form-input" id="fTitulo" placeholder="Título"></div>
+            <div class="form-group"><label class="form-label">Turma</label><select class="form-select" id="fTurma"><option>1° Informática</option><option>2° Informática</option><option>3° Informática</option><option>1° Administração</option><option>2° Administração</option><option>3° Administração</option></select></div>
+            <div class="form-group"><label class="form-label">Prioridade</label><select class="form-select" id="fPrioridade"><option value="urgente">Urgente</option><option value="media">Média</option><option value="baixa">Baixa</option></select></div>
+            <div class="form-group"><label class="form-label">Responsável</label><select class="form-select" id="fResp"><option>Coordenação</option><option>Psicólogo Escolar</option></select></div>
+            <div class="form-group"><label class="form-label">Data</label><input class="form-input" id="fData" type="date"></div>
+            <button class="btn-primary" style="width:100%" onclick="criarIntervencao()">Adicionar</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-users"></i> Responsáveis</div>
+            <div id="respContainer"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-history"></i> Histórico</div>
+            <div id="timelineContainer"></div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Detalhe -->
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitulo">—</div>
+            <button class="modal-close" onclick="fecharModalBtn()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+            <button class="btn-success" id="modalBtnOk" onclick="avancarStatus()">Avançar</button>
+            <button class="btn-danger" onclick="excluirIntervencao()">Remover</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">✅ Sucesso!</div>
+
+<script>
+    let intervencoes = [];
+    let filtroPrioridade = 'todos';
+    let openId = null;
+    let usuarios = [];
+
+    // Sidebar
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
+    document.getElementById('menuToggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+    document.addEventListener('click', (e) => {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('menuToggle');
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    });
+
+    // Partículas
+    function createBubble() {
+        const c = document.getElementById('particles-container');
+        if (!c) return;
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const s = Math.random() * 20 + 5;
+        b.style.width = s + 'px'; b.style.height = s + 'px';
+        b.style.left = Math.random() * 100 + '%';
+        b.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        c.appendChild(b);
+        setTimeout(() => b.remove(), 10000);
+    }
+    setInterval(createBubble, 1500);
+
+    async function carregarUsuarios() {
+        try {
+            const response = await fetch('https://mindfine-backend.onrender.com/api/admin/usuarios');
+            const data = await response.json();
+            usuarios = data.filter(u => u.tipo === 'gestao' || u.tipo === 'psicologia');
+            renderResponsaveis();
+        } catch (error) { console.error(error); }
+    }
+
+    async function carregarIntervencoes() {
+        try {
+            const response = await fetch('https://mindfine-backend.onrender.com/api/intervencoes');
+            intervencoes = await response.json();
+            renderKanban();
+            atualizarKPIs();
+            renderTimeline();
+        } catch (error) { console.error(error); }
+    }
+
+    function getCursoCodigo(turma) {
+        if (turma.includes('Informática')) return 'inf';
+        if (turma.includes('Administração')) return 'adm';
+        return 'todos';
+    }
+
+    function renderKanban() {
+        const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        const cols = ['pendente', 'andamento', 'concluido'];
+        const colMeta = { pendente: { label: 'Pendente', cls: 'pending' }, andamento: { label: 'Em Andamento', cls: 'progress' }, concluido: { label: 'Concluído', cls: 'done' } };
+        
+        const board = document.getElementById('kanbanBoard');
+        board.innerHTML = cols.map(col => {
+            const itens = intervencoes.filter(i => i.status === col && (filtroPrioridade === 'todos' || i.prioridade === filtroPrioridade) && (q === '' || (i.titulo || '').toLowerCase().includes(q) || (i.turma || '').toLowerCase().includes(q)));
+            return `<div class="kanban-col"><div class="col-header"><span class="col-dot ${colMeta[col].cls}"></span><span class="col-title ${colMeta[col].cls}">${colMeta[col].label}</span><span class="col-count">${itens.length}</span></div>${itens.length === 0 ? '<div class="empty-col">Nenhuma ação</div>' : itens.map(i => cardHTML(i)).join('')}</div>`;
+        }).join('');
+    }
+
+    function cardHTML(i) {
+        const pLabel = { urgente: 'Urgente', media: 'Média', baixa: 'Baixa' };
+        const progBar = i.status !== 'pendente' ? `<div class="int-progress-bar"><div class="int-progress-fill" style="width:${i.progresso}%"></div></div><div class="int-progress-label">${i.progresso}%</div>` : '';
+        return `<div class="int-card" onclick="abrirModal(${i.id})"><div class="int-card-top"><span class="int-prioridade ${i.prioridade}">${pLabel[i.prioridade]}</span></div><div class="int-titulo">${i.titulo}</div><div class="int-desc">${(i.descricao || '').substring(0, 60)}</div>${progBar}<div class="int-footer"><span class="int-tag turma">${i.turma}</span><span class="int-tag">${i.responsavel}</span></div></div>`;
+    }
+
+    function atualizarKPIs() {
+        const total = intervencoes.length;
+        const pendentes = intervencoes.filter(i => i.status === 'pendente').length;
+        const concluidas = intervencoes.filter(i => i.status === 'concluido').length;
+        const eficacia = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+        document.getElementById('kpiTotal').textContent = total;
+        document.getElementById('kpiPendentes').textContent = pendentes;
+        document.getElementById('kpiConcluidas').textContent = concluidas;
+        document.getElementById('kpiEficacia').textContent = eficacia + '%';
+    }
+
+    function formatarData(d) { if (!d) return '—'; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+
+    function renderResponsaveis() {
+        const container = document.getElementById('respContainer');
+        if (usuarios.length === 0) { container.innerHTML = '<div class="resp-row">Nenhum responsável</div>'; return; }
+        container.innerHTML = usuarios.map(user => `<div class="resp-row"><div class="resp-avatar" style="background:${user.tipo === 'gestao' ? '#32B5F1' : '#8b5cf6'}">${user.nome.substring(0,2).toUpperCase()}</div><div class="resp-info"><div class="resp-name">${user.nome}</div><div class="resp-role">${user.tipo === 'gestao' ? 'Gestão' : 'Psicologia'}</div></div><span class="resp-count">0</span></div>`).join('');
+    }
+
+    function renderTimeline() {
+        const concluidas = intervencoes.filter(i => i.status === 'concluido').slice(-3);
+        const container = document.getElementById('timelineContainer');
+        if (concluidas.length === 0) { container.innerHTML = '<div class="tl-item">Nenhuma concluída</div>'; return; }
+        container.innerHTML = concluidas.map(i => `<div class="tl-item"><div class="tl-dot"></div><div><div class="tl-title">${i.titulo}</div><div class="tl-sub">${i.turma} - ${formatarData(i.data_prevista)}</div></div></div>`).join('');
+    }
+
+    function filtrar() { renderKanban(); }
+    function setPill(btn, f) { document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active')); btn.classList.add('active'); filtroPrioridade = f; renderKanban(); }
+
+    function abrirModal(id) {
+        const i = intervencoes.find(x => x.id == id);
+        if (!i) return;
+        openId = id;
+        document.getElementById('modalTitulo').textContent = i.titulo;
+        document.getElementById('modalBody').innerHTML = `<div class="modal-detail-row"><div><div class="modal-detail-label">Descrição</div><div class="modal-detail-val">${i.descricao || 'Sem descrição'}</div></div></div><div class="modal-detail-row"><div><div class="modal-detail-label">Turma</div><div class="modal-detail-val">${i.turma}</div></div></div><div class="modal-detail-row"><div><div class="modal-detail-label">Responsável</div><div class="modal-detail-val">${i.responsavel}</div></div></div><div class="modal-detail-row"><div><div class="modal-detail-label">Data</div><div class="modal-detail-val">${formatarData(i.data_prevista)}</div></div></div>`;
+        document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function fecharModal(e) { if (e.target === document.getElementById('modalOverlay')) fecharModalBtn(); }
+    function fecharModalBtn() { document.getElementById('modalOverlay').classList.remove('open'); openId = null; }
+
+    async function avancarStatus() {
+        if (!openId) return;
+        const i = intervencoes.find(x => x.id == openId);
+        if (!i) return;
+        const next = { pendente: 'andamento', andamento: 'concluido', concluido: 'pendente' };
+        const prog = { pendente: 30, andamento: 100, concluido: 0 };
+        i.status = next[i.status];
+        i.progresso = prog[i.status];
+        await fetch(`https://mindfine-backend.onrender.com/api/intervencoes/${i.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: i.status, progresso: i.progresso }) });
+        fecharModalBtn();
+        renderKanban();
+        atualizarKPIs();
+        renderTimeline();
+        showToast('Status atualizado!');
+    }
+
+    async function excluirIntervencao() {
+        if (!openId) return;
+        if (confirm('Remover esta intervenção?')) {
+            await fetch(`https://mindfine-backend.onrender.com/api/intervencoes/${openId}`, { method: 'DELETE' });
+            intervencoes = intervencoes.filter(x => x.id !== openId);
+            fecharModalBtn();
+            renderKanban();
+            atualizarKPIs();
+            renderTimeline();
+            showToast('Removido!');
+        }
+    }
+
+    async function criarIntervencao() {
+        const titulo = document.getElementById('fTitulo').value;
+        if (!titulo) { showToast('Título obrigatório'); return; }
+        const nova = {
+            id: Date.now().toString(),
+            titulo: titulo,
+            descricao: 'Intervenção criada manualmente',
+            turma: document.getElementById('fTurma').value,
+            prioridade: document.getElementById('fPrioridade').value,
+            responsavel: document.getElementById('fResp').value,
+            data_prevista: document.getElementById('fData').value || new Date().toISOString().split('T')[0],
+            progresso: 0,
+            status: 'pendente',
+            curso: getCursoCodigo(document.getElementById('fTurma').value)
+        };
+        await fetch('https://mindfine-backend.onrender.com/api/intervencoes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nova) });
+        intervencoes.unshift(nova);
+        renderKanban();
+        atualizarKPIs();
+        renderTimeline();
+        showToast('Intervenção criada!');
+        document.getElementById('fTitulo').value = '';
+        document.getElementById('fData').value = '';
+    }
+
+    function abrirNovaIntervencao() { showToast('Preencha o formulário'); }
+    function exportarCSV() { showToast('Exportação CSV'); }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    window.filtrar = filtrar;
+    window.setPill = setPill;
+    window.abrirModal = abrirModal;
+    window.fecharModal = fecharModal;
+    window.fecharModalBtn = fecharModalBtn;
+    window.avancarStatus = avancarStatus;
+    window.excluirIntervencao = excluirIntervencao;
+    window.abrirNovaIntervencao = abrirNovaIntervencao;
+    window.exportarCSV = exportarCSV;
+    window.criarIntervencao = criarIntervencao;
+
+    carregarUsuarios();
+    carregarIntervencoes();
+    setInterval(() => {
+        fetch('https://mindfine-backend.onrender.com/api/alertas').then(r=>r.json()).then(a => {
+            const ativos = a.filter(a=>a.resolvido!==1).length;
+            document.getElementById('sidebarBadge').textContent = ativos;
+        }).catch(e=>console.error);
+    }, 30000);
+</script>
+</body>
+</html>
