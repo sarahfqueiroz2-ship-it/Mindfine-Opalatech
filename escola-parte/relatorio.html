@@ -680,17 +680,7 @@ c<!DOCTYPE html>
     <tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>
 </tbody>
             </table>
-            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0f4f8;">
-                <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:10px;">Destaque do Período</div>
-                <div style="background:#f0fdf4;border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:12px 14px;">
-<div style="font-size:13px;font-weight:800;color:#10b981;">Administração (1° Ano) — Melhor desempenho</div>
-<div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;">Score 8.5 · 0 alertas · 96% participação</div>
-                </div>
-                <div style="background:#fff8f8;border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:12px 14px;margin-top:8px;">
-<div style="font-size:13px;font-weight:800;color:#ef4444;">Meio Ambiente — Atenção</div>
-                    <div style="font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;">Score médio 5.8 · 9 alertas ativos</div>
-                </div>
-            </div>
+           
         </div>
 
     </div>
@@ -784,26 +774,28 @@ c<!DOCTYPE html>
         }
     }
     
-   async function carregarCursos() {
+  async function carregarCursos() {
     try {
         const url = new URL('https://mindfine-backend.onrender.com/api/relatorio/cursos');
         url.searchParams.set('curso', filtros.curso);
         url.searchParams.set('ano', filtros.ano);
         
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const dados = await response.json();
         
+        // Garantir que dados é um array
         dadosGlobais.cursos = Array.isArray(dados) ? dados : [];
         renderizarTabelaCursos();
         
-        // Atualizar KPIs da página
+        // Atualizar KPIs apenas com cursos reais
         if (dadosGlobais.cursos.length > 0) {
-            const totalAlunos = dadosGlobais.cursos.reduce((sum, c) => sum + c.alunos, 0);
-            const totalAlertas = dadosGlobais.cursos.reduce((sum, c) => sum + c.alertas, 0);
-            const mediaScore = dadosGlobais.cursos.reduce((sum, c) => sum + parseFloat(c.score), 0) / dadosGlobais.cursos.length;
-            
+            const totalAlertas = dadosGlobais.cursos.reduce((sum, c) => sum + (c.alertas || 0), 0);
             document.getElementById('kpiAlertas').textContent = totalAlertas;
-            document.getElementById('kpiWellbeing').textContent = mediaScore.toFixed(1);
         }
     } catch (error) {
         console.error('Erro ao carregar cursos:', error);
@@ -954,13 +946,13 @@ c<!DOCTYPE html>
         }).join('');
     }
     
-    function renderizarTabelaCursos() {
+   function renderizarTabelaCursos() {
     const tbody = document.querySelector('.curso-table tbody');
     if (!tbody) return;
     
-    // Verificar se cursos é um array
+    // Verificar se cursos é um array e tem dados
     if (!dadosGlobais.cursos || !Array.isArray(dadosGlobais.cursos) || dadosGlobais.cursos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sem dados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum curso com alunos cadastrados</td></tr>';
         return;
     }
     
@@ -970,11 +962,12 @@ c<!DOCTYPE html>
         return `
             <tr>
                 <td><span class="curso-tag ${cursoTag}">${curso.curso}</span></td>
-                <td>${curso.turmas}</td>
+                <td>${curso.turmas || 1}</td>
                 <td>${curso.alunos}</td>
                 <td class="score-cell ${scoreClass}">${curso.score}</td>
-                <td style="color:#10b981;font-weight:800;">0</td>
-            </tr>`;
+                <td style="color:${curso.alertas > 0 ? '#ef4444' : '#10b981'};font-weight:800;">${curso.alertas || 0}</td>
+            </tr>
+        `;
     }).join('');
 }
     
