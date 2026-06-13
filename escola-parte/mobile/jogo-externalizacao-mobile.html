@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Mindfine - Externalização</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .background-layer {
+            position: fixed;
+            width: 110%;
+            height: 110%;
+            background-color: #001a2d;
+            background-image: url('../fundos/fundo-a.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 1;
+            left: -5%;
+            top: -5%;
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* Header Mobile */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            color: #32B5F1;
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        .header-title h2 {
+            font-size: 14px;
+            color: #0277bd;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .wind-icon {
+            color: #32B5F1;
+            font-size: 18px;
+        }
+
+        /* Canvas */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            display: block;
+            touch-action: none;
+        }
+
+        /* Input Area */
+        .input-area {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .thought-input {
+            flex: 1;
+            background: white;
+            border: 2px solid #32B5F1;
+            border-radius: 30px;
+            padding: 12px 18px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            outline: none;
+            color: #0277bd;
+        }
+
+        .send-btn {
+            background: #32B5F1;
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .instruction {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            text-align: center;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 16px;
+            padding: 10px 20px;
+            z-index: 200;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-left: 4px solid #32B5F1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-content i {
+            color: #32B5F1;
+            font-size: 18px;
+        }
+
+        .toast-content span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0277bd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-layer"></div>
+
+<div class="mobile-header">
+    <div class="header-left">
+        <a href="sala-de-jogos-mobile.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
+        <div class="header-title"><h2>Vazio Sereno</h2></div>
+    </div>
+    <i class="fas fa-wind wind-icon"></i>
+</div>
+
+<canvas id="world"></canvas>
+
+<div class="input-area">
+    <div class="input-wrapper">
+        <input type="text" id="thoughtField" class="thought-input" placeholder="O que quer soltar?" autocomplete="off">
+        <button id="sendBtn" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    <div class="instruction">Toque no balão para soltar ou arrastar</div>
+</div>
+
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <i class="fas fa-smile-wink"></i>
+        <span>Pensamento solto!</span>
+    </div>
+</div>
+
+<script>
+    // Toast
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.querySelector('span').textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Canvas setup
+    const canvas = document.getElementById('world');
+    const ctx = canvas.getContext('2d');
+    const input = document.getElementById('thoughtField');
+    const sendBtn = document.getElementById('sendBtn');
+    const header = document.querySelector('.mobile-header');
+    let headerHeight = header.offsetHeight;
+
+    let thoughts = [];
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        headerHeight = header.offsetHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.size = Math.random() * 4 + 2;
+            this.vx = (Math.random() - 0.5) * 6;
+            this.vy = (Math.random() - 0.5) * 6 - 2;
+            this.alpha = 1;
+            this.life = 1;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.life -= 0.02;
+            this.alpha = this.life;
+            return this.life > 0;
+        }
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = '#32B5F1';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    class Thought {
+        constructor(text) {
+            this.text = text;
+            this.x = Math.random() * (canvas.width - 100) + 50;
+            this.y = canvas.height + 50;
+            this.vx = (Math.random() - 0.5) * 0.8;
+            this.vy = -Math.random() * 2 - 1.5;
+            this.radius = Math.min(70, Math.max(40, Math.sqrt(text.length * 80) + 20));
+            this.atCeiling = false;
+            this.jiggleOffset = Math.random() * 1000;
+        }
+
+        update() {
+            if (!this.atCeiling) {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.y - this.radius <= headerHeight + 10) {
+                    this.y = headerHeight + this.radius + 10;
+                    this.atCeiling = true;
+                    this.vy = 0;
+                }
+            } else {
+                this.x += Math.sin((Date.now() + this.jiggleOffset) / 800) * 0.4;
+            }
+            if (this.x < this.radius || this.x > canvas.width - this.radius) {
+                this.vx *= -0.9;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            // Glow
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius + 10);
+            grad.addColorStop(0, 'rgba(50, 181, 241, 0.3)');
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Main circle
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(50, 181, 241, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Text
+            ctx.fillStyle = '#0277bd';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `600 ${Math.min(14, Math.floor(this.radius / 5))}px Montserrat`;
+            
+            const words = this.text.split(' ');
+            let lines = [];
+            let line = '';
+            const maxWidth = this.radius * 1.6;
+            
+            for (let i = 0; i < words.length; i++) {
+                let testLine = line + words[i] + ' ';
+                let metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && i > 0) {
+                    lines.push(line);
+                    line = words[i] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+            
+            const lineHeight = 18;
+            const startY = this.y - ((lines.length - 1) * lineHeight / 2);
+            lines.forEach((l, i) => {
+                ctx.fillText(l.trim(), this.x, startY + (i * lineHeight));
+            });
+            
+            ctx.restore();
+        }
+
+        pop() {
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle(this.x, this.y));
+            }
+        }
+
+        containsPoint(x, y) {
+            const dx = x - this.x;
+            const dy = y - this.y;
+            return Math.sqrt(dx * dx + dy * dy) < this.radius;
+        }
+    }
+
+    function releaseThought() {
+        const text = input.value.trim();
+        if (text === "") return;
+        
+        thoughts.push(new Thought(text));
+        input.value = "";
+        showToast("Pensamento solto!");
+        
+        // Pequena vibração se suportado
+        if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    sendBtn.addEventListener('click', releaseThought);
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') releaseThought();
+    });
+
+    // Touch/pointer para estourar balões
+    function handleTap(e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        
+        for (let i = thoughts.length - 1; i >= 0; i--) {
+            if (thoughts[i].containsPoint(x, y)) {
+                thoughts[i].pop();
+                thoughts.splice(i, 1);
+                showToast("Pensamento liberado!");
+                if (navigator.vibrate) navigator.vibrate(50);
+                break;
+            }
+        }
+    }
+    
+    canvas.addEventListener('pointerdown', handleTap);
+    canvas.addEventListener('touchstart', handleTap);
+
+    // Animação
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const alive = particles[i].update();
+            particles[i].draw();
+            if (!alive) particles.splice(i, 1);
+        }
+        
+        thoughts.forEach(t => t.update());
+        thoughts.forEach(t => t.draw());
+        
+        requestAnimationFrame(animate);
+    }
+    
+    animate();
+
+    // Ajuste de headerHeight quando redimensionar
+    window.addEventListener('resize', () => {
+        headerHeight = header.offsetHeight;
+    });
+</script>
+</body>
+</html>
