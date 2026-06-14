@@ -36,7 +36,7 @@
             filter: blur(4px) brightness(0.7);
         }
 
-        #particles-container {
+        #particles-container { z-index: 1;
             position: fixed;
             top: 0;
             left: 0;
@@ -263,7 +263,7 @@
         }
 
         /* Modal */
-        .modal-overlay {
+        .modal-overlay { z-index: 9999;
             position: fixed;
             top: 0;
             left: 0;
@@ -355,7 +355,7 @@
         .sidebar-overlay.open {
             display: block;
         }
-    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
+    .background-layer, #particles-container { z-index: 1; z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
 </head>
 <body>
 
