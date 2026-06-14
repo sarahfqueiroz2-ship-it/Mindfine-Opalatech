@@ -352,7 +352,15 @@
             top: -10px;
             animation: confettiFall linear forwards;
         }
-    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
+    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } 
+.card { position: relative; z-index: 100 !important; cursor: pointer; }
+.card .front, .card .back { z-index: 101 !important; }
+.game-board-container { position: relative; z-index: 50 !important; background: rgba(0,0,0,0.7) !important; }
+.memory-grid { position: relative; z-index: 60 !important; }
+.background-layer { z-index: 0 !important; }
+#particles-container { z-index: 1 !important; }
+.main-content { z-index: 10 !important; }
+</style>
 </head>
 <body>
 
