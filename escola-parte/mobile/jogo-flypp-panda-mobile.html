@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mindfine - Santuário do Panda</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -15,53 +15,34 @@
         }
 
         body, html {
-            font-family: 'Montserrat', sans-serif;
-            height: 100vh;
+            font-family: "Montserrat", sans-serif;
+            height: 100%;
+            width: 100%;
             overflow: hidden;
             background: #000;
+            position: fixed;
         }
 
-        .background-layer { z-index: 0;
+        .background-layer {
             position: fixed;
-            width: 110%;
-            height: 110%;
-            background-image: url('../fundos/fundo\ fly.png');
+            width: 100%;
+            height: 100%;
+            background-image: url("../fundos/fundo-fly.png");
             background-size: cover;
             background-position: center;
             z-index: 0;
-            left: -5%;
-            top: -5%;
-            filter: blur(4px) brightness(0.7);
         }
 
         canvas {
             display: block;
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            z-index: 0;
+            width: 100%;
+            height: 100%;
+            position: fixed;
             top: 0;
             left: 0;
-        }
-
-        /* Sparkles */
-        .sparkle {
-            position: fixed;
-            background: white;
-            border-radius: 50%;
-            pointer-events: none;
-            box-shadow: 0 0 10px white;
             z-index: 1;
-            animation: rise linear infinite;
         }
 
-        @keyframes rise {
-            0% { transform: translateY(110vh) scale(0); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
-        }
-
-        /* Header Mobile */
         .mobile-header {
             position: fixed;
             top: 0;
@@ -69,7 +50,7 @@
             right: 0;
             z-index: 100;
             background: white;
-            padding: 12px 16px;
+            padding: 10px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -92,7 +73,6 @@
             font-size: 14px;
             color: #0277bd;
             font-weight: 800;
-            text-transform: uppercase;
         }
 
         .leaf-icon {
@@ -100,27 +80,28 @@
             font-size: 18px;
         }
 
-        /* Score e Progresso */
         #score-counter {
-            position: absolute;
-            right: 20px;
-            top: 70px;
-            font-size: 32px;
+            position: fixed;
+            right: 16px;
+            top: 60px;
+            font-size: 28px;
             font-weight: 900;
             color: white;
             text-shadow: 0 0 10px #32B5F1;
             z-index: 100;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 20px;
         }
 
         .side-progress-container {
-            position: absolute;
+            position: fixed;
             right: 12px;
-            top: 120px;
-            width: 8px;
-            height: 150px;
-            background: rgba(255,255,255,0.2);
+            top: 110px;
+            width: 6px;
+            height: 120px;
+            background: rgba(255,255,255,0.3);
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.3);
             z-index: 100;
             overflow: hidden;
         }
@@ -130,47 +111,44 @@
             bottom: 0;
             width: 100%;
             height: 0%;
-            background: linear-gradient(to top, #0277bd, #32B5F1, #00ffaa);
+            background: linear-gradient(to top, #32B5F1, #00ffaa);
             transition: height 0.3s ease;
         }
 
-        /* Start Message */
         #start-msg {
-            position: absolute;
-            bottom: 30%;
+            position: fixed;
+            bottom: 25%;
             width: 100%;
             text-align: center;
             z-index: 100;
             font-weight: 800;
             color: white;
+            font-size: 18px;
             text-shadow: 0 0 10px #0277bd;
-            font-size: 16px;
             animation: pulse 1.5s infinite;
             pointer-events: none;
         }
 
-        @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-        /* Game Over Screen */
         .game-over-screen {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 200;
             background: rgba(255,255,255,0.95);
-            border-radius: 30px;
+            border-radius: 24px;
             padding: 24px;
-            width: 85%;
-            max-width: 300px;
+            width: 80%;
+            max-width: 280px;
             text-align: center;
-            backdrop-filter: blur(10px);
             display: none;
         }
 
         .game-over-screen h3 {
             color: #0277bd;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .score-row {
@@ -195,44 +173,29 @@
             background: #32B5F1;
             color: white;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 30px;
             font-weight: 800;
             font-size: 14px;
             width: 100%;
             cursor: pointer;
         }
-    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } 
-@media screen and (orientation: portrait) {
-    .mobile-header, #score-counter, .side-progress-container, #start-msg, .game-over-screen {
-        display: none;
-    }
-    body::before {
-        content: "?? Gire o celular para o modo paisagem para jogar!";
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        color: #0277bd;
-        padding: 20px;
-        border-radius: 20px;
-        font-weight: 800;
-        text-align: center;
-        z-index: 9999;
-        font-size: 18px;
-        width: 90%;
-    }
-}
-@media screen and (orientation: landscape) {
-    body::before { display: none; }
-    .mobile-header, #score-counter, .side-progress-container, #start-msg, .game-over-screen { display: flex; }
-    .mobile-header { display: flex; }
-    #score-counter { display: block; }
-    .side-progress-container { display: block; }
-    #start-msg { display: block; }
-}
-</style>
+
+        .sparkle {
+            position: fixed;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            animation: rise linear forwards;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
 
@@ -252,34 +215,33 @@
     <div class="side-progress-bar" id="progress-bar"></div>
 </div>
 
-<div id="start-msg">TOQUE PARA VOAR</div>
+<div id="start-msg">👆 TOQUE NA TELA PARA VOAR</div>
 
 <div class="game-over-screen" id="gameOverScreen">
-    <h3>Jornada Concluída</h3>
+    <h3>🐼 Jornada Concluída</h3>
     <div class="score-row">
         <div class="score-item"><p>PONTOS</p><p id="finalScore">0</p></div>
         <div class="score-item"><p>RECORDE</p><p id="bestScore">0</p></div>
     </div>
-    <button class="restart-btn" id="restartBtn">Tentar Novamente</button>
+    <button class="restart-btn" id="restartBtn">🐼 Tentar Novamente</button>
 </div>
 
 <script>
-    let matriculaAtual = '';
+    let matriculaAtual = "";
     let melhorPontuacao = 0;
 
-    // Carregar recorde
     async function carregarRecorde() {
-        const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+        const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
         matriculaAtual = usuario.matricula;
         if (!matriculaAtual) {
-            window.location.href = 'login-mobile.html';
+            window.location.href = "login-mobile.html";
             return;
         }
         try {
             const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`);
             const dados = await response.json();
             melhorPontuacao = dados.recorde || 0;
-            document.getElementById('bestScore').innerText = melhorPontuacao;
+            document.getElementById("bestScore").innerText = melhorPontuacao;
         } catch (error) { console.error(error); }
     }
 
@@ -287,58 +249,60 @@
         if (pontuacao <= melhorPontuacao) return;
         try {
             await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ pontuacao: pontuacao })
             });
             melhorPontuacao = pontuacao;
-            document.getElementById('bestScore').innerText = melhorPontuacao;
+            document.getElementById("bestScore").innerText = melhorPontuacao;
         } catch (error) { console.error(error); }
     }
 
-    // Sparkles
     function createSparkle() {
-        const sparkle = document.createElement('div');
-        sparkle.classList.add('sparkle');
-        const size = Math.random() * 4 + 2 + 'px';
-        sparkle.style.width = size;
-        sparkle.style.height = size;
-        sparkle.style.left = Math.random() * 100 + 'vw';
-        sparkle.style.animationDuration = Math.random() * 3 + 4 + 's';
+        const sparkle = document.createElement("div");
+        sparkle.classList.add("sparkle");
+        const size = Math.random() * 4 + 2;
+        sparkle.style.width = size + "px";
+        sparkle.style.height = size + "px";
+        sparkle.style.left = Math.random() * 100 + "%";
+        sparkle.style.animationDuration = Math.random() * 3 + 4 + "s";
         document.body.appendChild(sparkle);
         setTimeout(() => sparkle.remove(), 7000);
     }
-    setInterval(createSparkle, 400);
+    setInterval(createSparkle, 500);
 
-    // Canvas e jogo
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const progressBar = document.getElementById('progress-bar');
-    const scoreCounter = document.getElementById('score-counter');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const startMsg = document.getElementById('start-msg');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const progressBar = document.getElementById("progress-bar");
+    const scoreCounter = document.getElementById("score-counter");
+    const gameOverScreen = document.getElementById("gameOverScreen");
+    const startMsg = document.getElementById("start-msg");
 
-    const bgImg = new Image(); bgImg.src = '../fundos/fundo fly.png';
-    const birdImg = new Image(); birdImg.src = '../pandas/panda-jogoVoar.png';
-    const birdDeadImg = new Image(); birdDeadImg.src = '../pandas/panda-jogoVoarCair.png';
-    const pipeImg = new Image(); pipeImg.src = '../itens/bambu.png';
+    const bgImg = new Image();
+    bgImg.src = "../fundos/fundo-fly.png";
+    const birdImg = new Image();
+    birdImg.src = "../pandas/panda-jogoVoar.png";
+    const birdDeadImg = new Image();
+    birdDeadImg.src = "../pandas/panda-jogoVoarCair.png";
+    const pipeImg = new Image();
+    pipeImg.src = "../itens/bambu.png";
 
     let frames = 0;
     let score = 0;
     let isGameOver = false;
     let isPlaying = false;
-    let gameSpeed = 4;
+    let gameSpeed = 1.5;
 
     function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resize);
+    window.addEventListener("resize", resize);
     resize();
 
     const bird = {
-        x: 0, y: 0, w: 80, h: 80,
-        velocity: 0, gravity: 0.45, jump: 8,
+        x: 0, y: 0, w: 50, h: 50,
+        velocity: 0, gravity: 0.15, jump: 4.5,
         reset() {
             this.x = canvas.width * 0.25;
             this.y = canvas.height / 2;
@@ -347,49 +311,45 @@
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            let rotation = Math.min(Math.PI/6, Math.max(-Math.PI/6, this.velocity * 0.05));
-            if (isGameOver) rotation = Math.PI/2;
+            let rotation = Math.min(Math.PI / 6, Math.max(-Math.PI / 6, this.velocity * 0.08));
+            if (isGameOver) rotation = Math.PI / 2;
             ctx.rotate(rotation);
             let img = isGameOver ? birdDeadImg : birdImg;
-            ctx.drawImage(img, -this.w/2, -this.h/2, this.w, this.h);
+            ctx.drawImage(img, -this.w / 2, -this.h / 2, this.w, this.h);
             ctx.restore();
         },
         update() {
             if (!isPlaying) {
-                this.y = (canvas.height/2) + Math.sin(frames * 0.1) * 15;
+                this.y = canvas.height / 2 + Math.sin(frames * 0.05) * 10;
                 return;
             }
             this.velocity += this.gravity;
             this.y += this.velocity;
-            if (this.y + this.h/3 >= canvas.height || this.y - this.h/3 <= 0) gameOver();
+            if (this.y + this.h / 2 >= canvas.height || this.y - this.h / 2 <= 0) gameOver();
         }
     };
 
     const pipes = {
-        list: [], gap: 260, w: 90,
+        list: [], gap: 220, w: 55,
         add() {
-            let min = 100;
+            let min = 80;
             let max = canvas.height - this.gap - min;
             let top = Math.random() * (max - min) + min;
             this.list.push({ x: canvas.width, top: top, passed: false });
         },
         draw() {
             this.list.forEach(p => {
-                ctx.save();
-                ctx.translate(p.x + this.w/2, p.top);
-                ctx.scale(1, -1);
-                ctx.drawImage(pipeImg, -this.w/2, 0, this.w, p.top);
-                ctx.restore();
-                ctx.drawImage(pipeImg, p.x, p.top + this.gap, this.w, canvas.height);
+                ctx.drawImage(pipeImg, p.x, p.top, this.w, p.top);
+                ctx.drawImage(pipeImg, p.x, p.top + this.gap, this.w, canvas.height - (p.top + this.gap));
             });
         },
         update() {
             if (!isPlaying) return;
-            if (frames % 85 === 0) this.add();
+            if (frames % 100 === 0) this.add();
             this.list.forEach((p, i) => {
                 p.x -= gameSpeed;
-                if (bird.x + 30 > p.x && bird.x - 30 < p.x + this.w) {
-                    if (bird.y - 30 < p.top || bird.y + 30 > p.top + this.gap) gameOver();
+                if (bird.x + 20 > p.x && bird.x - 20 < p.x + this.w) {
+                    if (bird.y - 20 < p.top || bird.y + 20 > p.top + this.gap) gameOver();
                 }
                 if (p.x + this.w < bird.x && !p.passed) {
                     score++;
@@ -403,8 +363,8 @@
 
     function updateUI() {
         scoreCounter.innerText = score;
-        let progress = (score % 20) * 5;
-        progressBar.style.height = Math.min(100, progress) + "%";
+        let progress = Math.min(100, (score % 20) * 5);
+        progressBar.style.height = progress + "%";
         if (score > melhorPontuacao) salvarRecorde(score);
     }
 
@@ -413,9 +373,9 @@
         isGameOver = true;
         isPlaying = false;
         salvarRecorde(score);
-        document.getElementById('finalScore').innerText = score;
-        document.getElementById('bestScore').innerText = melhorPontuacao;
-        gameOverScreen.style.display = 'block';
+        document.getElementById("finalScore").innerText = score;
+        document.getElementById("bestScore").innerText = melhorPontuacao;
+        gameOverScreen.style.display = "block";
     }
 
     function init() {
@@ -426,8 +386,8 @@
         updateUI();
         bird.reset();
         pipes.list = [];
-        gameOverScreen.style.display = 'none';
-        startMsg.style.display = 'block';
+        gameOverScreen.style.display = "none";
+        startMsg.style.display = "block";
         resize();
     }
 
@@ -449,16 +409,16 @@
         if (isGameOver) return;
         if (!isPlaying) {
             isPlaying = true;
-            startMsg.style.display = 'none';
+            startMsg.style.display = "none";
         }
         bird.velocity = -bird.jump;
-        if (navigator.vibrate) navigator.vibrate(30);
+        if (navigator.vibrate) navigator.vibrate(20);
     }
 
-    canvas.addEventListener('mousedown', handleTap);
-    canvas.addEventListener('touchstart', handleTap, { passive: false });
-    document.getElementById('restartBtn').onclick = () => {
-        gameOverScreen.style.display = 'none';
+    canvas.addEventListener("mousedown", handleTap);
+    canvas.addEventListener("touchstart", handleTap, { passive: false });
+    document.getElementById("restartBtn").onclick = () => {
+        gameOverScreen.style.display = "none";
         init();
         loop();
     };
