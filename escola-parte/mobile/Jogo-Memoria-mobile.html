@@ -191,12 +191,12 @@
             justify-content: center;
         }
 
-        .grid-10 { grid-template-columns: repeat(3, 95px); gap: 12px;
-        .grid-20 { grid-template-columns: repeat(4, 85px); gap: 10px;
-        .grid-30 { grid-template-columns: repeat(5, 70px); gap: 8px;
+        .grid-10 { grid-template-columns: repeat(4, 1fr); max-width: 320px;
+        .grid-20 { grid-template-columns: repeat(5, 1fr); max-width: 380px;
+        .grid-30 { grid-template-columns: repeat(5, 1fr); max-width: 400px;
 
         /* Cards */
-        .card { width: 100%; height: 100px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.4s; position: relative; z-index: 20;
+        .card { aspect-ratio: 3/4; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.4s; position: relative; z-index: 20;
             aspect-ratio: 3/4;
             cursor: pointer;
             position: relative;
@@ -225,7 +225,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .front { background: #32B5F1; color: white; font-size: 28px; display: flex; align-items: center; justify-content: center; border-radius: 16px;
+        .front { background: #32B5F1; color: white; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 16px;
             background: #32B5F1;
             color: white;
             font-size: 20px;
@@ -238,7 +238,7 @@
             border: 2px solid #32B5F1;
         }
 
-        .back i { font-size: 40px; color: #0277bd;
+        .back i { font-size: 20px; color: #0277bd;
             color: #0277bd;
             font-size: 20px;
         }
@@ -353,7 +353,7 @@
             animation: confettiFall linear forwards;
         }
     .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } 
-.card { width: 100%; height: 100px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.4s; position: relative; z-index: 100 !important; cursor: pointer; }
+.card { aspect-ratio: 3/4; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.4s; position: relative; z-index: 100 !important; cursor: pointer; }
 .card .front, .card .back { background: white; transform: rotateY(180deg); display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 3px solid #32B5F1; z-index: 101 !important; }
 .game-board-container { position: relative; z-index: 50 !important; background: rgba(0,0,0,0.7) !important; }
 .memory-grid { display: grid; gap: 12px; justify-content: center; margin-top: 20px; position: relative; z-index: 60 !important; }
