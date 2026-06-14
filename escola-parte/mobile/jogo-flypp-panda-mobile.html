@@ -13,16 +13,12 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-
         body, html {
             font-family: "Montserrat", sans-serif;
-            height: 100%;
-            width: 100%;
+            height: 100vh;
             overflow: hidden;
             background: #000;
-            position: fixed;
         }
-
         .background-layer {
             position: fixed;
             width: 100%;
@@ -32,17 +28,15 @@
             background-position: center;
             z-index: 0;
         }
-
         canvas {
             display: block;
             width: 100%;
             height: 100%;
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             z-index: 1;
         }
-
         .mobile-header {
             position: fixed;
             top: 0;
@@ -56,30 +50,10 @@
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .back-btn {
-            color: #32B5F1;
-            font-size: 18px;
-            text-decoration: none;
-        }
-
-        .header-title h2 {
-            font-size: 14px;
-            color: #0277bd;
-            font-weight: 800;
-        }
-
-        .leaf-icon {
-            color: #32B5F1;
-            font-size: 18px;
-        }
-
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn { color: #32B5F1; font-size: 18px; text-decoration: none; }
+        .header-title h2 { font-size: 14px; color: #0277bd; font-weight: 800; }
+        .leaf-icon { color: #32B5F1; font-size: 18px; }
         #score-counter {
             position: fixed;
             right: 16px;
@@ -93,7 +67,6 @@
             padding: 5px 12px;
             border-radius: 20px;
         }
-
         .side-progress-container {
             position: fixed;
             right: 12px;
@@ -105,7 +78,6 @@
             z-index: 100;
             overflow: hidden;
         }
-
         .side-progress-bar {
             position: absolute;
             bottom: 0;
@@ -114,7 +86,6 @@
             background: linear-gradient(to top, #32B5F1, #00ffaa);
             transition: height 0.3s ease;
         }
-
         #start-msg {
             position: fixed;
             bottom: 25%;
@@ -128,9 +99,7 @@
             animation: pulse 1.5s infinite;
             pointer-events: none;
         }
-
         @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
-
         .game-over-screen {
             position: fixed;
             top: 50%;
@@ -145,42 +114,11 @@
             text-align: center;
             display: none;
         }
-
-        .game-over-screen h3 {
-            color: #0277bd;
-            margin-bottom: 16px;
-        }
-
-        .score-row {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-
-        .score-item p:first-child {
-            font-size: 11px;
-            font-weight: 800;
-            color: #888;
-        }
-
-        .score-item p:last-child {
-            font-size: 28px;
-            font-weight: 800;
-            color: #0277bd;
-        }
-
-        .restart-btn {
-            background: #32B5F1;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 30px;
-            font-weight: 800;
-            font-size: 14px;
-            width: 100%;
-            cursor: pointer;
-        }
-
+        .game-over-screen h3 { color: #0277bd; margin-bottom: 16px; }
+        .score-row { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .score-item p:first-child { font-size: 11px; font-weight: 800; color: #888; }
+        .score-item p:last-child { font-size: 28px; font-weight: 800; color: #0277bd; }
+        .restart-btn { background: #32B5F1; color: white; border: none; padding: 12px; border-radius: 30px; font-weight: 800; font-size: 14px; width: 100%; cursor: pointer; }
         .sparkle {
             position: fixed;
             background: white;
@@ -189,7 +127,6 @@
             z-index: 2;
             animation: rise linear forwards;
         }
-
         @keyframes rise {
             0% { transform: translateY(100vh) scale(0); opacity: 0; }
             50% { opacity: 0.8; }
@@ -215,7 +152,7 @@
     <div class="side-progress-bar" id="progress-bar"></div>
 </div>
 
-<div id="start-msg">👆 TOQUE NA TELA PARA VOAR</div>
+<div id="start-msg">👆 TOQUE PARA VOAR</div>
 
 <div class="game-over-screen" id="gameOverScreen">
     <h3>🐼 Jornada Concluída</h3>
@@ -291,7 +228,7 @@
     let score = 0;
     let isGameOver = false;
     let isPlaying = false;
-    let gameSpeed = 1.5;
+    let gameSpeed = 1.8;
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -301,8 +238,8 @@
     resize();
 
     const bird = {
-        x: 0, y: 0, w: 50, h: 50,
-        velocity: 0, gravity: 0.15, jump: 4.5,
+        x: 0, y: 0, w: 55, h: 55,
+        velocity: 0, gravity: 0.2, jump: 5.2,
         reset() {
             this.x = canvas.width * 0.25;
             this.y = canvas.height / 2;
@@ -330,7 +267,7 @@
     };
 
     const pipes = {
-        list: [], gap: 220, w: 55,
+        list: [], gap: 240, w: 60,
         add() {
             let min = 80;
             let max = canvas.height - this.gap - min;
@@ -339,13 +276,13 @@
         },
         draw() {
             this.list.forEach(p => {
-                ctx.drawImage(pipeImg, p.x, p.top, this.w, p.top);
+                ctx.drawImage(pipeImg, p.x, 0, this.w, p.top);
                 ctx.drawImage(pipeImg, p.x, p.top + this.gap, this.w, canvas.height - (p.top + this.gap));
             });
         },
         update() {
             if (!isPlaying) return;
-            if (frames % 100 === 0) this.add();
+            if (frames % 120 === 0) this.add();
             this.list.forEach((p, i) => {
                 p.x -= gameSpeed;
                 if (bird.x + 20 > p.x && bird.x - 20 < p.x + this.w) {
