@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
             --branco: #ffffff;
             --fundo-transparente: rgba(255, 255, 255, 0.98);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body, html { font-family: "Montserrat", sans-serif; min-height: 100vh; background: #000; display: flex; justify-content: center; align-items: center; padding: 20px 0; }
         .background-layer { position: fixed; width: 110%; height: 110%; background-image: url(../fundos/fundo-a.png); background-size: cover; background-position: center; z-index: 0; left: -5%; top: -5%; filter: blur(8px) brightness(0.6); }
         .diary-header { position: fixed; top: 0; left: 0; width: 100%; background: white; padding: 12px 25px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 500; }
@@ -28,9 +28,9 @@
         .score-bubble { background: var(--azul-claro); padding: 8px; border-radius: 15px; border: 1px solid rgba(50,181,241,0.2); }
         .score-label { font-size: 0.6rem; text-transform: uppercase; color: var(--azul-escuro); font-weight: 800; }
         .score-value { font-size: 1.1rem; color: var(--azul-escuro); font-weight: 800; }
-        .grid-container { background: #fff; padding: 10px; border-radius: 20px; border: 2px solid var(--azul-claro); margin-bottom: 15px; display: inline-block; }
-        .grid { display: grid; gap: 4px; user-select: none; }
-        .cell { width: 32px; height: 32px; background: #fff; border: 1px solid #f0f4f8; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; font-weight: 800; color: var(--azul-escuro); cursor: pointer; border-radius: 6px; transition: 0.2s; }
+        .grid-container { background: #fff; padding: 10px; border-radius: 20px; border: 2px solid var(--azul-claro); margin-bottom: 15px; display: inline-block; overflow-x: auto; width: 100%; }
+        .grid { display: grid; gap: 4px; user-select: none; justify-content: center; }
+        .cell { width: 32px; height: 32px; background: #fff; border: 1px solid #f0f4f8; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; font-weight: 800; color: var(--azul-escuro); cursor: pointer; border-radius: 6px; transition: 0.1s; touch-action: none; }
         .cell.selected { background: var(--azul-bright); color: white; border-color: var(--azul-bright); }
         .cell.found { background: var(--azul-escuro); color: white; border-color: var(--azul-escuro); }
         .words-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 15px 0; }
@@ -40,7 +40,8 @@
         .btn-filled { background: var(--azul-bright); color: white; }
         .message-box { font-size: 0.75rem; font-weight: 800; color: var(--azul-escuro); text-transform: uppercase; min-height: 30px; margin-bottom: 10px; }
         .recorde-text { text-align: center; margin: 5px 0; font-size: 0.7rem; font-weight: 800; color: var(--azul-escuro); }
-        @media (max-width: 450px) { .cell { width: 25px; height: 25px; font-size: 0.7rem; } .container { padding: 15px; } }
+        @media (max-width: 450px) { .cell { width: 28px; height: 28px; font-size: 0.7rem; } .container { padding: 15px; } }
+        @media (max-width: 380px) { .cell { width: 24px; height: 24px; font-size: 0.65rem; } }
     </style>
 </head>
 <body>
@@ -88,6 +89,7 @@
         let selectedCells = [];
         let isSelecting = false;
         let score = 0;
+        let startCell = null;
 
         const themes = {
             easy: [
@@ -147,11 +149,13 @@
             score = 0;
             foundWords = [];
             selectedCells = [];
+            isSelecting = false;
+            startCell = null;
             updateScore();
             const themeList = themes[difficulty];
             const selectedTheme = themeList[Math.floor(Math.random() * themeList.length)];
             document.getElementById("themeDisplay").textContent = selectedTheme.name;
-            words = selectedTheme.words;
+            words = [...selectedTheme.words];
             createGrid();
             placeWords();
             fillEmpty();
@@ -165,28 +169,65 @@
             else if (rd) rd.innerHTML = `🏆 Melhor: --`;
         }
 
-        function createGrid() { grid = Array(gridSize).fill().map(() => Array(gridSize).fill({ letter: "", found: false })); }
+        function createGrid() { 
+            grid = Array(gridSize).fill().map(() => Array(gridSize).fill().map(() => ({ letter: "", found: false }))); 
+        }
         
         function placeWords() {
             words.forEach(word => {
                 let placed = false;
-                while (!placed) {
-                    const isHoriz = Math.random() > 0.5;
-                    const row = Math.floor(Math.random() * (isHoriz ? gridSize : gridSize - word.length));
-                    const col = Math.floor(Math.random() * (isHoriz ? gridSize - word.length : gridSize));
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    attempts++;
+                    const direction = Math.floor(Math.random() * 4);
+                    let row, col, dr, dc;
+                    if (direction === 0) { dr = 0; dc = 1; }
+                    else if (direction === 1) { dr = 1; dc = 0; }
+                    else if (direction === 2) { dr = 1; dc = 1; }
+                    else { dr = 1; dc = -1; }
+                    
+                    if (dr === 0) {
+                        row = Math.floor(Math.random() * gridSize);
+                        col = Math.floor(Math.random() * (gridSize - word.length + 1));
+                    } else if (dc === 0) {
+                        row = Math.floor(Math.random() * (gridSize - word.length + 1));
+                        col = Math.floor(Math.random() * gridSize);
+                    } else if (dc === 1) {
+                        row = Math.floor(Math.random() * (gridSize - word.length + 1));
+                        col = Math.floor(Math.random() * (gridSize - word.length + 1));
+                    } else {
+                        row = Math.floor(Math.random() * (gridSize - word.length + 1));
+                        col = Math.floor(Math.random() * (gridSize - word.length + 1)) + (word.length - 1);
+                        if (col >= gridSize) continue;
+                    }
+                    
                     let canPlace = true;
                     for (let i = 0; i < word.length; i++) {
-                        const r = isHoriz ? row : row + i;
-                        const c = isHoriz ? col + i : col;
+                        const r = row + i * dr;
+                        const c = col + i * dc;
+                        if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) { canPlace = false; break; }
                         if (grid[r][c].letter !== "" && grid[r][c].letter !== word[i]) { canPlace = false; break; }
                     }
                     if (canPlace) {
                         for (let i = 0; i < word.length; i++) {
-                            const r = isHoriz ? row : row + i;
-                            const c = isHoriz ? col + i : col;
+                            const r = row + i * dr;
+                            const c = col + i * dc;
                             grid[r][c] = { letter: word[i], found: false };
                         }
                         placed = true;
+                    }
+                }
+                if (!placed) {
+                    for (let i = 0; i < word.length; i++) {
+                        let placedLetter = false;
+                        for (let r = 0; r < gridSize && !placedLetter; r++) {
+                            for (let c = 0; c < gridSize && !placedLetter; c++) {
+                                if (grid[r][c].letter === "") {
+                                    grid[r][c] = { letter: word[i], found: false };
+                                    placedLetter = true;
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -203,75 +244,152 @@
 
         function render() {
             const gridElement = document.getElementById("grid");
-            gridElement.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            gridElement.style.gridTemplateColumns = `repeat(${gridSize}, minmax(24px, 32px))`;
             gridElement.innerHTML = "";
             for (let r = 0; r < gridSize; r++) {
                 for (let c = 0; c < gridSize; c++) {
                     const cell = document.createElement("div");
-                    cell.className = "cell" + (grid[r][c].found ? " found" : "");
+                    cell.className = "cell";
+                    if (grid[r][c].found) cell.classList.add("found");
+                    if (selectedCells.some(sc => sc.r === r && sc.c === c)) cell.classList.add("selected");
                     cell.textContent = grid[r][c].letter;
-                    cell.onmousedown = () => startSelect(r, c);
-                    cell.onmouseenter = () => moveSelect(r, c);
-                    cell.onmouseup = endSelect;
-                    cell.ontouchstart = (e) => { e.preventDefault(); startSelect(r, c); };
-                    cell.ontouchmove = (e) => { e.preventDefault(); handleTouchMove(e); };
-                    cell.ontouchend = () => endSelect();
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    
+                    cell.addEventListener("touchstart", (e) => {
+                        e.preventDefault();
+                        handleStart(r, c);
+                    });
+                    cell.addEventListener("touchmove", (e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (element && element.classList.contains("cell")) {
+                            const row = parseInt(element.dataset.row);
+                            const col = parseInt(element.dataset.col);
+                            if (!isNaN(row) && !isNaN(col)) {
+                                handleMove(row, col);
+                            }
+                        }
+                    });
+                    cell.addEventListener("touchend", (e) => {
+                        e.preventDefault();
+                        handleEnd();
+                    });
+                    
+                    cell.addEventListener("mousedown", () => handleStart(r, c));
+                    cell.addEventListener("mouseenter", () => {
+                        if (isSelecting) handleMove(r, c);
+                    });
+                    cell.addEventListener("mouseup", () => handleEnd());
+                    
                     gridElement.appendChild(cell);
                 }
             }
+            
             const wordsList = document.getElementById("wordsList");
             wordsList.innerHTML = words.map(w => `<span class="word-item ${foundWords.includes(w) ? "found" : ""}">${w}</span>`).join("");
         }
 
-        let touchCells = [];
-        function handleTouchMove(e) {
-            const touch = e.touches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.classList.contains("cell")) {
-                const index = Array.from(target.parentNode.children).indexOf(target);
-                const r = Math.floor(index / gridSize);
-                const c = index % gridSize;
-                if (!touchCells.some(cell => cell.r === r && cell.c === c)) {
-                    touchCells.push({ r, c });
-                    updateSelectionTouch();
+        function handleStart(r, c) {
+            if (grid[r][c].found) return;
+            isSelecting = true;
+            startCell = { r, c };
+            selectedCells = [{ r, c }];
+            updateSelectionDisplay();
+        }
+
+        function handleMove(r, c) {
+            if (!isSelecting) return;
+            if (grid[r][c].found) return;
+            
+            if (!selectedCells.some(cell => cell.r === r && cell.c === c)) {
+                const lastCell = selectedCells[selectedCells.length - 1];
+                const dr = Math.abs(r - lastCell.r);
+                const dc = Math.abs(c - lastCell.c);
+                
+                if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1) || (dr === 1 && dc === 1)) {
+                    selectedCells.push({ r, c });
+                } else if (selectedCells.length > 1) {
+                    const secondLast = selectedCells[selectedCells.length - 2];
+                    if (secondLast.r === r && secondLast.c === c) {
+                        selectedCells.pop();
+                    }
                 }
+                updateSelectionDisplay();
             }
         }
-        function updateSelectionTouch() {
-            const allCells = document.querySelectorAll(".cell");
-            allCells.forEach(cell => cell.classList.remove("selected"));
-            touchCells.forEach(cell => {
-                const idx = cell.r * gridSize + cell.c;
-                if (allCells[idx]) allCells[idx].classList.add("selected");
-            });
-        }
-        function startSelect(r, c) { isSelecting = true; selectedCells = [{ r, c }]; touchCells = [{ r, c }]; updateSelection(); }
-        function moveSelect(r, c) { if (!isSelecting) return; if (!selectedCells.some(cell => cell.r === r && cell.c === c)) { selectedCells.push({ r, c }); updateSelection(); } }
-        function updateSelection() { const allCells = document.querySelectorAll(".cell"); allCells.forEach(cell => cell.classList.remove("selected")); selectedCells.forEach(cell => { const idx = cell.r * gridSize + cell.c; if (allCells[idx]) allCells[idx].classList.add("selected"); }); }
-        function endSelect() {
+
+        function handleEnd() {
             if (!isSelecting) return;
             isSelecting = false;
-            touchCells = [];
-            const word = selectedCells.map(cell => grid[cell.r][cell.c].letter).join("");
-            const reversed = word.split("").reverse().join("");
-            if (words.includes(word) && !foundWords.includes(word)) markFound(word);
-            else if (words.includes(reversed) && !foundWords.includes(reversed)) markFound(reversed);
+            
+            if (selectedCells.length >= 3) {
+                const word = selectedCells.map(cell => grid[cell.r][cell.c].letter).join("");
+                const reversed = word.split("").reverse().join("");
+                
+                let foundWord = null;
+                if (words.includes(word) && !foundWords.includes(word)) foundWord = word;
+                else if (words.includes(reversed) && !foundWords.includes(reversed)) foundWord = reversed;
+                
+                if (foundWord) {
+                    markFound(foundWord);
+                } else {
+                    document.getElementById("messageBox").textContent = "❌ Palavra não encontrada! Tente novamente";
+                    setTimeout(() => {
+                        if (foundWords.length !== words.length) 
+                            document.getElementById("messageBox").textContent = "Encontre as palavras!";
+                    }, 1500);
+                }
+            }
+            
             selectedCells = [];
-            render();
+            startCell = null;
+            updateSelectionDisplay();
         }
+
+        function updateSelectionDisplay() {
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach(cell => cell.classList.remove("selected"));
+            selectedCells.forEach(cell => {
+                const index = cell.r * gridSize + cell.c;
+                if (cells[index]) cells[index].classList.add("selected");
+            });
+        }
+
         function markFound(word) {
+            if (foundWords.includes(word)) return;
             foundWords.push(word);
-            selectedCells.forEach(cell => grid[cell.r][cell.c].found = true);
+            selectedCells.forEach(cell => {
+                grid[cell.r][cell.c].found = true;
+            });
             score += 10;
             updateScore();
             render();
-            if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "🎉 Incrível! Você achou tudo! 🎉"; salvarRecorde(); createConfetti(); }
-            else { document.getElementById("messageBox").textContent = `✅ Encontrou "${word}"! +10 pontos`; }
+            
+            if (foundWords.length === words.length) { 
+                document.getElementById("messageBox").textContent = "🎉 Incrível! Você achou tudo! 🎉"; 
+                salvarRecorde(); 
+                createConfetti(); 
+            } else { 
+                document.getElementById("messageBox").textContent = `✅ Encontrou "${word}"! +10 pontos`; 
+            }
         }
-        function updateScore() { document.getElementById("scoreDisplay").textContent = score; }
-        function createConfetti() { for (let i = 0; i < 80; i++) { const c = document.createElement("div"); c.style.cssText = `position:fixed;width:8px;height:8px;background:#32B5F1;left:${Math.random()*100}%;top:-10px;border-radius:50%;z-index:2000;pointer-events:none`; document.body.appendChild(c); c.animate([{transform:"translateY(0)",opacity:1},{transform:`translateY(${window.innerHeight}px)`,opacity:0}],{duration:2000}).onfinish=()=>c.remove(); } }
-        document.addEventListener("mouseup", () => { if (isSelecting) endSelect(); });
+        
+        function updateScore() { 
+            document.getElementById("scoreDisplay").textContent = score; 
+        }
+        
+        function createConfetti() { 
+            for (let i = 0; i < 80; i++) { 
+                const c = document.createElement("div"); 
+                c.style.cssText = `position:fixed;width:8px;height:8px;background:#32B5F1;left:${Math.random()*100}%;top:-10px;border-radius:50%;z-index:2000;pointer-events:none`; 
+                document.body.appendChild(c); 
+                c.animate([{transform:"translateY(0)",opacity:1},{transform:`translateY(${window.innerHeight}px)`,opacity:0}],{duration:2000}).onfinish=()=>c.remove(); 
+            } 
+        }
+        
+        document.addEventListener("mouseup", () => { if (isSelecting) handleEnd(); });
     </script>
 </body>
 </html>
-
