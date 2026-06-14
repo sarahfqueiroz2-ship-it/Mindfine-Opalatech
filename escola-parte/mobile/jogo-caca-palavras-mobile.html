@@ -506,16 +506,32 @@
     }
 
     function markFound(word) {
-        foundWords.push(word);
-        selectedCells.forEach(cell => grid[cell.r][cell.c].found = true);
-        score += 10;
-        updateScore();
-        
-        if (foundWords.length === words.length) {
-            document.getElementById('messageBox').textContent = "ðŸŽ‰ IncrÃ­vel! VocÃª achou tudo! ðŸŽ‰";
-            salvarRecorde();
-            createConfetti();
-        } else {
+    foundWords.push(word);
+    selectedCells.forEach(cell => {
+        grid[cell.r][cell.c].found = true;
+    });
+    score += 10;
+    updateScore();
+    
+    // ATUALIZAR VISUAL DAS CÉLULAS ENCONTRADAS
+    const allCells = document.querySelectorAll('.cell');
+    for (let i = 0; i < allCells.length; i++) {
+        const r = Math.floor(i / gridSize);
+        const c = i % gridSize;
+        if (grid[r][c].found) {
+            allCells[i].classList.add('found');
+        }
+    }
+    
+    if (foundWords.length === words.length) {
+        document.getElementById("messageBox").textContent = "?? Incrível! Você achou tudo! ??";
+        salvarRecorde();
+        createConfetti();
+    } else {
+        document.getElementById("messageBox").textContent = `? Encontrou "${word}"! +10 pontos`;
+    }
+    render();
+} else {
             document.getElementById('messageBox').textContent = `âœ… Encontrou "${word}"! +10 pontos`;
         }
         render();
