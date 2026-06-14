@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Mindfine - Caça-Palavras</title>
+    <title>Mindfine - CaÃ§a-Palavras</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
@@ -48,17 +48,17 @@
     <header class="diary-header">
         <div class="header-left">
             <a href="sala-de-jogos-mobile.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
-            <div class="diary-title"><h2>Caça-Palavras</h2></div>
+            <div class="diary-title"><h2>CaÃ§a-Palavras</h2></div>
         </div>
         <i class="fas fa-search" style="color: var(--azul-bright); font-size: 1.2rem;"></i>
     </header>
     <div class="container">
         <div id="confettiContainer"></div>
         <div class="screen active" id="menuScreen">
-            <div class="message-box">Escolha o nível de dificuldade</div>
+            <div class="message-box">Escolha o nÃ­vel de dificuldade</div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button class="btn-style" onclick="startGame("easy")">Iniciante (8x8)</button>
-                <button class="btn-style" onclick="startGame("medium")">Intermediário (10x10)</button>
+                <button class="btn-style" onclick="startGame("medium")">IntermediÃ¡rio (10x10)</button>
                 <button class="btn-style" onclick="startGame("hard")">Mestre (12x12)</button>
             </div>
         </div>
@@ -265,7 +265,7 @@
             score += 10;
             updateScore();
             render();
-            if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "?? Incrível! Você achou tudo! ??"; salvarRecorde(); createConfetti(); }
+            if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "?? IncrÃ­vel! VocÃª achou tudo! ??"; salvarRecorde(); createConfetti(); }
             else { document.getElementById("messageBox").textContent = `? Encontrou "${word}"! +10 pontos`; }
         }
         function updateScore() { document.getElementById("scoreDisplay").textContent = score; }
@@ -274,3 +274,4 @@
     </script>
 </body>
 </html>
+
