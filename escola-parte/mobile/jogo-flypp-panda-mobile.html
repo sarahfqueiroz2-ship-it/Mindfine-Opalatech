@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mindfine - Santuário do Panda</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -202,7 +202,37 @@
             width: 100%;
             cursor: pointer;
         }
-    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } </style>
+    .background-layer, #particles-container { z-index: 0 !important; } .main-content, .entries-area, .container, .card, .content-section { position: relative; z-index: 10 !important; } 
+@media screen and (orientation: portrait) {
+    .mobile-header, #score-counter, .side-progress-container, #start-msg, .game-over-screen {
+        display: none;
+    }
+    body::before {
+        content: "?? Gire o celular para o modo paisagem para jogar!";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: #0277bd;
+        padding: 20px;
+        border-radius: 20px;
+        font-weight: 800;
+        text-align: center;
+        z-index: 9999;
+        font-size: 18px;
+        width: 90%;
+    }
+}
+@media screen and (orientation: landscape) {
+    body::before { display: none; }
+    .mobile-header, #score-counter, .side-progress-container, #start-msg, .game-over-screen { display: flex; }
+    .mobile-header { display: flex; }
+    #score-counter { display: block; }
+    .side-progress-container { display: block; }
+    #start-msg { display: block; }
+}
+</style>
 </head>
 <body>
 
