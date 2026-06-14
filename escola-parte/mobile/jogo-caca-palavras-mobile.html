@@ -67,7 +67,7 @@
                 <div class="score-bubble"><div class="score-label">Tema</div><div class="score-value" id="themeDisplay">...</div></div>
                 <div class="score-bubble"><div class="score-label">Pontos</div><div class="score-value" id="scoreDisplay">0</div></div>
             </div>
-            <div class="recorde-text" id="recordeDisplay">?? Melhor: --</div>
+            <div class="recorde-text" id="recordeDisplay">🏆 Melhor: --</div>
             <div class="grid-container"><div class="grid" id="grid"></div></div>
             <div class="words-list" id="wordsList"></div>
             <div class="message-box" id="messageBox">Encontre as palavras!</div>
@@ -114,7 +114,7 @@
                 const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/caca_palavras_${difficulty}`);
                 const dados = await response.json();
                 melhorPontuacao[difficulty] = dados.recorde || 0;
-                document.getElementById("recordeDisplay").innerHTML = `?? Melhor: ${melhorPontuacao[difficulty] || "--"}`;
+                document.getElementById("recordeDisplay").innerHTML = `🏆 Melhor: ${melhorPontuacao[difficulty] || "--"}`;
             } catch (error) { console.error(error); }
         }
 
@@ -126,7 +126,7 @@
                     body: JSON.stringify({ pontuacao: score })
                 });
                 melhorPontuacao[difficulty] = score;
-                document.getElementById("recordeDisplay").innerHTML = `?? Melhor: ${score}`;
+                document.getElementById("recordeDisplay").innerHTML = `🏆 Melhor: ${score}`;
             } catch (error) { console.error(error); }
         }
 
@@ -161,8 +161,8 @@
 
         function updateRecordeDisplay() {
             const rd = document.getElementById("recordeDisplay");
-            if (rd && melhorPontuacao[difficulty] > 0) rd.innerHTML = `?? Melhor: ${melhorPontuacao[difficulty]} pontos`;
-            else if (rd) rd.innerHTML = `?? Melhor: --`;
+            if (rd && melhorPontuacao[difficulty] > 0) rd.innerHTML = `🏆 Melhor: ${melhorPontuacao[difficulty]} pontos`;
+            else if (rd) rd.innerHTML = `🏆 Melhor: --`;
         }
 
         function createGrid() { grid = Array(gridSize).fill().map(() => Array(gridSize).fill({ letter: "", found: false })); }
@@ -266,7 +266,7 @@
             updateScore();
             render();
             if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "?? Incrível! Você achou tudo! ??"; salvarRecorde(); createConfetti(); }
-            else { document.getElementById("messageBox").textContent = `? Encontrou "${word}"! +10 pontos`; }
+            else { document.getElementById("messageBox").textContent = `✅ Encontrou "${word}"! +10 pontos`; }
         }
         function updateScore() { document.getElementById("scoreDisplay").textContent = score; }
         function createConfetti() { for (let i = 0; i < 80; i++) { const c = document.createElement("div"); c.style.cssText = `position:fixed;width:8px;height:8px;background:#32B5F1;left:${Math.random()*100}%;top:-10px;border-radius:50%;z-index:2000;pointer-events:none`; document.body.appendChild(c); c.animate([{transform:"translateY(0)",opacity:1},{transform:`translateY(${window.innerHeight}px)`,opacity:0}],{duration:2000}).onfinish=()=>c.remove(); } }
