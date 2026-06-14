@@ -1,6 +1,18 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
+<style>
+.modal-overlay {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
+    z-index: 99999 !important;
+}
+.modal-overlay .modal-content {
+    background: white !important;
+    display: block !important;
+}
+</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Mindfine - Chat com Apoio</title>
@@ -279,10 +291,7 @@
             transition: 0.3s;
         }
 
-        .modal-overlay.open {
-            visibility: visible;
-            opacity: 1;
-        }
+        .modal-overlay.open { visibility: visible !important; opacity: 1 !important; display: flex !important; z-index: 99999 !important; }
 
         .modal-content {
             background: white;
