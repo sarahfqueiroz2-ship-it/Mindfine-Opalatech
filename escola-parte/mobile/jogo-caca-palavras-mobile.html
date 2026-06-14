@@ -265,7 +265,7 @@
             score += 10;
             updateScore();
             render();
-            if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "?? Incrível! Você achou tudo! ??"; salvarRecorde(); createConfetti(); }
+            if (foundWords.length === words.length) { document.getElementById("messageBox").textContent = "🎉 Incrível! Você achou tudo! 🎉"; salvarRecorde(); createConfetti(); }
             else { document.getElementById("messageBox").textContent = `✅ Encontrou "${word}"! +10 pontos`; }
         }
         function updateScore() { document.getElementById("scoreDisplay").textContent = score; }
