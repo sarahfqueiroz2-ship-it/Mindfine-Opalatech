@@ -1,137 +1,34 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Mindfine - Santu�rio do Panda</title>
+    <title>Mindfine - Santuário do Panda</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body, html {
-            font-family: "Montserrat", sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            background: #000;
-        }
-        .background-layer {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background-image: url("fundos/fundo-fly.png");
-            background-size: cover;
-            background-position: center;
-            z-index: 0;
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        .mobile-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: white;
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { font-family: "Montserrat", sans-serif; height: 100vh; overflow: hidden; background: #000; }
+        .background-layer { position: fixed; width: 100%; height: 100%; background-image: url("fundos/fundo-fly.png"); background-size: cover; background-position: center; z-index: 0; }
+        canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+        .mobile-header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: white; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .back-btn { color: #32B5F1; font-size: 18px; text-decoration: none; }
         .header-title h2 { font-size: 14px; color: #0277bd; font-weight: 800; }
         .leaf-icon { color: #32B5F1; font-size: 18px; }
-        #score-counter {
-            position: fixed;
-            right: 16px;
-            top: 60px;
-            font-size: 28px;
-            font-weight: 900;
-            color: white;
-            text-shadow: 0 0 10px #32B5F1;
-            z-index: 100;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 12px;
-            border-radius: 20px;
-        }
-        .side-progress-container {
-            position: fixed;
-            right: 12px;
-            top: 110px;
-            width: 6px;
-            height: 120px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 10px;
-            z-index: 100;
-            overflow: hidden;
-        }
-        .side-progress-bar {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 0%;
-            background: linear-gradient(to top, #32B5F1, #00ffaa);
-            transition: height 0.3s ease;
-        }
-        #start-msg {
-            position: fixed;
-            bottom: 25%;
-            width: 100%;
-            text-align: center;
-            z-index: 100;
-            font-weight: 800;
-            color: white;
-            font-size: 18px;
-            text-shadow: 0 0 10px #0277bd;
-            animation: pulse 1.5s infinite;
-            pointer-events: none;
-        }
+        #score-counter { position: fixed; right: 16px; top: 60px; font-size: 28px; font-weight: 900; color: white; text-shadow: 0 0 10px #32B5F1; z-index: 100; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 20px; }
+        .side-progress-container { position: fixed; right: 12px; top: 110px; width: 6px; height: 120px; background: rgba(255,255,255,0.3); border-radius: 10px; z-index: 100; overflow: hidden; }
+        .side-progress-bar { position: absolute; bottom: 0; width: 100%; height: 0%; background: linear-gradient(to top, #32B5F1, #00ffaa); transition: height 0.3s ease; }
+        #start-msg { position: fixed; bottom: 25%; width: 100%; text-align: center; z-index: 100; font-weight: 800; color: white; font-size: 18px; text-shadow: 0 0 10px #0277bd; animation: pulse 1.5s infinite; pointer-events: none; }
         @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
-        .game-over-screen {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 200;
-            background: rgba(255,255,255,0.95);
-            border-radius: 24px;
-            padding: 24px;
-            width: 80%;
-            max-width: 280px;
-            text-align: center;
-            display: none;
-        }
+        .game-over-screen { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 24px; padding: 24px; width: 80%; max-width: 280px; text-align: center; display: none; }
         .game-over-screen h3 { color: #0277bd; margin-bottom: 16px; }
         .score-row { display: flex; justify-content: space-around; margin-bottom: 20px; }
         .score-item p:first-child { font-size: 11px; font-weight: 800; color: #888; }
         .score-item p:last-child { font-size: 28px; font-weight: 800; color: #0277bd; }
         .restart-btn { background: #32B5F1; color: white; border: none; padding: 12px; border-radius: 30px; font-weight: 800; font-size: 14px; width: 100%; cursor: pointer; }
-        .sparkle {
-            position: fixed;
-            background: white;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 2;
-            animation: rise linear forwards;
-        }
-        @keyframes rise {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-        }
+        .sparkle { position: fixed; background: white; border-radius: 50%; pointer-events: none; z-index: 2; animation: rise linear forwards; }
+        @keyframes rise { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translateY(-10vh) scale(1); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -142,7 +39,7 @@
 <div class="mobile-header">
     <div class="header-left">
         <a href="sala-de-jogos-mobile.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
-        <div class="header-title"><h2>Santu�rio do Panda</h2></div>
+        <div class="header-title"><h2>Santuário do Panda</h2></div>
     </div>
     <i class="fas fa-leaf leaf-icon"></i>
 </div>
@@ -152,15 +49,15 @@
     <div class="side-progress-bar" id="progress-bar"></div>
 </div>
 
-<div id="start-msg">?? TOQUE PARA VOAR</div>
+<div id="start-msg">👆 TOQUE PARA VOAR</div>
 
 <div class="game-over-screen" id="gameOverScreen">
-    <h3>?? Jornada Conclu�da</h3>
+    <h3>🐼 Jornada Concluída</h3>
     <div class="score-row">
         <div class="score-item"><p>PONTOS</p><p id="finalScore">0</p></div>
         <div class="score-item"><p>RECORDE</p><p id="bestScore">0</p></div>
     </div>
-    <button class="restart-btn" id="restartBtn">?? Tentar Novamente</button>
+    <button class="restart-btn" id="restartBtn">🐼 Tentar Novamente</button>
 </div>
 
 <script>
@@ -170,10 +67,7 @@
     async function carregarRecorde() {
         const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
         matriculaAtual = usuario.matricula;
-        if (!matriculaAtual) {
-            window.location.href = "login-mobile.html";
-            return;
-        }
+        if (!matriculaAtual) { window.location.href = "login-mobile.html"; return; }
         try {
             const response = await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`);
             const dados = await response.json();
@@ -186,8 +80,7 @@
         if (pontuacao <= melhorPontuacao) return;
         try {
             await fetch(`https://mindfine-backend.onrender.com/api/recorde/${matriculaAtual}/flypp_panda`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ pontuacao: pontuacao })
             });
             melhorPontuacao = pontuacao;
@@ -228,7 +121,7 @@
     let score = 0;
     let isGameOver = false;
     let isPlaying = false;
-    let gameSpeed = 1.8;
+    let gameSpeed = 1.6;
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -239,7 +132,7 @@
 
     const bird = {
         x: 0, y: 0, w: 55, h: 55,
-        velocity: 0, gravity: 0.2, jump: 5.2,
+        velocity: 0, gravity: 0.18, jump: 5,
         reset() {
             this.x = canvas.width * 0.25;
             this.y = canvas.height / 2;
@@ -269,7 +162,7 @@
     const pipes = {
         list: [], gap: 240, w: 60,
         add() {
-            let min = 80;
+            let min = 70;
             let max = canvas.height - this.gap - min;
             let top = Math.random() * (max - min) + min;
             this.list.push({ x: canvas.width, top: top, passed: false });
@@ -282,7 +175,7 @@
         },
         update() {
             if (!isPlaying) return;
-            if (frames % 120 === 0) this.add();
+            if (frames % 110 === 0) this.add();
             this.list.forEach((p, i) => {
                 p.x -= gameSpeed;
                 if (bird.x + 20 > p.x && bird.x - 20 < p.x + this.w) {
