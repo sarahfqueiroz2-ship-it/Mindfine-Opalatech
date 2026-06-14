@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -678,6 +678,11 @@
     window.generateAndShowAnon = generateAndShowAnon;
     window.startChat = startChat;
     window.backToStep1 = backToStep1;
-</script>
-</body>
+    // Abrir modal automaticamente se não houver conversas
+    setTimeout(() => {
+        if (conversas.length === 0) {
+            abrirModalNovoChat();
+        }
+    }, 500);
+</script></body>
 </html>
